@@ -670,7 +670,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0577ca3184f68c488b9eb13edc553a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridSize: 5
+  gridSize: 4
   gridScale: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

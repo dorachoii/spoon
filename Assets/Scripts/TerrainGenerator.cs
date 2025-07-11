@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
 #if UNITY_EDITOR
 using UnityEditor;// 폰이나 다른 플랫폼에서 테스트 할 때는 지워줘야 한다!
 #endif
@@ -40,6 +41,22 @@ public class TerrainGenerator : MonoBehaviour
     private void TouchingCallback(Vector3 worldPosition)
     {
         Debug.Log($"World Position : {worldPosition}");
+        worldPosition.z = 0;
+
+        // world -> grid pos
+        Vector2Int gridPosition = GetGridPositionFromWorldPosition(worldPosition);
+        
+        if (!IsValidGridPosition(gridPosition))
+        {
+            Debug.LogError("Invalid grid position");
+            return;
+        } 
+
+        grid[gridPosition.x, gridPosition.y] = 0;
+    }
+
+    private bool IsValidGridPosition(Vector2Int gridPosition) {
+        return gridPosition.x >= 0 && gridPosition.x < gridSize && gridPosition.y < gridSize;
     }
 
     private Vector2 GetWorldPositionFromGridPosition(int x, int y)
@@ -49,6 +66,16 @@ public class TerrainGenerator : MonoBehaviour
         worldPosition.y -= (gridSize * gridScale) / 2 - gridScale / 2;
 
         return worldPosition;
+    }
+
+    private Vector2Int GetGridPositionFromWorldPosition(Vector2 worldPosition)
+    {
+        Vector2Int gridPosition = new Vector2Int();
+
+        gridPosition.x = Mathf.FloorToInt(worldPosition.x / gridScale + gridSize / 2 - gridScale / 2);
+        gridPosition.y = Mathf.FloorToInt(worldPosition.y / gridScale + gridSize / 2 - gridScale / 2);
+
+        return gridPosition;
     }
 
 #if UNITY_EDITOR
@@ -66,7 +93,7 @@ public class TerrainGenerator : MonoBehaviour
 
                 Gizmos.DrawSphere(worldPosition, gridScale / 4);
 
-                Handles.Label(worldPosition + Vector2.up * gridScale / 3, grid[x,y].ToString());
+                Handles.Label(worldPosition + Vector2.up * gridScale / 3, grid[x, y].ToString());
             }
         }
     }
