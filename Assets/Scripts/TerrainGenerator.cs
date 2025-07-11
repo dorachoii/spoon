@@ -10,6 +10,10 @@ using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour
 {
+    
+    [Header(" Elements ")]
+    [SerializeField] private MeshFilter filter;
+
     [Header(" Brush Settings ")]
     [SerializeField] private int brushRadius;
     [SerializeField] private float brushStrength;
@@ -18,6 +22,12 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] private int gridSize;
     [SerializeField] private float gridScale;
     [SerializeField] private float isoValue;
+
+    private List<Vector3> vertices = new List<Vector3>();
+    private List<int> triangles = new List<int>();
+
+    private SquareGrid squareGrid;
+
     private float[,] grid;
 
     void Awake()
@@ -35,6 +45,10 @@ public class TerrainGenerator : MonoBehaviour
                 grid[x, y] = isoValue + 0.1f;
             }
         }
+
+        squareGrid = new SquareGrid(gridSize - 1, gridScale, isoValue);
+
+        GenerateMesh();
     }
 
     // Update is called once per frame
@@ -65,6 +79,23 @@ public class TerrainGenerator : MonoBehaviour
                 grid[gridPosition.x, gridPosition.y] -= brushStrength;
             }
         }
+
+        GenerateMesh();
+    }
+
+    private void GenerateMesh()
+    {
+        Mesh mesh = new Mesh();
+
+        vertices.Clear();
+        triangles.Clear();
+
+        squareGrid.Update(grid);
+
+        mesh.vertices = squareGrid.GetVertices();
+        mesh.triangles = squareGrid.GetTriangles();
+
+        filter.mesh = mesh;
     }
 
     private bool IsValidGridPosition(Vector2Int gridPosition)
