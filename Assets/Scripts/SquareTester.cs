@@ -73,6 +73,7 @@ public class SquareTester : MonoBehaviour
         if (topRightValue > isoValue) configuration += 1;
         if (bottomRightValue > isoValue) configuration += 2;
         if (bottomLeftValue > isoValue) configuration += 4;
+        
         if (topLeftValue > isoValue) configuration += 8;
 
         return configuration;
