@@ -169,10 +169,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   filter: {fileID: 1036420849}
   gridScale: 3
-  topRightState: 0
-  bottomRightState: 0
-  bottomLeftState: 0
-  topLeftState: 0
+  isoValue: 1
+  topRightValue: 2
+  bottomRightValue: 0
+  bottomLeftValue: 0
+  topLeftValue: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

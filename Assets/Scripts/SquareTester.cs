@@ -21,16 +21,16 @@ public class SquareTester : MonoBehaviour
 
     [Header(" Settings ")]
     [SerializeField] private float gridScale;
+    [SerializeField] private float isoValue;
 
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
 
     [Header(" Configuration ")]
-    [SerializeField] private bool topRightState;
-    [SerializeField] private bool bottomRightState;
-    [SerializeField] private bool bottomLeftState;
-    [SerializeField] private bool topLeftState;
-
+    [SerializeField] private float topRightValue;
+    [SerializeField] private float bottomRightValue;
+    [SerializeField] private float bottomLeftValue;
+    [SerializeField] private float topLeftValue;
 
     // Start is called before the first frame update
     void Start()
@@ -54,6 +54,8 @@ public class SquareTester : MonoBehaviour
         vertices.Clear();
         triangles.Clear();
 
+        Interporate();
+
         Triangulate(GetConfiguration());
 
         mesh.vertices = vertices.ToArray();
@@ -68,12 +70,36 @@ public class SquareTester : MonoBehaviour
 
         // 비트 연산자(<<, >>, |) 활용 가능
         //configuration = configuration | (1 << 0);   //0001
-        if (topRightState) configuration += 1;
-        if (bottomRightState) configuration += 2;
-        if (bottomLeftState) configuration += 4;
-        if (topLeftState) configuration += 8;
+        if (topRightValue > isoValue) configuration += 1;
+        if (bottomRightValue > isoValue) configuration += 2;
+        if (bottomLeftValue > isoValue) configuration += 4;
+        if (topLeftValue > isoValue) configuration += 8;
 
         return configuration;
+    }
+
+    private void Interporate()
+    {
+        // Top Center
+        // float topLerp = (isoValue - topLeftValue) / (topRightValue - topLeftValue);
+        // topLerp = Mathf.Clamp01(topLerp);
+        // topCenter = topLeft + (topRight - topLeft) * topLerp;
+
+        float topLerp = Mathf.InverseLerp(topLeftValue, topRightValue, isoValue);
+        topLerp = Mathf.Clamp01(topLerp);
+        topCenter = topLeft + (topRight - topLeft) * topLerp;
+
+        float rightLerp = Mathf.InverseLerp(topRightValue, bottomRightValue, isoValue);
+        rightLerp = Mathf.Clamp01(rightLerp);
+        rightCenter = topRight + (bottomRight - topRight) * rightLerp;
+
+        float bottomLerp = Mathf.InverseLerp(bottomLeftValue, bottomRightValue, isoValue);
+        bottomLerp= Mathf.Clamp01(bottomLerp);
+        bottomCenter = bottomLeft + (bottomRight - bottomLeft) * bottomLerp;
+
+        float leftLerp = Mathf.InverseLerp(topLeftValue, bottomLeftValue, isoValue);
+        leftLerp = Mathf.Clamp01(leftLerp);
+        leftCenter = topLeft + (bottomLeft - topLeft) * leftLerp;
     }
 
     private void Triangulate(int configuration)
@@ -140,7 +166,7 @@ public class SquareTester : MonoBehaviour
                 break;
             case 15:
                 vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomLeft, topLeft });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2,3});
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
                 break;
         }
     }
