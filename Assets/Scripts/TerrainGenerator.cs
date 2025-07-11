@@ -10,9 +10,14 @@ using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour
 {
+    [Header(" Brush Settings ")]
+    [SerializeField] private int brushRadius;
+    [SerializeField] private float brushStrength;
+
     [Header(" Data ")]
     [SerializeField] private int gridSize;
     [SerializeField] private float gridScale;
+    [SerializeField] private float isoValue;
     private float[,] grid;
 
     void Awake()
@@ -27,7 +32,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for (int x = 0; x < gridSize; x++)
             {
-                grid[x, y] = Random.Range(0f, 2f);
+                grid[x, y] = isoValue + 0.1f;
             }
         }
     }
@@ -45,17 +50,25 @@ public class TerrainGenerator : MonoBehaviour
 
         // world -> grid pos
         Vector2Int gridPosition = GetGridPositionFromWorldPosition(worldPosition);
-        
-        if (!IsValidGridPosition(gridPosition))
-        {
-            Debug.LogError("Invalid grid position");
-            return;
-        } 
 
-        grid[gridPosition.x, gridPosition.y] = 0;
+        for (int y = gridPosition.y - brushRadius; y <= gridPosition.y + brushRadius; y++)
+        {
+            for (int x = gridPosition.x - brushRadius; x <= gridPosition.x + brushRadius; x++)
+            {
+                Vector2Int currentGridPosition = new Vector2Int(x, y);
+
+                if (!IsValidGridPosition(currentGridPosition))
+                {
+                    Debug.LogError("Invalid grid position");
+                    continue;
+                }
+                grid[gridPosition.x, gridPosition.y] -= brushStrength;
+            }
+        }
     }
 
-    private bool IsValidGridPosition(Vector2Int gridPosition) {
+    private bool IsValidGridPosition(Vector2Int gridPosition)
+    {
         return gridPosition.x >= 0 && gridPosition.x < gridSize && gridPosition.y < gridSize;
     }
 
