@@ -14,17 +14,32 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] private float gridScale;
     private float[,] grid;
 
-
+    void Awake()
+    {
+        InputManager.onTouching += TouchingCallback;
+    }
     // Start is called before the first frame update
     void Start()
     {
         grid = new float[gridSize, gridSize];
+        for (int y = 0; y < gridSize; y++)
+        {
+            for (int x = 0; x < gridSize; x++)
+            {
+                grid[x, y] = Random.Range(0f, 2f);
+            }
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
 
+    }
+
+    private void TouchingCallback(Vector3 worldPosition)
+    {
+        Debug.Log($"World Position : {worldPosition}");
     }
 
     private Vector2 GetWorldPositionFromGridPosition(int x, int y)
@@ -50,6 +65,8 @@ public class TerrainGenerator : MonoBehaviour
                 Vector2 worldPosition = GetWorldPositionFromGridPosition(x, y);
 
                 Gizmos.DrawSphere(worldPosition, gridScale / 4);
+
+                Handles.Label(worldPosition + Vector2.up * gridScale / 3, grid[x,y].ToString());
             }
         }
     }
