@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,6 +22,16 @@ public class SquareTester : MonoBehaviour
     [Header(" Settings ")]
     [SerializeField] private float gridScale;
 
+    private List<Vector3> vertices = new List<Vector3>();
+    private List<int> triangles = new List<int>();
+
+    [Header(" Configuration ")]
+    [SerializeField] private bool topRightState;
+    [SerializeField] private bool bottomRightState;
+    [SerializeField] private bool bottomLeftState;
+    [SerializeField] private bool topLeftState;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -33,50 +44,120 @@ public class SquareTester : MonoBehaviour
         rightCenter = bottomRight + Vector2.up * gridScale / 2;
         bottomCenter = bottomLeft + Vector2.right * gridScale / 2;
         leftCenter = topLeft + Vector2.down * gridScale / 2;
-
-
-        Vector3[] vertices = new Vector3[4];
-        int[] triangles = new int[6];
-
-        vertices[0] = topCenter;
-        vertices[1] = rightCenter;
-        vertices[2] = bottomCenter;
-        vertices[3] = leftCenter;
-
-        triangles[0] = 0;
-        triangles[1] = 1;
-        triangles[2] = 2;
-        triangles[3] = 0;
-        triangles[4] = 2;
-        triangles[5] = 3;
-
-        Mesh mesh = new Mesh();
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-
-        filter.mesh = mesh;
     }
 
     // Update is called once per frame
     void Update()
     {
+         Mesh mesh = new Mesh();
 
+        vertices.Clear();
+        triangles.Clear();
+
+        Triangulate(GetConfiguration());
+
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+
+        filter.mesh = mesh;
+    }
+
+    private int GetConfiguration()
+    {
+        int configuration = 0;
+
+        // 비트 연산자(<<, >>, |) 활용 가능
+        //configuration = configuration | (1 << 0);   //0001
+        if (topRightState) configuration += 1;
+        if (bottomRightState) configuration += 2;
+        if (bottomLeftState) configuration += 4;
+        if (topLeftState) configuration += 8;
+
+        return configuration;
+    }
+
+    private void Triangulate(int configuration)
+    {
+        switch (configuration)
+        {
+            case 0:
+                break;
+            case 1:
+                vertices.AddRange(new Vector3[] { topRight, rightCenter, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2 });
+                break;
+            case 2:
+                vertices.AddRange(new Vector3[] { rightCenter, bottomRight, bottomCenter });
+                triangles.AddRange(new int[] { 0, 1, 2 });
+                break;
+            case 3:
+                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomCenter, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
+                break;
+            case 4:
+                vertices.AddRange(new Vector3[] { bottomCenter, bottomLeft, leftCenter });
+                triangles.AddRange(new int[] { 0, 1, 2 });
+                break;
+            case 5:
+                vertices.AddRange(new Vector3[] { topRight, rightCenter, bottomCenter, bottomLeft, leftCenter, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 });
+                break;
+            case 6:
+                vertices.AddRange(new Vector3[] { bottomRight, bottomLeft, leftCenter, rightCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
+                break;
+            case 7:
+                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomLeft, leftCenter, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
+                break;
+            case 8:
+                vertices.AddRange(new Vector3[] { leftCenter, topLeft, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2 });
+                break;
+            case 9:
+                vertices.AddRange(new Vector3[] { topRight, rightCenter, leftCenter, topLeft });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
+                break;
+            case 10:
+                vertices.AddRange(new Vector3[] { rightCenter, bottomRight, bottomCenter, leftCenter, topLeft, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 });
+                break;
+            case 11:
+                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomCenter, leftCenter, topLeft });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
+                break;
+            case 12:
+                vertices.AddRange(new Vector3[] { bottomCenter, bottomLeft, topLeft, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
+                break;
+            case 13:
+                vertices.AddRange(new Vector3[] { topRight, rightCenter, bottomCenter, bottomLeft, topLeft });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
+                break;
+            case 14:
+                vertices.AddRange(new Vector3[] { rightCenter, bottomRight, bottomLeft, topLeft, topCenter });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
+                break;
+            case 15:
+                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomLeft, topLeft });
+                triangles.AddRange(new int[] { 0, 1, 2, 0, 2,3});
+                break;
+        }
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
 
-        Gizmos.DrawSphere(topRight, gridScale / 4f);
-        Gizmos.DrawSphere(bottomLeft, gridScale / 4f);
-        Gizmos.DrawSphere(bottomRight, gridScale / 4f);
-        Gizmos.DrawSphere(topLeft, gridScale / 4f);
+        Gizmos.DrawSphere(topRight, gridScale / 8f);
+        Gizmos.DrawSphere(bottomLeft, gridScale / 8f);
+        Gizmos.DrawSphere(bottomRight, gridScale / 8f);
+        Gizmos.DrawSphere(topLeft, gridScale / 8f);
 
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(topCenter, gridScale / 8f);
-        Gizmos.DrawSphere(rightCenter, gridScale / 8f);
-        Gizmos.DrawSphere(bottomCenter, gridScale / 8f);
-        Gizmos.DrawSphere(leftCenter, gridScale / 8f);
+        Gizmos.DrawSphere(topCenter, gridScale / 16f);
+        Gizmos.DrawSphere(rightCenter, gridScale / 16f);
+        Gizmos.DrawSphere(bottomCenter, gridScale / 16f);
+        Gizmos.DrawSphere(leftCenter, gridScale / 16f);
     }
 }
