@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 
 #if UNITY_EDITOR
-using UnityEditor;// 폰이나 다른 플랫폼에서 테스트 할 때는 지워줘야 한다!
+using UnityEditor;  // 폰이나 다른 플랫폼에서 테스트 할 때는 지워줘야 한다!
 #endif
 
 using UnityEngine;

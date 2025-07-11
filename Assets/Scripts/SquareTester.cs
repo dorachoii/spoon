@@ -49,129 +49,21 @@ public class SquareTester : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-         Mesh mesh = new Mesh();
+        Mesh mesh = new Mesh();
 
         vertices.Clear();
         triangles.Clear();
 
-        Interporate();
+        Square square = new Square(Vector3.zero, gridScale);
+        square.Triangulate(isoValue, new float[]{topRightValue, bottomRightValue, bottomLeftValue, topLeftValue});
 
-        Triangulate(GetConfiguration());
-
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        mesh.vertices = square.GetVertices();
+        mesh.triangles = square.GetTriangles();
 
         filter.mesh = mesh;
     }
 
-    private int GetConfiguration()
-    {
-        int configuration = 0;
-
-        // 비트 연산자(<<, >>, |) 활용 가능
-        //configuration = configuration | (1 << 0);   //0001
-        if (topRightValue > isoValue) configuration += 1;
-        if (bottomRightValue > isoValue) configuration += 2;
-        if (bottomLeftValue > isoValue) configuration += 4;
-        
-        if (topLeftValue > isoValue) configuration += 8;
-
-        return configuration;
-    }
-
-    private void Interporate()
-    {
-        // Top Center
-        // float topLerp = (isoValue - topLeftValue) / (topRightValue - topLeftValue);
-        // topLerp = Mathf.Clamp01(topLerp);
-        // topCenter = topLeft + (topRight - topLeft) * topLerp;
-
-        float topLerp = Mathf.InverseLerp(topLeftValue, topRightValue, isoValue);
-        topLerp = Mathf.Clamp01(topLerp);
-        topCenter = topLeft + (topRight - topLeft) * topLerp;
-
-        float rightLerp = Mathf.InverseLerp(topRightValue, bottomRightValue, isoValue);
-        rightLerp = Mathf.Clamp01(rightLerp);
-        rightCenter = topRight + (bottomRight - topRight) * rightLerp;
-
-        float bottomLerp = Mathf.InverseLerp(bottomLeftValue, bottomRightValue, isoValue);
-        bottomLerp= Mathf.Clamp01(bottomLerp);
-        bottomCenter = bottomLeft + (bottomRight - bottomLeft) * bottomLerp;
-
-        float leftLerp = Mathf.InverseLerp(topLeftValue, bottomLeftValue, isoValue);
-        leftLerp = Mathf.Clamp01(leftLerp);
-        leftCenter = topLeft + (bottomLeft - topLeft) * leftLerp;
-    }
-
-    private void Triangulate(int configuration)
-    {
-        switch (configuration)
-        {
-            case 0:
-                break;
-            case 1:
-                vertices.AddRange(new Vector3[] { topRight, rightCenter, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2 });
-                break;
-            case 2:
-                vertices.AddRange(new Vector3[] { rightCenter, bottomRight, bottomCenter });
-                triangles.AddRange(new int[] { 0, 1, 2 });
-                break;
-            case 3:
-                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomCenter, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
-                break;
-            case 4:
-                vertices.AddRange(new Vector3[] { bottomCenter, bottomLeft, leftCenter });
-                triangles.AddRange(new int[] { 0, 1, 2 });
-                break;
-            case 5:
-                vertices.AddRange(new Vector3[] { topRight, rightCenter, bottomCenter, bottomLeft, leftCenter, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 });
-                break;
-            case 6:
-                vertices.AddRange(new Vector3[] { bottomRight, bottomLeft, leftCenter, rightCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
-                break;
-            case 7:
-                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomLeft, leftCenter, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
-                break;
-            case 8:
-                vertices.AddRange(new Vector3[] { leftCenter, topLeft, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2 });
-                break;
-            case 9:
-                vertices.AddRange(new Vector3[] { topRight, rightCenter, leftCenter, topLeft });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
-                break;
-            case 10:
-                vertices.AddRange(new Vector3[] { rightCenter, bottomRight, bottomCenter, leftCenter, topLeft, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 });
-                break;
-            case 11:
-                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomCenter, leftCenter, topLeft });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
-                break;
-            case 12:
-                vertices.AddRange(new Vector3[] { bottomCenter, bottomLeft, topLeft, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
-                break;
-            case 13:
-                vertices.AddRange(new Vector3[] { topRight, rightCenter, bottomCenter, bottomLeft, topLeft });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
-                break;
-            case 14:
-                vertices.AddRange(new Vector3[] { rightCenter, bottomRight, bottomLeft, topLeft, topCenter });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4 });
-                break;
-            case 15:
-                vertices.AddRange(new Vector3[] { topRight, bottomRight, bottomLeft, topLeft });
-                triangles.AddRange(new int[] { 0, 1, 2, 0, 2, 3 });
-                break;
-        }
-    }
-
+   
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
