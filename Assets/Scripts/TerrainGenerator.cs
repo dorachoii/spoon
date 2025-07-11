@@ -40,7 +40,7 @@ public class TerrainGenerator : MonoBehaviour
 
     private void TouchingCallback(Vector3 worldPosition)
     {
-        Debug.Log($"World Position : {worldPosition}");
+        Debug.Log($"tg - World Position : {worldPosition}");
         worldPosition.z = 0;
 
         // world -> grid pos
@@ -90,7 +90,7 @@ public class TerrainGenerator : MonoBehaviour
             for (int x = 0; x < grid.GetLength(0); x++)
             {
                 Vector2 worldPosition = GetWorldPositionFromGridPosition(x, y);
-
+                Debug.Log($"tg - Gizmo - {x},{y} : {worldPosition}");
                 Gizmos.DrawSphere(worldPosition, gridScale / 4);
 
                 Handles.Label(worldPosition + Vector2.up * gridScale / 3, grid[x, y].ToString());
