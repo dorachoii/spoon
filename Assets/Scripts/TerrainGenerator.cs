@@ -184,6 +184,7 @@ public class TerrainGenerator : MonoBehaviour
     {
         if (!EditorApplication.isPlaying || grid == null) return;
 
+
         Gizmos.color = Color.red;
 
         // 디버그용으로 일부만 표시 (메모리 절약)
