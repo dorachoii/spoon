@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public enum PlayerState
 {
@@ -14,9 +15,11 @@ public class PlayerContoller : MonoBehaviour
 {
     public FloatingJoystick floatingJoystick;
     private Rigidbody2D rb;
+    public Tilemap[] targetTilemaps;
 
     [SerializeField]
     private float speed;
+    private float jumpForce = 0.0005f;
 
     [SerializeField]
     private float verticalThreshold = 0.2f;
@@ -30,7 +33,7 @@ public class PlayerContoller : MonoBehaviour
         if (currentState == newState) return;
 
         currentState = newState;
-        
+
         switch (newState)
         {
             case PlayerState.Idle:
@@ -38,6 +41,8 @@ public class PlayerContoller : MonoBehaviour
                 break;
             case PlayerState.Jump:
                 animator.SetTrigger("JumpTrigger");
+                // rb.velocity = new Vector2(rb.velocity.x, 0); 
+                // rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 break;
             case PlayerState.Dig:
                 animator.SetBool("IsDigging", true);
@@ -53,8 +58,6 @@ public class PlayerContoller : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-
-        rb.gravityScale = 0; 
     }
 
     public void FixedUpdate()
@@ -73,9 +76,29 @@ public class PlayerContoller : MonoBehaviour
         {
             Debug.Log("Moving Down");
             ChangeState(PlayerState.Dig);
-        }else
+        }
+        else
         {
             ChangeState(PlayerState.Idle);
+        }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (currentState != PlayerState.Dig) return;
+
+        if (collision.collider.gameObject == targetTilemaps[0].gameObject)
+        {
+            foreach (ContactPoint2D contact in collision.contacts)
+            {
+                Vector3 hitPoint = contact.point;
+                Vector3Int tilePos = targetTilemaps[0].WorldToCell(hitPoint);
+
+                if(targetTilemaps[0].HasTile(tilePos))
+                {
+                    targetTilemaps[0].SetTile(tilePos, null);
+                }
+            }
         }
     }
 }
