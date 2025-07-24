@@ -28,6 +28,9 @@ public class PlayerContoller : MonoBehaviour
 
     public PlayerState currentState { get; private set; }
 
+    public int brushRadius = 10;
+
+
     public void ChangeState(PlayerState newState)
     {
         if (currentState == newState) return;
@@ -76,6 +79,7 @@ public class PlayerContoller : MonoBehaviour
         {
             Debug.Log("Moving Down");
             ChangeState(PlayerState.Dig);
+            Dig();
         }
         else
         {
@@ -83,22 +87,41 @@ public class PlayerContoller : MonoBehaviour
         }
     }
 
-    private void OnCollisionStay2D(Collision2D collision)
+     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
+
+    private void Dig()
     {
         if (currentState != PlayerState.Dig) return;
 
-        if (collision.collider.gameObject == targetTilemaps[0].gameObject)
-        {
-            foreach (ContactPoint2D contact in collision.contacts)
-            {
-                Vector3 hitPoint = contact.point;
-                Vector3Int tilePos = targetTilemaps[0].WorldToCell(hitPoint);
+        Vector2 playerPos = transform.position + Vector3.down * 0.5f;
+        Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
 
-                if(targetTilemaps[0].HasTile(tilePos))
+        for (int y = -brushRadius; y <= brushRadius; y++)
+        {
+            for (int x = -brushRadius; x <= brushRadius; x++)
+            {
+                if (x * x + y * y > brushRadius * brushRadius) continue;
+
+                Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
+
+                if (removedTiles.Contains(cellPos)) continue;
+
+                if (targetTilemaps[0].HasTile(cellPos))
                 {
-                    targetTilemaps[0].SetTile(tilePos, null);
+                    targetTilemaps[0].SetTile(cellPos, null);
+                    removedTiles.Add(cellPos);
                 }
             }
         }
+    }
+
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Vector2 playerPos = transform.position + Vector3.down * 0.5f;
+        float worldRadius = brushRadius * (targetTilemaps != null && targetTilemaps.Length > 0 ? targetTilemaps[0].cellSize.x : 1f);
+
+        Gizmos.DrawWireSphere(playerPos, worldRadius);
     }
 }
