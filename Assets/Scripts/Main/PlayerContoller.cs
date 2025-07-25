@@ -29,7 +29,7 @@ public class PlayerContoller : MonoBehaviour
     public PlayerState currentState { get; private set; }
 
     public int brushRadius = 10;
-    private float digCooldown = 1f;
+    private float digCooldown = 0.4f;
     private float lastDigTime = -999f;
 
 
@@ -98,6 +98,8 @@ public class PlayerContoller : MonoBehaviour
         Vector2 playerPos = transform.position + Vector3.down * 0.5f;
         Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
 
+        List<Vector3Int> toRemove = new List<Vector3Int>();
+
         for (int y = -brushRadius; y <= brushRadius; y++)
         {
             for (int x = -brushRadius; x <= brushRadius; x++)
@@ -110,10 +112,16 @@ public class PlayerContoller : MonoBehaviour
 
                 if (targetTilemaps[0].HasTile(cellPos))
                 {
-                    targetTilemaps[0].SetTile(cellPos, null);
+                    toRemove.Add(cellPos);
                     removedTiles.Add(cellPos);
                 }
             }
+        }
+
+        if (toRemove.Count > 0)
+        {
+            TileBase[] tiles = new TileBase[toRemove.Count];
+            targetTilemaps[0].SetTiles(toRemove.ToArray(), tiles);
         }
     }
 
