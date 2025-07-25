@@ -29,8 +29,6 @@ public class PlayerContoller : MonoBehaviour
     public PlayerState currentState { get; private set; }
 
     public int brushRadius = 10;
-    private float digCooldown = 0.4f;
-    private float lastDigTime = -999f;
 
 
     public void ChangeState(PlayerState newState)
@@ -81,7 +79,7 @@ public class PlayerContoller : MonoBehaviour
         {
             Debug.Log("Moving Down");
             ChangeState(PlayerState.Dig);
-            TryDig();
+            StartDig();
         }
         else
         {
@@ -90,47 +88,76 @@ public class PlayerContoller : MonoBehaviour
     }
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
+    private List<Vector3Int> positionsToDig = new List<Vector3Int>();
 
-    private void Dig()
+    private Vector3Int[] tilePositions;
+    private TileBase[] nullTiles; 
+    
+    public int maxTilesPerFrame = 50;
+    private bool isDigging = false;
+    public void StartDig()
     {
-        if (currentState != PlayerState.Dig) return;
+        if (currentState != PlayerState.Dig || isDigging ) return;
 
-        Vector2 playerPos = transform.position + Vector3.down * 0.5f;
-        Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
+        StopAllCoroutines();
+        StartCoroutine(DigCoroutine());
+    }
 
-        List<Vector3Int> toRemove = new List<Vector3Int>();
+    private IEnumerator DigCoroutine()
+{
+    isDigging = true;
+    positionsToDig.Clear();
 
-        for (int y = -brushRadius; y <= brushRadius; y++)
+    Vector2 playerPos = transform.position + Vector3.down * 0.5f;
+    Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
+
+    for (int y = brushRadius; y > -brushRadius; y--)
+    {
+        for (int x = -brushRadius; x <= brushRadius; x++)
         {
-            for (int x = -brushRadius; x <= brushRadius; x++)
-            {
-                if (x * x + y * y > brushRadius * brushRadius) continue;
+            if (x * x + y * y > brushRadius * brushRadius) continue;
 
-                Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
+            Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
 
-                if (removedTiles.Contains(cellPos)) continue;
+            if (!targetTilemaps[0].cellBounds.Contains(cellPos)) continue;
+            if (removedTiles.Contains(cellPos)) continue;
+            if (!targetTilemaps[0].HasTile(cellPos)) continue;
 
-                if (targetTilemaps[0].HasTile(cellPos))
-                {
-                    toRemove.Add(cellPos);
-                    removedTiles.Add(cellPos);
-                }
-            }
-        }
-
-        if (toRemove.Count > 0)
-        {
-            TileBase[] tiles = new TileBase[toRemove.Count];
-            targetTilemaps[0].SetTiles(toRemove.ToArray(), tiles);
+            positionsToDig.Add(cellPos);
         }
     }
 
-    private void TryDig()
+    int total = positionsToDig.Count;
+    int current = 0;
+
+    while (current < total)
     {
-        if (Time.time - lastDigTime < digCooldown) return;
-        Dig();
-        lastDigTime = Time.time;
+        int count = Mathf.Min(maxTilesPerFrame, total - current);
+
+        tilePositions = new Vector3Int[count];
+        nullTiles = new TileBase[count]; 
+
+        for (int i = 0; i < count; i++)
+        {
+            tilePositions[i] = positionsToDig[current + i];
+            nullTiles[i] = null;
+        }
+
+        targetTilemaps[0].SetTiles(tilePositions, nullTiles);
+
+        for (int i = 0; i < count; i++)
+        {
+            removedTiles.Add(tilePositions[i]);
+        }
+
+        current += count;
+        yield return null;
     }
+    isDigging = false;
+
+}
+
+
 
 
     private void OnDrawGizmosSelected()
