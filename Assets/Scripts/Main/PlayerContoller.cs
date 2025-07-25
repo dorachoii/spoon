@@ -29,6 +29,8 @@ public class PlayerContoller : MonoBehaviour
     public PlayerState currentState { get; private set; }
 
     public int brushRadius = 10;
+    private float digCooldown = 1f;
+    private float lastDigTime = -999f;
 
 
     public void ChangeState(PlayerState newState)
@@ -79,7 +81,7 @@ public class PlayerContoller : MonoBehaviour
         {
             Debug.Log("Moving Down");
             ChangeState(PlayerState.Dig);
-            Dig();
+            TryDig();
         }
         else
         {
@@ -87,7 +89,7 @@ public class PlayerContoller : MonoBehaviour
         }
     }
 
-     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
+    private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
 
     private void Dig()
     {
@@ -113,6 +115,13 @@ public class PlayerContoller : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void TryDig()
+    {
+        if (Time.time - lastDigTime < digCooldown) return;
+        Dig();
+        lastDigTime = Time.time;
     }
 
 
