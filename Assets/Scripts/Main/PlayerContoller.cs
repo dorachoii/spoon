@@ -61,6 +61,14 @@ public class PlayerContoller : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+
+        tilePositions = new Vector3Int[maxTilesPerFrame];
+        nullTiles = new TileBase[maxTilesPerFrame];
+
+        for(int i = 0; i < nullTiles.Length; i++)
+        {
+            nullTiles[i] = null;
+        }
     }
 
     public void FixedUpdate()
@@ -90,74 +98,69 @@ public class PlayerContoller : MonoBehaviour
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
     private List<Vector3Int> positionsToDig = new List<Vector3Int>();
 
+    public int maxTilesPerFrame = 40;
     private Vector3Int[] tilePositions;
-    private TileBase[] nullTiles; 
-    
-    public int maxTilesPerFrame = 50;
+    private TileBase[] nullTiles;
+
+
+
     private bool isDigging = false;
     public void StartDig()
     {
-        if (currentState != PlayerState.Dig || isDigging ) return;
+        if (currentState != PlayerState.Dig || isDigging) return;
 
         StopAllCoroutines();
         StartCoroutine(DigCoroutine());
     }
 
     private IEnumerator DigCoroutine()
-{
-    isDigging = true;
-    positionsToDig.Clear();
-
-    Vector2 playerPos = transform.position + Vector3.down * 0.5f;
-    Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
-
-    for (int y = brushRadius; y > -brushRadius; y--)
     {
-        for (int x = -brushRadius; x <= brushRadius; x++)
+        isDigging = true;
+        positionsToDig.Clear();
+
+        Vector2 playerPos = transform.position + Vector3.down * 0.5f;
+        Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
+
+        for (int y = brushRadius; y > -brushRadius; y--)
         {
-            if (x * x + y * y > brushRadius * brushRadius) continue;
+            for (int x = -brushRadius; x <= brushRadius; x++)
+            {
+                if (x * x + y * y > brushRadius * brushRadius) continue;
 
-            Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
+                Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
 
-            if (!targetTilemaps[0].cellBounds.Contains(cellPos)) continue;
-            if (removedTiles.Contains(cellPos)) continue;
-            if (!targetTilemaps[0].HasTile(cellPos)) continue;
+                if (!targetTilemaps[0].cellBounds.Contains(cellPos)) continue;
+                if (removedTiles.Contains(cellPos)) continue;
+                if (!targetTilemaps[0].HasTile(cellPos)) continue;
 
-            positionsToDig.Add(cellPos);
+                positionsToDig.Add(cellPos);
+            }
         }
+
+        int total = positionsToDig.Count;
+        int current = 0;
+
+        while (current < total)
+        {
+            int count = Mathf.Min(maxTilesPerFrame, total - current);
+
+            for (int i = 0; i < count; i++)
+            {
+                tilePositions[i] = positionsToDig[current + i];
+            }
+
+            targetTilemaps[0].SetTiles(tilePositions, nullTiles);
+
+            for (int i = 0; i < count; i++)
+            {
+                removedTiles.Add(tilePositions[i]);
+            }
+
+            current += count;
+            yield return null;
+        }
+        isDigging = false;
     }
-
-    int total = positionsToDig.Count;
-    int current = 0;
-
-    while (current < total)
-    {
-        int count = Mathf.Min(maxTilesPerFrame, total - current);
-
-        tilePositions = new Vector3Int[count];
-        nullTiles = new TileBase[count]; 
-
-        for (int i = 0; i < count; i++)
-        {
-            tilePositions[i] = positionsToDig[current + i];
-            nullTiles[i] = null;
-        }
-
-        targetTilemaps[0].SetTiles(tilePositions, nullTiles);
-
-        for (int i = 0; i < count; i++)
-        {
-            removedTiles.Add(tilePositions[i]);
-        }
-
-        current += count;
-        yield return null;
-    }
-    isDigging = false;
-
-}
-
-
 
 
     private void OnDrawGizmosSelected()
