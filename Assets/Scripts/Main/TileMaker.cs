@@ -46,7 +46,7 @@ public class TileMaker : MonoBehaviour
         currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
 
         Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-        FillGradientLine(currentBottomLeft.y, currentLevel-1);
+        FillGradientLine(currentBottomLeft.y, currentLevel - 1);
 
         lastGradientLineY = currentBottomLeft.y;
         lastLevel = currentLevel;
@@ -61,9 +61,15 @@ public class TileMaker : MonoBehaviour
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
         tile_dotted = LoadTiles(TileType.Dotted.ToString(), "0", 9);
-        StampDottedTiles();
 
-        width = lastTopRightCell.x - lastBottomLeftCell.x + 1;
+        int width = lastTopRightCell.x - lastBottomLeftCell.x + 1;
+        int height = lastTopRightCell.y - lastBottomLeftCell.y + 1;
+
+        BoundsInt bounds = new BoundsInt(lastBottomLeftCell.x, lastBottomLeftCell.y, 0, width, height, 1);
+
+        StampDottedTilesInBounds(bounds, 13, currentLevel);
+
+        this.width = width;
     }
 
     void Update()
@@ -74,7 +80,6 @@ public class TileMaker : MonoBehaviour
         // 내려갔을 때 (더 아래로 이동)
         if (currentBottomLeft.y < lastBottomLeftCell.y)
         {
-
 
             FillNewBottom(currentBottomLeft.y, lastBottomLeftCell.y - 1, currentLevel);
 
@@ -142,6 +147,7 @@ public class TileMaker : MonoBehaviour
         }
 
         tilemap.SetTilesBlock(bounds, tiles);
+
     }
 
     void ClearTopRows(int startY, int endY)
@@ -158,20 +164,44 @@ public class TileMaker : MonoBehaviour
     }
 
 
-
-    void StampDottedTiles()
+    private int loadedDottedLevel = -1;
+    void StampDottedTilesInBounds(BoundsInt bounds, int maxStampCount, int level)
     {
-        Vector3Int bottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-        Vector3Int topRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+        
+        int dottedLevelToLoad = 0;
 
-        int mapWidth = topRightCell.x - bottomLeftCell.x + 1;
-        int mapHeight = topRightCell.y - bottomLeftCell.y + 1;
+        Debug.Log($"level = {level}");
+
+        switch (level) {
+            case 0:
+                dottedLevelToLoad = 0;
+                break;
+            case 2:
+                dottedLevelToLoad = 1;
+                break;
+            case 3:
+                dottedLevelToLoad = 2;
+                break;
+            default:
+                return;
+        }
+        
+        Debug.Log($"level = {level}, dottedLevel = {dottedLevelToLoad}");
+
+        if (loadedDottedLevel != dottedLevelToLoad)
+        {
+            tile_dotted = LoadTiles(TileType.Dotted.ToString(), dottedLevelToLoad.ToString(), 9);
+            loadedDottedLevel = dottedLevelToLoad;
+        }
+
+        int mapWidth = bounds.size.x;
+        int mapHeight = bounds.size.y;
 
         List<Vector3Int> stampPos = new List<Vector3Int>();
 
-        for (int x = bottomLeftCell.x; x <= topRightCell.x - 8; x++)
+        for (int x = bounds.xMin; x <= bounds.xMax - 8; x++)
         {
-            for (int y = bottomLeftCell.y; y <= topRightCell.y - 8; y++)
+            for (int y = bounds.yMin; y <= bounds.yMax - 8; y++)
             {
                 stampPos.Add(new Vector3Int(x, y, 0));
             }
@@ -186,7 +216,7 @@ public class TileMaker : MonoBehaviour
             stampPos[j] = temp;
         }
 
-        int stampCount = Mathf.Min(13, stampPos.Count);
+        int stampCount = Mathf.Min(maxStampCount, stampPos.Count);
 
         for (int i = 0; i < stampCount; i++)
         {
@@ -200,10 +230,11 @@ public class TileMaker : MonoBehaviour
                     selectedTiles[dy * 9 + dx] = tile_dotted[dx, dy];
                 }
             }
-            BoundsInt bounds = new BoundsInt(origin.x, origin.y, 0, 9, 9, 1);
-            tilemap.SetTilesBlock(bounds, selectedTiles);
+            BoundsInt dotBounds = new BoundsInt(origin.x, origin.y, 0, 9, 9, 1);
+            tilemap.SetTilesBlock(dotBounds, selectedTiles);
         }
     }
+
 
     TileBase[,] LoadTiles(string type, string color, int size)
     {
