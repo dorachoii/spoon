@@ -162,6 +162,11 @@ public class PlayerContoller : MonoBehaviour
         isDigging = false;
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        Debug.Log("지금 부딪힌 층의 이름" + collision.collider.gameObject.name);    
+    }
+
 
     private void OnDrawGizmosSelected()
     {
