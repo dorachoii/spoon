@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.IO;
 
+public enum TileType { Plain, Dotted, Gradient }
+
 public class TileMaker : MonoBehaviour
 {
     public Tilemap tilemap;
@@ -43,7 +45,7 @@ public class TileMaker : MonoBehaviour
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
-        LoadDottedTiles("01");
+        tile_dotted = LoadTiles(TileType.Dotted.ToString(), "0", 9);
         StampDottedTiles();
 
         width = lastTopRightCell.x - lastBottomLeftCell.x + 1;
@@ -78,7 +80,7 @@ public class TileMaker : MonoBehaviour
     }
 
     void FillNewBottom(int startY, int endY, int level)
-    {        
+    {
         int height = endY - startY + 1;
 
         if (height <= 0) return;
@@ -155,14 +157,16 @@ public class TileMaker : MonoBehaviour
         }
     }
 
-    void LoadDottedTiles(string color)
+    TileBase[,] LoadTiles(string type, string color, int size)
     {
-        for (int y = 0; y < 9; y++)
+        TileBase[,] tiles = new TileBase[size, size];
+
+        for (int y = 0; y < size; y++)
         {
-            for (int x = 0; x < 9; x++)
+            for (int x = 0; x < size; x++)
             {
-                int index = y * 9 + x;
-                string path = $"TileMap/BG_Dotted_V1_{color}_{index}";
+                int index = y * size + x;
+                string path = $"TileMap/BG_{type}_{color}_{index}";
                 TileBase tile = Resources.Load<TileBase>(path);
 
                 if (tile == null)
@@ -171,9 +175,10 @@ public class TileMaker : MonoBehaviour
                     continue;
                 }
 
-                tile_dotted[x, y] = tile;
+                tiles[x, y] = tile;
             }
         }
+        return tiles;
     }
 
     void FillTiles()
