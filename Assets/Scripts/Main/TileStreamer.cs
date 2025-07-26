@@ -12,15 +12,78 @@ public class TileStreamer : MonoBehaviour
     public TileBase[] tile_plain; // 5가지 색상
     public TileBase[,] tile_dotted = new TileBase[9, 9];
 
+    private Vector3Int lastBottomLeftCell;
+    private Vector3Int lastTopRightCell;
+
     private Camera mainCamera;
 
     void Start()
     {
         mainCamera = Camera.main;
         FillTiles();
+
+        lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+
         LoadDottedTiles("01");
         StampDottedTiles();
     }
+
+    void Update()
+    {
+        Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        Vector3Int currentTopRight = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+
+        // 내려갔을 때 (더 아래로 이동)
+        if (currentBottomLeft.y < lastBottomLeftCell.y)
+        {
+            int newHeight = lastBottomLeftCell.y - currentBottomLeft.y;
+
+            FillNewBottom(currentBottomLeft.y, lastBottomLeftCell.y - 1);
+
+            int clearStartY = Mathf.Min(lastTopRightCell.y + 1, currentTopRight.y + 1);
+            int clearEndY = Mathf.Max(lastTopRightCell.y, currentTopRight.y);
+
+            ClearTopRows(clearStartY, clearEndY);
+
+
+            lastBottomLeftCell = currentBottomLeft;
+            lastTopRightCell = currentTopRight;
+        }
+    }
+
+    void FillNewBottom(int startY, int endY)
+    {
+        int width = lastTopRightCell.x - lastBottomLeftCell.x + 1;
+        int height = endY - startY + 1;
+
+        if (height <= 0) return;
+
+        BoundsInt bounds = new BoundsInt(lastBottomLeftCell.x, startY, 0, width, height, 1);
+        TileBase[] tiles = new TileBase[width * height];
+
+        for (int i = 0; i < tiles.Length; i++)
+        {
+            tiles[i] = tile_plain[0];
+        }
+
+        tilemap.SetTilesBlock(bounds, tiles);
+    }
+
+    void ClearTopRows(int startY, int endY)
+    {
+        int width = lastTopRightCell.x - lastBottomLeftCell.x + 1;
+        int height = endY - startY + 1;
+
+        if (height <= 0) return;
+
+        BoundsInt bounds = new BoundsInt(lastBottomLeftCell.x, startY, 0, width, height, 1);
+        TileBase[] tiles = new TileBase[width * height]; // 전부 null
+
+        tilemap.SetTilesBlock(bounds, tiles);
+    }
+
+
 
     void StampDottedTiles()
     {
