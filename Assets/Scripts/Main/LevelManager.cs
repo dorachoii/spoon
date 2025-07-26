@@ -8,7 +8,7 @@ public class LevelManager : MonoBehaviour
     public static LevelManager Instance { get; private set; }
 
     public int CurrentLevel { get; private set; } = 0;
-    public float levelHeight = 40f;
+    private float levelHeight = 20f;
     private Camera mainCam;
 
     public Action<int> OnLevelChanged;
@@ -39,6 +39,7 @@ public class LevelManager : MonoBehaviour
 
         if (newLevel != lastLevel)
         {
+            Debug.Log($"current Level : {CurrentLevel}");
             CurrentLevel = newLevel;
             lastLevel = newLevel;
 
@@ -48,7 +49,8 @@ public class LevelManager : MonoBehaviour
 
     int GetCameraLevel()
     {
+        float originY = 0f;
         float camY = mainCam.transform.position.y;
-        return Mathf.FloorToInt(-camY / levelHeight);
+        return Mathf.Max(0, Mathf.FloorToInt( originY - camY / levelHeight));
     }
 }

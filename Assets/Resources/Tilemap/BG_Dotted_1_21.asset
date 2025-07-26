@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: BG_Dotted_V1_02_21
+  m_Name: BG_Dotted_1_21
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 2013866520, guid: 14806a035552d8f44bce8fff4a80a934, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

@@ -11,7 +11,8 @@ public class TileMaker : MonoBehaviour
 {
     public Tilemap tilemap;
     public TileBase[] tile_plain; // 5가지 색상
-    public TileBase[,] tile_dotted = new TileBase[9, 9];
+    private TileBase[,] tile_dotted = new TileBase[9, 9];
+    private TileBase[,] tile_gradient = new TileBase[12, 12];
 
     private Vector3Int lastBottomLeftCell;
     private Vector3Int lastTopRightCell;
@@ -20,6 +21,9 @@ public class TileMaker : MonoBehaviour
     int currentLevel = 0;
 
     int width = 0;
+    private int lastGradientLineY = int.MinValue;
+    private int lastLevel = -1;
+    private int loadGradientLevel = -1;
 
     void OnEnable()
     {
@@ -35,6 +39,17 @@ public class TileMaker : MonoBehaviour
         {
             LevelManager.Instance.OnLevelChanged -= HandleLevelChanged;
         }
+    }
+
+    void HandleLevelChanged(int newLevel)
+    {
+        currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
+
+        Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        FillGradientLine(currentBottomLeft.y, currentLevel-1);
+
+        lastGradientLineY = currentBottomLeft.y;
+        lastLevel = currentLevel;
     }
 
     void Start()
@@ -59,7 +74,7 @@ public class TileMaker : MonoBehaviour
         // 내려갔을 때 (더 아래로 이동)
         if (currentBottomLeft.y < lastBottomLeftCell.y)
         {
-            int newHeight = lastBottomLeftCell.y - currentBottomLeft.y;
+
 
             FillNewBottom(currentBottomLeft.y, lastBottomLeftCell.y - 1, currentLevel);
 
@@ -68,16 +83,49 @@ public class TileMaker : MonoBehaviour
 
             ClearTopRows(clearStartY, clearEndY);
 
-
             lastBottomLeftCell = currentBottomLeft;
             lastTopRightCell = currentTopRight;
         }
     }
 
-    void HandleLevelChanged(int newLevel)
+    void FillGradientLine(int y, int level)
     {
-        currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
+        if (loadGradientLevel != level)
+        {
+            tile_gradient = LoadTiles(TileType.Gradient.ToString(), level.ToString(), 12);
+            loadGradientLevel = level;
+        }
+
+        Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        Vector3Int currentTopRight = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+
+        int cellWidth = currentTopRight.x - currentBottomLeft.x + 1;
+        int chunkCount = Mathf.CeilToInt((float)cellWidth / 12);
+
+        int startX = currentBottomLeft.x;
+
+        for (int i = 0; i < chunkCount; i++)
+        {
+            int originX = startX + i * 12;
+
+            BoundsInt bounds = new BoundsInt(originX, y, 0, 12, 12, 1);
+
+            TileBase[] tiles = new TileBase[12 * 12];
+            for (int dx = 0; dx < 12; dx++)
+            {
+                for (int dy = 0; dy < 12; dy++)
+                {
+                    int index = dy * 12 + dx;
+                    int reverseIndex = (12 * 12 - 1) - index;
+                    tiles[reverseIndex] = tile_gradient[dx, dy];
+                }
+            }
+
+            tilemap.SetTilesBlock(bounds, tiles);
+        }
     }
+
+
 
     void FillNewBottom(int startY, int endY, int level)
     {
