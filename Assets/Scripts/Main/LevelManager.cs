@@ -9,6 +9,7 @@ public class LevelManager : MonoBehaviour
 
     public int CurrentLevel { get; private set; } = 0;
     private float levelHeight = 20f;
+
     private Camera mainCam;
 
     public Action<int> OnLevelChanged;
@@ -51,6 +52,11 @@ public class LevelManager : MonoBehaviour
     {
         float originY = 0f;
         float camY = mainCam.transform.position.y;
-        return Mathf.Max(0, Mathf.FloorToInt( originY - camY / levelHeight));
+        return Mathf.Max(0, Mathf.FloorToInt(originY - camY / levelHeight));
+    }
+
+    public float GetTilemapTotalHeight()
+    {
+        return levelHeight * 5f + 10f;
     }
 }
