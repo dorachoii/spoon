@@ -70,7 +70,7 @@ public class LevelManager : MonoBehaviour
 
     public float GetCurrentHardness()
     {
-        return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 1.5f);
+        return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 2.2f) * 21.6f;
     }
 
 

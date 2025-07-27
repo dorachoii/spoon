@@ -142,6 +142,19 @@ public class PlayerContoller : MonoBehaviour
         int total = positionsToDig.Count;
         int current = 0;
 
+        if (positionsToDig.Count > 0)
+        {
+            float hardness = LevelManager.Instance.GetCurrentHardness(); // 또는 GetCurrentHardness()
+            float digPower = PlayerStat.Instance.DigPower;
+
+            if (digPower < hardness)
+            {
+                ChangeState(PlayerState.Jump);
+                isDigging = false;
+                yield break;
+            }
+        }
+
         while (current < total)
         {
             int count = Mathf.Min(LevelManager.Instance.GetMaxTile(), total - current);
@@ -159,7 +172,7 @@ public class PlayerContoller : MonoBehaviour
             }
 
             current += count;
-            
+
             float digSpeed = PlayerStat.Instance.DigPower;
             float waitTime = 1f / digSpeed;
             yield return new WaitForSeconds(waitTime);
