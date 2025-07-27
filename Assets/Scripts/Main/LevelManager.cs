@@ -54,8 +54,8 @@ public class LevelManager : MonoBehaviour
     int GetCameraLevel()
     {
         float originY = 0f;
-        float camY = mainCam.transform.position.y;
-        return Mathf.Max(0, Mathf.FloorToInt(originY - camY / levelHeight));
+        float bottomY = mainCam.ViewportToWorldPoint(new Vector3(0, 0, mainCam.nearClipPlane)).y;
+        return Mathf.Max(0, Mathf.FloorToInt(originY - bottomY / levelHeight));
     }
 
     public float GetTilemapTotalHeight()
@@ -72,4 +72,6 @@ public class LevelManager : MonoBehaviour
     {
         return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 1.5f);
     }
+
+
 }

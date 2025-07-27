@@ -165,8 +165,7 @@ public class TileMaker : MonoBehaviour
 
     private int loadedDottedLevel = -1;
     void StampDottedTilesInBounds(BoundsInt bounds, int maxStampCount, int level)
-    {
-        
+    {    
         int dottedLevelToLoad = 0;
 
         Debug.Log($"level = {level}");
