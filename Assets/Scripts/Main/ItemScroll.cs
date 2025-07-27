@@ -18,6 +18,7 @@ public class ItemScroll : MonoBehaviour
     {
         currentCell = tilemap.WorldToCell(transform.position);
 
+        // AutoDestroy
         if (!tilemap.HasTile(currentCell))
         {
             Destroy(gameObject);

@@ -1,67 +1,78 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class ItemSpawner : MonoBehaviour
 {
-    public Tilemap tilemap;
+    private Tilemap tilemap;
     public GameObject itemPrefab;
 
-    public Vector3Int areaBottomLeft = new Vector3Int(-10, -10, 0);
-    public Vector3Int areaTopRight = new Vector3Int(10, 10, 0);
+    private Transform player;
+    private float lastDropY;
+
+    public float dropInterval = 8f;  
 
     void Start()
     {
-        SpawnRandomItemInArea(areaBottomLeft, areaTopRight);
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        tilemap = FindObjectOfType<Tilemap>();
+
+        lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
     }
 
-    public void SpawnRandomItemInArea(Vector3Int bottomLeft, Vector3Int topRight)
+    void Update()
     {
-        List<Vector3Int> validTilePositions = new List<Vector3Int>();
+        if (player == null || tilemap == null) return;
 
-        for (int x = bottomLeft.x; x <= topRight.x; x++)
+        float expectedDropY = lastDropY - dropInterval;
+
+        if (player.position.y <= expectedDropY)
         {
-            for (int y = bottomLeft.y; y <= topRight.y; y++)
+            SpawnItemBelowScreen();
+            lastDropY = expectedDropY; 
+        }
+    }
+
+
+    void SpawnItemBelowScreen()
+    {
+        Camera cam = Camera.main;
+        float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
+
+        Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0, -0.2f, z));
+        Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1, 0f, z));
+
+        Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
+        Vector3Int max = tilemap.WorldToCell(topRightWorld);
+
+        List<Vector3Int> validTiles = new List<Vector3Int>();
+        for (int x = min.x; x <= max.x; x++)
+        {
+            for (int y = min.y; y <= max.y; y++)
             {
                 Vector3Int tilePos = new Vector3Int(x, y, 0);
                 if (tilemap.HasTile(tilePos))
                 {
-                    validTilePositions.Add(tilePos);
+                    validTiles.Add(tilePos);
                 }
             }
         }
 
-        if (validTilePositions.Count > 0)
+        if (validTiles.Count > 0)
         {
-            Vector3Int randomTile = validTilePositions[Random.Range(0, validTilePositions.Count)];
-            SpawnItemAtTile(randomTile);
+            Vector3Int spawnTile = validTiles[Random.Range(0, validTiles.Count)];
+            SpawnItemAtTile(spawnTile);
+            Debug.Log($"[ItemSpawner] Spawned item at {spawnTile}");
         }
         else
         {
-            Debug.LogWarning("No valid tile to spawn item!");
+            Debug.Log("[ItemSpawner] No valid tile found to spawn item.");
         }
     }
 
-
-    public void SpawnItemAtTile(Vector3Int tilePos)
+    void SpawnItemAtTile(Vector3Int tilePos)
     {
         Vector3 worldPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
         Instantiate(itemPrefab, worldPos, Quaternion.identity);
-    }
-
-    public void SpawnItemInArea(Vector3Int bottomLeft, Vector3Int topRight)
-    {
-        for (int x = bottomLeft.x; x <= topRight.x; x++)
-        {
-            for (int y = bottomLeft.y; y <= topRight.y; y++)
-            {
-                Vector3Int tilePos = new Vector3Int(x, y, 0);
-                if (tilemap.HasTile(tilePos))
-                {
-                    SpawnItemAtTile(tilePos);
-                }
-            }
-        }
     }
 }

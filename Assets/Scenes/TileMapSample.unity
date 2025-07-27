@@ -253,6 +253,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680a3749196114c4aa8343a923280b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  levelHeight: 20
 --- !u!4 &148671255
 Transform:
   m_ObjectHideFlags: 0
@@ -165269,7 +165270,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7d11592ca3ffe243a062f68865ff45c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilemap: {fileID: 1283537573}
   itemPrefab: {fileID: 5079261478389199776, guid: 40268b379350f5e49a47e0a757a1d203, type: 3}
 --- !u!1 &1791980947
 GameObject:
@@ -165853,7 +165853,7 @@ GameObject:
   - component: {fileID: 2030428312}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
