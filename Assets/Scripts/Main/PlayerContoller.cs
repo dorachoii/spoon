@@ -62,8 +62,8 @@ public class PlayerContoller : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
 
-        tilePositions = new Vector3Int[maxTilesPerFrame];
-        nullTiles = new TileBase[maxTilesPerFrame];
+        tilePositions = new Vector3Int[LevelManager.Instance.GetMaxTile()];
+        nullTiles = new TileBase[LevelManager.Instance.GetMaxTile()];
 
         for(int i = 0; i < nullTiles.Length; i++)
         {
@@ -98,7 +98,7 @@ public class PlayerContoller : MonoBehaviour
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
     private List<Vector3Int> positionsToDig = new List<Vector3Int>();
 
-    public int maxTilesPerFrame = 40;
+
     private Vector3Int[] tilePositions;
     private TileBase[] nullTiles;
 
@@ -142,7 +142,7 @@ public class PlayerContoller : MonoBehaviour
 
         while (current < total)
         {
-            int count = Mathf.Min(maxTilesPerFrame, total - current);
+            int count = Mathf.Min(LevelManager.Instance.GetMaxTile(), total - current);
 
             for (int i = 0; i < count; i++)
             {
@@ -157,14 +157,12 @@ public class PlayerContoller : MonoBehaviour
             }
 
             current += count;
-            yield return null;
+            
+            float digSpeed = PlayerStat.Instance.DigPower;
+            float waitTime = 1f / digSpeed;
+            yield return new WaitForSeconds(waitTime);
         }
         isDigging = false;
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        Debug.Log("지금 부딪힌 층의 이름" + collision.collider.gameObject.name);    
     }
 
 

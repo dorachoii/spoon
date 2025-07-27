@@ -8,12 +8,15 @@ public class LevelManager : MonoBehaviour
     public static LevelManager Instance { get; private set; }
 
     public int CurrentLevel { get; private set; } = 0;
-    private float levelHeight = 20f;
+    public float CurrentLevelHardness { get; private set; } = 1f;
+    private float levelHeight = 10f;
 
     private Camera mainCam;
 
     public Action<int> OnLevelChanged;
     private int lastLevel = 0;
+
+    private int maxTilesPerFrame = 40;
 
     void Awake()
     {
@@ -58,5 +61,15 @@ public class LevelManager : MonoBehaviour
     public float GetTilemapTotalHeight()
     {
         return levelHeight * 5f + 10f;
+    }
+
+    public int GetMaxTile()
+    {
+        return maxTilesPerFrame;
+    }
+
+    public float GetCurrentHardness()
+    {
+        return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 1.5f);
     }
 }
