@@ -96,7 +96,7 @@ public class TileMaker : MonoBehaviour
 
     void FillGradientLine(int y, int level)
     {
-        if (loadGradientLevel != level)
+        if (loadGradientLevel != level && level >= 0)
         {
             tile_gradient = LoadTiles(TileType.Gradient.ToString(), level.ToString(), 12);
             loadGradientLevel = level;
