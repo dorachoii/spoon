@@ -9,7 +9,7 @@ public class LevelManager : MonoBehaviour
 
     public int CurrentLevel { get; private set; } = 0;
     public float CurrentLevelHardness { get; private set; } = 1f;
-    private float levelHeight = 10f;
+    private float levelHeight = 20f;
 
     private Camera mainCam;
 

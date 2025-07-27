@@ -19,7 +19,7 @@ public class PlayerContoller : MonoBehaviour
 
     [SerializeField]
     private float speed;
-    private float jumpForce = 0.0005f;
+    private float jumpForce;
 
     [SerializeField]
     private float verticalThreshold = 0.2f;
@@ -44,8 +44,8 @@ public class PlayerContoller : MonoBehaviour
                 break;
             case PlayerState.Jump:
                 animator.SetTrigger("JumpTrigger");
-                // rb.velocity = new Vector2(rb.velocity.x, 0); 
-                // rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                rb.velocity = new Vector2(rb.velocity.x, 0); 
+                rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 break;
             case PlayerState.Dig:
                 animator.SetBool("IsDigging", true);
@@ -65,17 +65,16 @@ public class PlayerContoller : MonoBehaviour
         tilePositions = new Vector3Int[LevelManager.Instance.GetMaxTile()];
         nullTiles = new TileBase[LevelManager.Instance.GetMaxTile()];
 
-        for(int i = 0; i < nullTiles.Length; i++)
+        for (int i = 0; i < nullTiles.Length; i++)
         {
             nullTiles[i] = null;
         }
+        jumpForce = PlayerStat.Instance.JumpForce;
     }
 
     public void FixedUpdate()
     {
         Vector3 direction = Vector3.up * floatingJoystick.Vertical + Vector3.right * floatingJoystick.Horizontal;
-        rb.AddForce(direction * speed * Time.fixedDeltaTime, ForceMode2D.Force);
-
         float verticalInput = floatingJoystick.Vertical;
 
         if (verticalInput > verticalThreshold)
@@ -85,6 +84,7 @@ public class PlayerContoller : MonoBehaviour
         }
         else if (verticalInput < -verticalThreshold)
         {
+            rb.AddForce(direction * speed * Time.fixedDeltaTime, ForceMode2D.Force);
             Debug.Log("Moving Down");
             ChangeState(PlayerState.Dig);
             StartDig();
@@ -93,6 +93,8 @@ public class PlayerContoller : MonoBehaviour
         {
             ChangeState(PlayerState.Idle);
         }
+
+        
     }
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();

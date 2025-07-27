@@ -80,13 +80,14 @@ public class TileMaker : MonoBehaviour
         // 내려갔을 때 (더 아래로 이동)
         if (currentBottomLeft.y < lastBottomLeftCell.y)
         {
-
             FillNewBottom(currentBottomLeft.y, lastBottomLeftCell.y - 1, currentLevel);
 
             int clearStartY = Mathf.Min(lastTopRightCell.y + 1, currentTopRight.y + 1);
             int clearEndY = Mathf.Max(lastTopRightCell.y, currentTopRight.y);
+          
+            int tileBuffer = 30;
 
-            ClearTopRows(clearStartY, clearEndY);
+            ClearTopRows(clearStartY + tileBuffer, clearEndY + tileBuffer);
 
             lastBottomLeftCell = currentBottomLeft;
             lastTopRightCell = currentTopRight;
@@ -165,12 +166,13 @@ public class TileMaker : MonoBehaviour
 
     private int loadedDottedLevel = -1;
     void StampDottedTilesInBounds(BoundsInt bounds, int maxStampCount, int level)
-    {    
+    {
         int dottedLevelToLoad = 0;
 
         Debug.Log($"level = {level}");
 
-        switch (level) {
+        switch (level)
+        {
             case 0:
                 dottedLevelToLoad = 0;
                 break;
@@ -183,7 +185,7 @@ public class TileMaker : MonoBehaviour
             default:
                 return;
         }
-        
+
         Debug.Log($"level = {level}, dottedLevel = {dottedLevelToLoad}");
 
         if (loadedDottedLevel != dottedLevelToLoad)

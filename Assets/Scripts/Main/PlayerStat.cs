@@ -6,6 +6,7 @@ public class PlayerStat : MonoBehaviour
 {
     public static PlayerStat Instance { get; private set; }
     private float baseDigPower = 100f;
+    private float jumpForce = 0.0005f;
 
     private void Awake()
     {
@@ -26,5 +27,10 @@ public class PlayerStat : MonoBehaviour
             float hardness = LevelManager.Instance.GetCurrentHardness();
             return baseDigPower / Mathf.Max(1f, hardness);
         }
+    }
+
+    public float JumpForce
+    {
+        get { return jumpForce; }
     }
 }
