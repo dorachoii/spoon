@@ -8,33 +8,30 @@ public class PlayerStatUI : MonoBehaviour
     public Slider powerSlider;
     public Slider HPSlider;
 
-    private PlayerStat playerStat;
 
     // Start is called before the first frame update
     void Start()
     {
-        playerStat = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStat>();
-        HPSlider.maxValue = playerStat.MaxHP;
-        powerSlider.maxValue = playerStat.DigPower;
+        HPSlider.maxValue = PlayerStat.Instance.MaxHP;
+        powerSlider.maxValue = 300f;
 
-        UpdateHPUI(playerStat.CurrentHP);
-        UpdateDigUI(playerStat.DigPower);
+        UpdateHPUI(PlayerStat.Instance.CurrentHP);
+        UpdateDigUI(PlayerStat.Instance.DigPower);
+
+        PlayerStat.Instance.OnHPChanged += UpdateHPUI;
+        PlayerStat.Instance.OnDigPowerChanged += UpdateDigUI;
     }
 
-    void OnEnable()
-{
-    PlayerStat.Instance.OnHPChanged += UpdateHPUI;
-    PlayerStat.Instance.OnDigPowerChanged += UpdateDigUI;
-}
 
-void OnDisable()
-{
-    PlayerStat.Instance.OnHPChanged -= UpdateHPUI;
-    PlayerStat.Instance.OnDigPowerChanged -= UpdateDigUI;
-}
+    void OnDisable()
+    {
+        PlayerStat.Instance.OnHPChanged -= UpdateHPUI;
+        PlayerStat.Instance.OnDigPowerChanged -= UpdateDigUI;
+    }
 
     private void UpdateDigUI(float digPower)
     {
+        Debug.Log($"Updating dig power UI: {digPower}");
         powerSlider.value = digPower;
     }
 

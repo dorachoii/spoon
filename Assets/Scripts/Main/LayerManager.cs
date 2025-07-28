@@ -45,7 +45,7 @@ public class LayerManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        int newLayer = GetPlayerGroundLevel();
+        int newLayer = GetCurrentLayer();
 
         if (newLayer != lastLayer)
         {
@@ -67,15 +67,16 @@ public class LayerManager : MonoBehaviour
     }
 
 
-    int GetPlayerGroundLevel()
+    int GetCurrentLayer()
     {
         float originY = 0f;
-        Vector3 centerWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, mainCam.nearClipPlane));
-        Vector3Int centerCell = FindObjectOfType<Tilemap>().WorldToCell(centerWorldPos);
+        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0, mainCam.nearClipPlane));
+        Vector3Int bottomCenterCell = tilemap.WorldToCell(bottomCenterWorldPos);
 
-        int level = Mathf.FloorToInt((originY - tilemap.CellToWorld(centerCell).y) / layerHeight);
-        return Mathf.Max(0, level);
+        int layer = Mathf.FloorToInt((originY - tilemap.CellToWorld(bottomCenterCell).y) / layerHeight);
+        return Mathf.Max(0, layer);
     }
+
 
     public float GetTilemapTotalHeight()
     {
@@ -89,8 +90,9 @@ public class LayerManager : MonoBehaviour
 
     public float GetCurrentHardness()
     {
-        //return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 2.2f) * 21.6f;
-        return CurrentLayerHardness = 1f + Mathf.Pow(CurrentLayer, 2.2f) * 1f;
+        int layer = Mathf.Max(0, CurrentLayer);
+        return CurrentLayerHardness = 40f + Mathf.Pow(layer, 1.5f) * 20f;
+
     }
 
 

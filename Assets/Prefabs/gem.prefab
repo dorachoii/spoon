@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2318490044437783167}
   - component: {fileID: 2594190919382277132}
   - component: {fileID: 5046392621063751741}
+  - component: {fileID: 6217188572605385172}
   m_Layer: 0
   m_Name: gem
   m_TagString: Untagged
@@ -142,3 +143,17 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.075
+--- !u!114 &6217188572605385172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5079261478389199776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76ab3478ca0398848b520b4e71808f95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHeight: 30
+  powerIncrease: 10

@@ -7,6 +7,8 @@ public class PlayerStat : MonoBehaviour
 {
     public static PlayerStat Instance { get; private set; }
     private float baseDigPower = 100f;
+    private float digPowerBonus = 0f;
+
     private float jumpForce = 0.0005f;
 
     private float maxHP = 100f;
@@ -28,17 +30,32 @@ public class PlayerStat : MonoBehaviour
         currentHP = maxHP;
     }
 
-    public float DigPower
-    {
-        get
-        {
-            float hardness = LayerManager.Instance.GetCurrentHardness();
-            return baseDigPower / Mathf.Max(1f, hardness);
-        }
-    }
+    public float DigPower => baseDigPower + digPowerBonus;
 
     public float JumpForce => jumpForce;
     public float MaxHP => maxHP;
     public float CurrentHP => currentHP;
 
+    public float CalculateDigSpeed()
+    {
+        float hardness = LayerManager.Instance.GetCurrentHardness();
+        return (DigPower / Mathf.Max(1f, hardness)) * 5f;
+    }
+
+
+
+    public float GetDigDelay()
+    {
+        return 1f / CalculateDigSpeed(); // 더 이상 10f 안 곱함
+    }
+
+
+    public void AddDigPowerBonus(float bonus)
+    {
+        digPowerBonus += bonus;
+        OnDigPowerChanged?.Invoke(DigPower);
+
+    }
 }
+
+

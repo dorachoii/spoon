@@ -79,13 +79,11 @@ public class PlayerContoller : MonoBehaviour
 
         if (verticalInput > verticalThreshold)
         {
-            Debug.Log("Moving Up");
             ChangeState(PlayerState.Jump);
         }
         else if (verticalInput < -verticalThreshold)
         {
             rb.AddForce(direction * speed * Time.fixedDeltaTime, ForceMode2D.Force);
-            Debug.Log("Moving Down");
             ChangeState(PlayerState.Dig);
             StartDig();
         }
@@ -173,13 +171,10 @@ public class PlayerContoller : MonoBehaviour
 
             current += count;
 
-            float digSpeed = PlayerStat.Instance.DigPower;
-            float waitTime = 1f / digSpeed;
-            yield return new WaitForSeconds(waitTime);
+            yield return new WaitForSeconds(PlayerStat.Instance.GetDigDelay());
         }
         isDigging = false;
     }
-
 
     private void OnDrawGizmosSelected()
     {
