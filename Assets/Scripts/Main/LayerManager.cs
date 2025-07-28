@@ -4,18 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class LevelManager : MonoBehaviour
+public class LayerManager : MonoBehaviour
 {
-    public static LevelManager Instance { get; private set; }
+    public static LayerManager Instance { get; private set; }
 
-    public int CurrentLevel { get; private set; } = 0;
-    public float CurrentLevelHardness { get; private set; } = 1f;
-    public float levelHeight = 20f;
+    public int CurrentLayer { get; private set; } = 0;
+    public float CurrentLayerHardness { get; private set; } = 1f;
+    public float layerHeight = 20f;
 
     private Camera mainCam;
 
-    public Action<int> OnLevelChanged;
-    private int lastLevel = 0;
+    public Action<int> OnLayerChanged;
+    private int lastLayer = 0;
 
     private int maxTilesPerFrame = 40;
 
@@ -45,25 +45,25 @@ public class LevelManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        int newLevel = GetPlayerGroundLevel();
+        int newLayer = GetPlayerGroundLevel();
 
-        if (newLevel != lastLevel)
+        if (newLayer != lastLayer)
         {
-            CurrentLevel = newLevel;
-            lastLevel = newLevel;
+            CurrentLayer = newLayer;
+            lastLayer = newLayer;
 
-            OnLevelChanged?.Invoke(CurrentLevel);
+            OnLayerChanged?.Invoke(CurrentLayer);
         }
     }
 
-    public float GetLevelStartY(int level)
+    public float GetLevelStartY(int layer)
     {
-        return -level * levelHeight;
+        return -layer * layerHeight;
     }
 
-    public float GetLevelEndY(int level)
+    public float GetLevelEndY(int layer)
     {
-        return -(level + 1) * levelHeight;
+        return -(layer + 1) * layerHeight;
     }
 
 
@@ -73,13 +73,13 @@ public class LevelManager : MonoBehaviour
         Vector3 centerWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, mainCam.nearClipPlane));
         Vector3Int centerCell = FindObjectOfType<Tilemap>().WorldToCell(centerWorldPos);
 
-        int level = Mathf.FloorToInt((originY - tilemap.CellToWorld(centerCell).y) / levelHeight);
+        int level = Mathf.FloorToInt((originY - tilemap.CellToWorld(centerCell).y) / layerHeight);
         return Mathf.Max(0, level);
     }
 
     public float GetTilemapTotalHeight()
     {
-        return levelHeight * 5f + 10f;
+        return layerHeight * 5f + 10f;
     }
 
     public int GetMaxTile()
@@ -90,7 +90,7 @@ public class LevelManager : MonoBehaviour
     public float GetCurrentHardness()
     {
         //return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 2.2f) * 21.6f;
-        return CurrentLevelHardness = 1f + Mathf.Pow(CurrentLevel, 2.2f) * 1f;
+        return CurrentLayerHardness = 1f + Mathf.Pow(CurrentLayer, 2.2f) * 1f;
     }
 
 

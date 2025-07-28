@@ -62,8 +62,8 @@ public class PlayerContoller : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
 
-        tilePositions = new Vector3Int[LevelManager.Instance.GetMaxTile()];
-        nullTiles = new TileBase[LevelManager.Instance.GetMaxTile()];
+        tilePositions = new Vector3Int[LayerManager.Instance.GetMaxTile()];
+        nullTiles = new TileBase[LayerManager.Instance.GetMaxTile()];
 
         for (int i = 0; i < nullTiles.Length; i++)
         {
@@ -144,7 +144,7 @@ public class PlayerContoller : MonoBehaviour
 
         if (positionsToDig.Count > 0)
         {
-            float hardness = LevelManager.Instance.GetCurrentHardness(); // 또는 GetCurrentHardness()
+            float hardness = LayerManager.Instance.GetCurrentHardness(); // 또는 GetCurrentHardness()
             float digPower = PlayerStat.Instance.DigPower;
 
             if (digPower < hardness)
@@ -157,7 +157,7 @@ public class PlayerContoller : MonoBehaviour
 
         while (current < total)
         {
-            int count = Mathf.Min(LevelManager.Instance.GetMaxTile(), total - current);
+            int count = Mathf.Min(LayerManager.Instance.GetMaxTile(), total - current);
 
             for (int i = 0; i < count; i++)
             {

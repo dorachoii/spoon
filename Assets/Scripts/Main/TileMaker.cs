@@ -27,17 +27,17 @@ public class TileMaker : MonoBehaviour
 
     void OnEnable()
     {
-        if (LevelManager.Instance != null)
+        if (LayerManager.Instance != null)
         {
-            LevelManager.Instance.OnLevelChanged += HandleLevelChanged;
+            LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
         }
     }
 
     void OnDisable()
     {
-        if (LevelManager.Instance != null)
+        if (LayerManager.Instance != null)
         {
-            LevelManager.Instance.OnLevelChanged -= HandleLevelChanged;
+            LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
         }
     }
 
@@ -59,6 +59,9 @@ public class TileMaker : MonoBehaviour
 
         // viewport point -> world point -> cell point
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+
+
+        
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
         tile_dotted = LoadTiles(TileType.Dotted.ToString(), "0", 9);

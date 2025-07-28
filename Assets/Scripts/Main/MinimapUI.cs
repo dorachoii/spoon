@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MinimapIndicator : MonoBehaviour
+public class MinimapUI : MonoBehaviour
 {
     public RectTransform minimapBar;
     public RectTransform character;
@@ -17,7 +17,7 @@ public class MinimapIndicator : MonoBehaviour
     void Start()
     {
         mainCam = Camera.main;
-        totalHeight = LevelManager.Instance.GetTilemapTotalHeight();
+        totalHeight = LayerManager.Instance.GetTilemapTotalHeight();
         viewHeightInWorld = mainCam.orthographicSize * 2f;
 
         startY = mainCam.transform.position.y;

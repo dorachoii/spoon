@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 public class ItemSpawner : MonoBehaviour
 {
     private Tilemap tilemap;
-    public GameObject itemPrefab;
+    public GameObject[] itemPrefab;
 
     private Transform player;
     private float lastDropY;
@@ -73,6 +73,6 @@ public class ItemSpawner : MonoBehaviour
     void SpawnItemAtTile(Vector3Int tilePos)
     {
         Vector3 worldPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
-        Instantiate(itemPrefab, worldPos, Quaternion.identity);
+        Instantiate(itemPrefab[Random.Range(0,itemPrefab.Length)], worldPos, Quaternion.identity);
     }
 }
