@@ -14,8 +14,12 @@ public class PlayerStat : MonoBehaviour
     private float maxHP = 100f;
     private float currentHP;
 
+    private float maxStamina = 100f;
+    private float currentStamina;
+
     public event Action<float> OnDigPowerChanged;
     public event Action<float> OnHPChanged;
+    public event Action<float> OnStaminaChanged;
 
     private void Awake()
     {
@@ -28,6 +32,7 @@ public class PlayerStat : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         currentHP = maxHP;
+        currentStamina = maxStamina;
     }
 
     public float DigPower => baseDigPower + digPowerBonus;
@@ -36,13 +41,14 @@ public class PlayerStat : MonoBehaviour
     public float MaxHP => maxHP;
     public float CurrentHP => currentHP;
 
+    public float MaxStamina => maxStamina;
+    public float CurrentStamina => currentStamina;
+
     public float CalculateDigSpeed()
     {
         float hardness = LayerManager.Instance.GetCurrentHardness();
         return (DigPower / Mathf.Max(1f, hardness)) * 5f;
     }
-
-
 
     public float GetDigDelay()
     {
@@ -55,6 +61,29 @@ public class PlayerStat : MonoBehaviour
         digPowerBonus += bonus;
         OnDigPowerChanged?.Invoke(DigPower);
 
+    }
+
+    public void TakeDamage(float damage)
+    {
+        currentHP -= damage;
+        if (currentHP < 0)
+        {
+            currentHP = 0;
+            // 사망 처리
+        }
+        OnHPChanged?.Invoke(currentHP);
+    }
+
+    public void ConsumeStamina(float amount)
+    {
+        currentStamina = Mathf.Max(0, currentStamina - amount);
+        OnStaminaChanged?.Invoke(currentStamina);
+    }
+    
+    public void RecoverStamina(float amount)
+    {
+        currentStamina = Mathf.Min(maxStamina, currentStamina + amount);
+        OnStaminaChanged?.Invoke(currentStamina);
     }
 }
 

@@ -5,14 +5,18 @@ using System.Collections.Generic;
 
 public class BombItem : ItemBase
 {
-    private int explosionRadius = 30;  
+    private int explosionRadius = 30;
+    private float explisionForce = 0.001f;
+    private float damageRadius = 15f;
+    private float damageAmount = 20f;
 
     protected override void ApplyEffect(GameObject player)
     {
-        Explode();
+        ExplodeTiles();
+        Damage(player);
     }
 
-    void Explode()
+    void ExplodeTiles()
     {
         Vector3Int centerCell = tilemap.WorldToCell(transform.position);
 
@@ -35,5 +39,29 @@ public class BombItem : ItemBase
         TileBase[] emptyTiles = new TileBase[positions.Length];
 
         tilemap.SetTiles(positions, emptyTiles);
+    }
+
+    void Damage(GameObject player)
+    {
+        if (player == null) return;
+
+        Vector2 playerPos = player.transform.position;
+        float dist = Vector2.Distance(playerPos, transform.position);
+
+        if (dist <= damageRadius)
+        {
+            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                Vector2 direction = (playerPos - (Vector2)transform.position).normalized;
+                rb.AddForce(direction * explisionForce, ForceMode2D.Impulse);
+            }
+        }
+        
+        PlayerStat playerStat = player.GetComponent<PlayerStat>();
+        if (playerStat != null)
+        {
+            playerStat.TakeDamage(damageAmount);
+        }
     }
 }
