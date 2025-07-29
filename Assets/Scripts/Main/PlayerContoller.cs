@@ -35,6 +35,8 @@ public class PlayerContoller : MonoBehaviour
 
     private bool isStateLocked = false;
 
+    private float screenPadding = 1f;
+
     public void ChangeState(PlayerState newState)
     {
         if (currentState == newState || isStateLocked) return;
@@ -55,6 +57,7 @@ public class PlayerContoller : MonoBehaviour
                 animator.SetBool("IsDigging", true);
                 break;
             case PlayerState.Damaged:
+                animator.SetBool("IsDigging", false);
                 StartCoroutine(IDamageFlicker());
                 break;
         }
@@ -78,16 +81,22 @@ public class PlayerContoller : MonoBehaviour
     }
 
     private void Start()
-{
-    if (PlayerStat.Instance != null)
-        PlayerStat.Instance.OnDamaged += HandleDamaged;
-}
+    {
+        if (PlayerStat.Instance != null)
+            PlayerStat.Instance.OnDamaged += HandleDamaged;
+    }
 
-private void OnDestroy()
-{
-    if (PlayerStat.Instance != null)
-        PlayerStat.Instance.OnDamaged -= HandleDamaged;
-}
+    private void LateUpdate()
+    {
+        ClampPositionToCameraView();
+    }
+
+
+    private void OnDestroy()
+    {
+        if (PlayerStat.Instance != null)
+            PlayerStat.Instance.OnDamaged -= HandleDamaged;
+    }
 
     private void HandleDamaged()
     {
@@ -257,4 +266,23 @@ private void OnDestroy()
         ChangeState(PlayerState.Idle);
     }
 
+    private void ClampPositionToCameraView()
+    {
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        // Viewport (0,0) ~ (1,1) 은 카메라의 좌하단 ~ 우상단
+        Vector3 min = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
+        Vector3 max = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
+
+        float minX = min.x + screenPadding;
+        float maxX = max.x - screenPadding;
+        float minY = min.y + screenPadding;
+        float maxY = max.y - screenPadding;
+
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        transform.position = pos;
+    }
 }
