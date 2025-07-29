@@ -6,11 +6,12 @@ public class ItemSpawner : MonoBehaviour
 {
     private Tilemap tilemap;
     public GameObject[] itemPrefab;
+    public GameObject[] enemyPrefab;
 
     private Transform player;
     private float lastDropY;
 
-    public float dropInterval = 8f;  
+    public float dropInterval = 8f;
 
     void Start()
     {
@@ -29,7 +30,7 @@ public class ItemSpawner : MonoBehaviour
         if (player.position.y <= expectedDropY)
         {
             SpawnItemBelowScreen();
-            lastDropY = expectedDropY; 
+            lastDropY = expectedDropY;
         }
     }
 
@@ -73,6 +74,20 @@ public class ItemSpawner : MonoBehaviour
     void SpawnItemAtTile(Vector3Int tilePos)
     {
         Vector3 worldPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
-        Instantiate(itemPrefab[Random.Range(0,itemPrefab.Length)], worldPos, Quaternion.identity);
+
+        int spawnRoll = Random.Range(0, 4); // 0~3 중 하나
+
+        if (spawnRoll == 0 && enemyPrefab.Length > 0)
+        {
+            // 적 25% 확률 (4번 중 1번)
+            Instantiate(enemyPrefab[Random.Range(0, enemyPrefab.Length)], worldPos, Quaternion.identity);
+        }
+        else if (itemPrefab.Length > 0)
+        {
+            // 나머지 75%는 아이템
+            Instantiate(itemPrefab[Random.Range(0, itemPrefab.Length)], worldPos, Quaternion.identity);
+        }
     }
+
+
 }
