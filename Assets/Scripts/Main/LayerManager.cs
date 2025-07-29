@@ -91,7 +91,7 @@ public class LayerManager : MonoBehaviour
     public float GetCurrentHardness()
     {
         int layer = Mathf.Max(0, CurrentLayer);
-        return CurrentLayerHardness = 40f + Mathf.Pow(layer, 1.5f) * 20f;
+        return CurrentLayerHardness = 40f + (layer * Mathf.Sqrt(layer)) * 20f;
 
     }
 
