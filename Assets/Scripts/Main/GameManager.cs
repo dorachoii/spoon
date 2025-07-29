@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -37,8 +38,19 @@ public struct Vector3IntSerializable
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get; private set; }
     public Tilemap tilemap;
     public PlayerContoller playerController;
+    public static event Action OnGameLoaded;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
 
     void Update()
     {
@@ -122,6 +134,7 @@ public class GameManager : MonoBehaviour
             }
 
             playerController.LoadRemovedTiles(saveData.removedTilePositions);
+            OnGameLoaded?.Invoke();
         }
         else
         {

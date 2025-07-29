@@ -16,6 +16,7 @@ public class TileMaker : MonoBehaviour
 
     private Vector3Int lastBottomLeftCell;
     private Vector3Int lastTopRightCell;
+    int tileBuffer = 30;
 
     private Camera mainCamera;
     int currentLevel = 0;
@@ -25,12 +26,15 @@ public class TileMaker : MonoBehaviour
     private int lastLevel = -1;
     private int loadGradientLevel = -1;
 
+
     void OnEnable()
     {
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
         }
+        
+        GameManager.OnGameLoaded += LoadTile;
     }
 
     void OnDisable()
@@ -39,6 +43,15 @@ public class TileMaker : MonoBehaviour
         {
             LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
         }
+
+        GameManager.OnGameLoaded -= LoadTile;
+    }
+
+    void LoadTile()
+    {
+        Debug.Log("[타일생성] LoadTile");
+        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1,1,mainCamera.nearClipPlane)));
+        lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
     }
 
     void HandleLevelChanged(int newLevel)
@@ -59,8 +72,6 @@ public class TileMaker : MonoBehaviour
 
         // viewport point -> world point -> cell point
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-
-
         
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
@@ -80,17 +91,16 @@ public class TileMaker : MonoBehaviour
     {
         Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
         Vector3Int currentTopRight = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
-
+        Debug.Log($"[타일생성] 현재 아래{currentBottomLeft.y}, 현재 위{currentTopRight.y}");
+        Debug.Log($"[타일생성] 과거 아래{lastBottomLeftCell.y}, 과거 위{lastTopRightCell.y}");
+        
         // 내려갔을 때 (더 아래로 이동)
-        if (currentBottomLeft.y < lastBottomLeftCell.y)
+        if (currentBottomLeft.y <= lastBottomLeftCell.y)
         {
-            int tileBuffer = 30;
             FillNewBottom(currentBottomLeft.y - tileBuffer, lastBottomLeftCell.y - 1, currentLevel);
 
             int clearStartY = Mathf.Min(lastTopRightCell.y + 1, currentTopRight.y + 1);
             int clearEndY = Mathf.Max(lastTopRightCell.y, currentTopRight.y);
-          
-            
 
             ClearTopRows(clearStartY + tileBuffer, clearEndY + tileBuffer);
 
@@ -100,9 +110,7 @@ public class TileMaker : MonoBehaviour
     }
 
     void FillGradientLine(int y, int level)
-    {
-        Debug.Log($"FillGradientLine: y = {y}, level = {level}");
-       
+    {       
         if (loadGradientLevel != level && level >= 0)
         {
             tile_gradient = LoadTiles(TileType.Gradient.ToString(), level.ToString(), 12);
