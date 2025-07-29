@@ -73,27 +73,40 @@ public class PlayerContoller : MonoBehaviour
     }
 
     public void FixedUpdate()
+{
+    Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
+
+    if (inputDirection.magnitude < 0.1f)
     {
-        Vector3 direction = Vector3.up * floatingJoystick.Vertical + Vector3.right * floatingJoystick.Horizontal;
-        float verticalInput = floatingJoystick.Vertical;
-
-        if (verticalInput > verticalThreshold)
-        {
-            ChangeState(PlayerState.Jump);
-        }
-        else if (verticalInput < -verticalThreshold)
-        {
-            rb.AddForce(direction * speed * Time.fixedDeltaTime, ForceMode2D.Force);
-            ChangeState(PlayerState.Dig);
-            StartDig();
-        }
-        else
-        {
-            ChangeState(PlayerState.Idle);
-        }
-
-
+        ChangeState(PlayerState.Idle);
+        return;
     }
+
+    float angle = Vector2.Angle(Vector2.up, inputDirection); 
+
+    bool isLeft = inputDirection.x < 0;
+
+    float signedAngle = isLeft ? 360f - angle : angle;
+
+    if (signedAngle >= 90f && signedAngle <= 270f)
+    {
+        // 아래 방향 → Dig
+        ChangeState(PlayerState.Dig);
+        rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
+        StartDig();
+    }
+    else if ((signedAngle >= 60f && signedAngle <= 120f))
+    {
+        // 좌우 부채꼴 → Idle
+        ChangeState(PlayerState.Idle);
+    }
+    else
+    {
+        // 나머지 위쪽 → Jump
+        ChangeState(PlayerState.Jump);
+    }
+}
+
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
     private List<Vector3Int> positionsToDig = new List<Vector3Int>();
