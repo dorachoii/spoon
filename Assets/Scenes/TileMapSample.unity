@@ -166080,8 +166080,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   floatingJoystick: {fileID: 1165751085}
-  targetTilemaps:
-  - {fileID: 1283537573}
+  tilemap: {fileID: 1283537573}
   speed: 0.1
   verticalThreshold: 0.2
   brushRadius: 14
