@@ -5,11 +5,13 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+
 [System.Serializable]
 public class SaveData
 {
     public Vector3 playerPosition;
     public List<TileData> tilemapData;
+    public List<Vector3IntSerializable> removedTilePositions = new List<Vector3IntSerializable>();
 }
 
 [System.Serializable]
@@ -19,12 +21,28 @@ public class TileData
     public string tileName;
 }
 
+[System.Serializable]
+public struct Vector3IntSerializable
+{
+    public int x, y, z;
+    public Vector3IntSerializable(Vector3Int v)
+    {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+    }
+
+    public Vector3Int ToVector3Int() => new Vector3Int(x, y, z);
+}
+
 public class GameManager : MonoBehaviour
 {
     public Tilemap tilemap;
+    public PlayerContoller playerController;
+
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             LoadGame();
         }
@@ -32,7 +50,7 @@ public class GameManager : MonoBehaviour
     public void SaveGame()
     {
         SaveData saveData = new SaveData();
-        saveData.playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position;
+        saveData.playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position + Vector3.up;
 
         BoundsInt bounds = tilemap.cellBounds;
 
@@ -59,75 +77,57 @@ public class GameManager : MonoBehaviour
 
         saveData.tilemapData = tileList;
 
+        saveData.removedTilePositions = new List<Vector3IntSerializable>();
+        foreach (var pos in playerController.GetRemovedTiles())
+        {
+            saveData.removedTilePositions.Add(new Vector3IntSerializable(pos));
+        }
+
+
         string json = JsonUtility.ToJson(saveData, true);
         File.WriteAllText(Path.Combine(Application.persistentDataPath, "savefile.json"), json);
     }
 
-  public void LoadGame()
-{
-    string path = Path.Combine(Application.persistentDataPath, "savefile.json");
-    if (File.Exists(path))
+    public void LoadGame()
     {
-        string json = File.ReadAllText(path);
-        SaveData saveData = JsonUtility.FromJson<SaveData>(json);
-
-        if (saveData.tilemapData == null)
+        string path = Path.Combine(Application.persistentDataPath, "savefile.json");
+        if (File.Exists(path))
         {
-            Debug.LogError("[SaveLoad] saveData.tilemapData가 null입니다!");
-            return;
-        }
+            string json = File.ReadAllText(path);
+            SaveData saveData = JsonUtility.FromJson<SaveData>(json);
 
-        Debug.Log("[SaveLoad] 타일맵 데이터 개수: " + saveData.tilemapData.Count);
+            if (saveData.tilemapData == null) return;
 
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
-        {
-            player.transform.position = saveData.playerPosition;
-            Debug.Log("[SaveLoad] Player 위치 복원 완료");
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                player.transform.position = saveData.playerPosition;
+            }
+
+            if (tilemap == null) return;
+
+            tilemap.ClearAllTiles();
+
+            foreach (TileData tileData in saveData.tilemapData)
+            {
+                if (tileData == null) continue;
+
+                Vector3Int position = new Vector3Int(tileData.x, tileData.y, 0);
+
+                Tile tile = Resources.Load<Tile>("Tilemap/" + tileData.tileName);
+                if (tile != null)
+                {
+                    tilemap.SetTile(position, tile);
+                }
+            }
+
+            playerController.LoadRemovedTiles(saveData.removedTilePositions);
         }
         else
         {
-            Debug.LogError("[SaveLoad] Player 오브젝트를 찾을 수 없습니다.");
-        }
-
-        if (tilemap == null)
-        {
-            Debug.LogError("[SaveLoad] Tilemap이 null입니다!");
-            return;
-        }
-        Debug.Log("[SaveLoad] Tilemap 준비 완료");
-
-        tilemap.ClearAllTiles();
-        Debug.Log("[SaveLoad] 타일맵 클리어 완료");
-
-        foreach (TileData tileData in saveData.tilemapData)
-        {
-            if (tileData == null)
-            {
-                Debug.LogWarning("[SaveLoad] tileData가 null입니다! 무시합니다.");
-                continue;
-            }
-
-            Vector3Int position = new Vector3Int(tileData.x, tileData.y, 0);
-            Debug.Log($"[SaveLoad] 타일 로드 시도: {tileData.tileName} 위치: {position}");
-
-            Tile tile = Resources.Load<Tile>("Tilemap/" + tileData.tileName);
-            if (tile != null)
-            {
-                tilemap.SetTile(position, tile);
-                Debug.Log("[SaveLoad] 타일 세팅 성공: " + tileData.tileName);
-            }
-            else
-            {
-                Debug.LogWarning("[SaveLoad] 타일 로드 실패: " + tileData.tileName);
-            }
+            Debug.LogError("[SaveLoad] Save file not found!");
         }
     }
-    else
-    {
-        Debug.LogError("[SaveLoad] Save file not found!");
-    }
-}
 
 
 }

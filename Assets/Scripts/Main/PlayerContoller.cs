@@ -44,7 +44,7 @@ public class PlayerContoller : MonoBehaviour
                 break;
             case PlayerState.Jump:
                 animator.SetTrigger("JumpTrigger");
-                rb.velocity = new Vector2(rb.velocity.x, 0); 
+                rb.velocity = new Vector2(rb.velocity.x, 0);
                 rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 break;
             case PlayerState.Dig:
@@ -92,7 +92,7 @@ public class PlayerContoller : MonoBehaviour
             ChangeState(PlayerState.Idle);
         }
 
-        
+
     }
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
@@ -184,4 +184,15 @@ public class PlayerContoller : MonoBehaviour
 
         Gizmos.DrawWireSphere(playerPos, worldRadius);
     }
+
+    public IEnumerable<Vector3Int> GetRemovedTiles() => removedTiles;
+    public void LoadRemovedTiles(IEnumerable<Vector3IntSerializable> savedPositions)
+    {
+        removedTiles.Clear();
+        foreach (var pos in savedPositions)
+        {
+            removedTiles.Add(pos.ToVector3Int());
+        }
+    }
+
 }
