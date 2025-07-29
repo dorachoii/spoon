@@ -35,41 +35,43 @@ public class ItemSpawner : MonoBehaviour
     }
 
 
-    void SpawnItemBelowScreen()
+   void SpawnItemBelowScreen()
+{
+    Camera cam = Camera.main;
+    float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
+
+    float xPadding = 0.15f; // 좌우 10% 패딩 (원하면 더 줄이거나 늘릴 수 있음)
+
+    Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
+    Vector3 topRightWorld  = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));
+
+    Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
+    Vector3Int max = tilemap.WorldToCell(topRightWorld);
+
+    List<Vector3Int> validTiles = new List<Vector3Int>();
+    for (int x = min.x; x <= max.x; x++)
     {
-        Camera cam = Camera.main;
-        float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
-
-        Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0, -0.2f, z));
-        Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1, 0f, z));
-
-        Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
-        Vector3Int max = tilemap.WorldToCell(topRightWorld);
-
-        List<Vector3Int> validTiles = new List<Vector3Int>();
-        for (int x = min.x; x <= max.x; x++)
+        for (int y = min.y; y <= max.y; y++)
         {
-            for (int y = min.y; y <= max.y; y++)
+            Vector3Int tilePos = new Vector3Int(x, y, 0);
+            if (tilemap.HasTile(tilePos))
             {
-                Vector3Int tilePos = new Vector3Int(x, y, 0);
-                if (tilemap.HasTile(tilePos))
-                {
-                    validTiles.Add(tilePos);
-                }
+                validTiles.Add(tilePos);
             }
         }
-
-        if (validTiles.Count > 0)
-        {
-            Vector3Int spawnTile = validTiles[Random.Range(0, validTiles.Count)];
-            SpawnItemAtTile(spawnTile);
-            Debug.Log($"[ItemSpawner] Spawned item at {spawnTile}");
-        }
-        else
-        {
-            Debug.Log("[ItemSpawner] No valid tile found to spawn item.");
-        }
     }
+
+    if (validTiles.Count > 0)
+    {
+        Vector3Int spawnTile = validTiles[Random.Range(0, validTiles.Count)];
+        SpawnItemAtTile(spawnTile);
+        Debug.Log($"[ItemSpawner] Spawned item at {spawnTile}");
+    }
+    else
+    {
+        Debug.Log("[ItemSpawner] No valid tile found to spawn item.");
+    }
+}
 
     void SpawnItemAtTile(Vector3Int tilePos)
     {
