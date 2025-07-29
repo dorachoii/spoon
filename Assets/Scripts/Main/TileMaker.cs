@@ -33,7 +33,7 @@ public class TileMaker : MonoBehaviour
         {
             LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
         }
-        
+
         GameManager.OnGameLoaded += LoadTile;
     }
 
@@ -49,8 +49,9 @@ public class TileMaker : MonoBehaviour
 
     void LoadTile()
     {
-        Debug.Log("[타일생성] LoadTile");
-        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1,1,mainCamera.nearClipPlane)));
+        Debug.Log("[타일생성] LoadTile"); 
+        // load되고, 플레이어 
+        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
     }
 
@@ -72,7 +73,7 @@ public class TileMaker : MonoBehaviour
 
         // viewport point -> world point -> cell point
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-        
+
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
         tile_dotted = LoadTiles(TileType.Dotted.ToString(), "0", 9);
@@ -91,9 +92,7 @@ public class TileMaker : MonoBehaviour
     {
         Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
         Vector3Int currentTopRight = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
-        Debug.Log($"[타일생성] 현재 아래{currentBottomLeft.y}, 현재 위{currentTopRight.y}");
-        Debug.Log($"[타일생성] 과거 아래{lastBottomLeftCell.y}, 과거 위{lastTopRightCell.y}");
-        
+
         // 내려갔을 때 (더 아래로 이동)
         if (currentBottomLeft.y <= lastBottomLeftCell.y)
         {
@@ -106,11 +105,12 @@ public class TileMaker : MonoBehaviour
 
             lastBottomLeftCell = currentBottomLeft;
             lastTopRightCell = currentTopRight;
+            tilemap.CompressBounds();
         }
     }
 
     void FillGradientLine(int y, int level)
-    {       
+    {
         if (loadGradientLevel != level && level >= 0)
         {
             tile_gradient = LoadTiles(TileType.Gradient.ToString(), level.ToString(), 12);
@@ -296,4 +296,85 @@ public class TileMaker : MonoBehaviour
 
         tilemap.SetTilesBlock(bounds, tiles);
     }
+
+    // 저장용: 현재 타일맵에서 타일 데이터 리스트 얻기
+    public List<TileData> GetTileDataList()
+    {
+        List<TileData> tileList = new List<TileData>();
+        BoundsInt bounds = tilemap.cellBounds;
+
+        Debug.Log($"[Save&Load] 저장 시, Tilemap.cellBounds Y Range: {bounds.yMin} ~ {bounds.yMax - 1}"); 
+
+        for (int y = bounds.yMin; y < bounds.yMax; y++)
+        {
+            for (int x = bounds.xMin; x < bounds.xMax; x++)
+            {
+                Vector3Int pos = new Vector3Int(x, y, 0);
+                TileBase tile = tilemap.GetTile(pos);
+                if (tile != null)
+                {
+                    tileList.Add(new TileData
+                    {
+                        x = x,
+                        y = y,
+                        tileName = tile.name
+                    });
+                }
+            }
+        }
+        return tileList;
+    }
+
+    // 불러오기용: 타일맵에 타일 데이터 리스트로 복원
+    public void LoadTilemapData(List<TileData> tileDataList)
+    {
+        Debug.Log($"[Save&Load] 로드 시작: ClearAllTiles할 tilemap.cellBounds Y Range: {tilemap.cellBounds.yMin} ~ {tilemap.cellBounds.yMax - 1}");
+
+        tilemap.ClearAllTiles();
+
+        if (tileDataList == null || tileDataList.Count == 0) return;
+
+        // 1. 좌표의 최소, 최대값 구하기 (bounds 계산)
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+        int maxX = int.MinValue;
+        int maxY = int.MinValue;
+
+        foreach (var tileData in tileDataList)
+        {
+            if (tileData == null) continue;
+            if (tileData.x < minX) minX = tileData.x;
+            if (tileData.y < minY) minY = tileData.y;
+            if (tileData.x > maxX) maxX = tileData.x;
+            if (tileData.y > maxY) maxY = tileData.y;
+        }
+
+
+
+        // 3. 타일 데이터 배열 준비 및 세팅
+        int width = maxX - minX + 1;
+        int height = maxY - minY + 1;
+
+        TileBase[] tiles = new TileBase[width * height];
+        for (int i = 0; i < tiles.Length; i++)
+            tiles[i] = null;
+
+        foreach (var tileData in tileDataList)
+        {
+            if (tileData == null) continue;
+            int x = tileData.x - minX;
+            int y = tileData.y - minY;
+            int index = y * width + x;
+
+            Tile tile = Resources.Load<Tile>("Tilemap/" + tileData.tileName);
+            if (tile != null)
+                tiles[index] = tile;
+            else
+                Debug.LogWarning($"[TileMaker] Failed to load tile: {tileData.tileName}");
+        }
+
+        BoundsInt bounds = new BoundsInt(minX, minY, 0, width, height, 1);
+        tilemap.SetTilesBlock(bounds, tiles);
+    }
+
 }

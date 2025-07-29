@@ -975,6 +975,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tilemap: {fileID: 1283537573}
   playerController: {fileID: 2030428310}
+  tileMaker: {fileID: 1463149008}
 --- !u!1 &1031796823
 GameObject:
   m_ObjectHideFlags: 0

@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     public Tilemap tilemap;
     public PlayerContoller playerController;
+    public TileMaker tileMaker;
     public static event Action OnGameLoaded;
 
     void Awake()
@@ -56,7 +57,7 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            LoadGame();
+            StartCoroutine(LoadGame());
         }
     }
     public void SaveGame()
@@ -64,83 +65,51 @@ public class GameManager : MonoBehaviour
         SaveData saveData = new SaveData();
         saveData.playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position + Vector3.up;
 
-        BoundsInt bounds = tilemap.cellBounds;
-
-        List<TileData> tileList = new List<TileData>();
-
-        for (int y = bounds.yMin; y < bounds.yMax; y++)
-        {
-            for (int x = bounds.xMin; x < bounds.xMax; x++)
-            {
-                Vector3Int position = new Vector3Int(x, y, 0);
-                TileBase tile = tilemap.GetTile(position);
-                if (tile != null)
-                {
-                    TileData tileData = new TileData
-                    {
-                        x = x,
-                        y = y,
-                        tileName = tile.name
-                    };
-                    tileList.Add(tileData);
-                }
-            }
-        }
-
-        saveData.tilemapData = tileList;
-
+        saveData.tilemapData = tileMaker.GetTileDataList();
         saveData.removedTilePositions = new List<Vector3IntSerializable>();
         foreach (var pos in playerController.GetRemovedTiles())
         {
             saveData.removedTilePositions.Add(new Vector3IntSerializable(pos));
         }
 
-
         string json = JsonUtility.ToJson(saveData, true);
         File.WriteAllText(Path.Combine(Application.persistentDataPath, "savefile.json"), json);
     }
 
-    public void LoadGame()
+    public IEnumerator LoadGame()
+{
+    string path = Path.Combine(Application.persistentDataPath, "savefile.json");
+    if (!File.Exists(path))
     {
-        string path = Path.Combine(Application.persistentDataPath, "savefile.json");
-        if (File.Exists(path))
-        {
-            string json = File.ReadAllText(path);
-            SaveData saveData = JsonUtility.FromJson<SaveData>(json);
-
-            if (saveData.tilemapData == null) return;
-
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                player.transform.position = saveData.playerPosition;
-            }
-
-            if (tilemap == null) return;
-
-            tilemap.ClearAllTiles();
-
-            foreach (TileData tileData in saveData.tilemapData)
-            {
-                if (tileData == null) continue;
-
-                Vector3Int position = new Vector3Int(tileData.x, tileData.y, 0);
-
-                Tile tile = Resources.Load<Tile>("Tilemap/" + tileData.tileName);
-                if (tile != null)
-                {
-                    tilemap.SetTile(position, tile);
-                }
-            }
-
-            playerController.LoadRemovedTiles(saveData.removedTilePositions);
-            OnGameLoaded?.Invoke();
-        }
-        else
-        {
-            Debug.LogError("[SaveLoad] Save file not found!");
-        }
+        Debug.LogError("[SaveLoad] Save file not found!");
+        yield break;
     }
+
+    string json = File.ReadAllText(path);
+    SaveData saveData = JsonUtility.FromJson<SaveData>(json);
+
+    if (saveData.tilemapData == null) yield break;
+
+    GameObject player = GameObject.FindGameObjectWithTag("Player");
+    if (player != null)
+    {
+        player.transform.position = saveData.playerPosition;
+
+        Vector3 camPos = Camera.main.transform.position;
+        camPos.y = saveData.playerPosition.y; // 카메라 z 고정
+
+        Camera.main.transform.position = camPos;
+    }
+
+    // 한 프레임 기다려서 LateUpdate가 실행된 뒤에 타일맵 로드 실행
+    yield return new WaitForEndOfFrame();
+
+    tileMaker.LoadTilemapData(saveData.tilemapData);
+    playerController.LoadRemovedTiles(saveData.removedTilePositions);
+
+    OnGameLoaded?.Invoke();
+}
+
 
 
 }
