@@ -15,7 +15,7 @@ public class PlayerContoller : MonoBehaviour
 {
     public FloatingJoystick floatingJoystick;
     private Rigidbody2D rb;
-    public Tilemap[] targetTilemaps;
+    public Tilemap tilemap;
 
     [SerializeField]
     private float speed;
@@ -119,7 +119,7 @@ public class PlayerContoller : MonoBehaviour
         positionsToDig.Clear();
 
         Vector2 playerPos = transform.position + Vector3.down * 0.5f;
-        Vector3Int centerCell = targetTilemaps[0].WorldToCell(playerPos);
+        Vector3Int centerCell = tilemap.WorldToCell(playerPos);
 
         for (int y = brushRadius; y > -brushRadius; y--)
         {
@@ -129,9 +129,9 @@ public class PlayerContoller : MonoBehaviour
 
                 Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
 
-                if (!targetTilemaps[0].cellBounds.Contains(cellPos)) continue;
+                if (!tilemap.cellBounds.Contains(cellPos)) continue;
                 if (removedTiles.Contains(cellPos)) continue;
-                if (!targetTilemaps[0].HasTile(cellPos)) continue;
+                if (!tilemap.HasTile(cellPos)) continue;
 
                 positionsToDig.Add(cellPos);
             }
@@ -162,7 +162,7 @@ public class PlayerContoller : MonoBehaviour
                 tilePositions[i] = positionsToDig[current + i];
             }
 
-            targetTilemaps[0].SetTiles(tilePositions, nullTiles);
+            tilemap.SetTiles(tilePositions, nullTiles);
 
             for (int i = 0; i < count; i++)
             {
@@ -180,7 +180,7 @@ public class PlayerContoller : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Vector2 playerPos = transform.position + Vector3.down * 0.5f;
-        float worldRadius = brushRadius * (targetTilemaps != null && targetTilemaps.Length > 0 ? targetTilemaps[0].cellSize.x : 1f);
+        float worldRadius = brushRadius * (tilemap != null ? tilemap.cellSize.x : 1f);
 
         Gizmos.DrawWireSphere(playerPos, worldRadius);
     }
