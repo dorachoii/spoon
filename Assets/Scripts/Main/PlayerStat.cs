@@ -19,6 +19,7 @@ public class PlayerStat : MonoBehaviour
 
     public event Action<float> OnDigPowerChanged;
     public event Action<float> OnHPChanged;
+    public event Action OnDamaged;
     public event Action<float> OnStaminaChanged;
 
     private void Awake()
@@ -71,6 +72,7 @@ public class PlayerStat : MonoBehaviour
             currentHP = 0;
             // 사망 처리
         }
+        OnDamaged?.Invoke();
         OnHPChanged?.Invoke(currentHP);
     }
 

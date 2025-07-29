@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System;
 
 public enum PlayerState
 {
@@ -30,10 +31,13 @@ public class PlayerContoller : MonoBehaviour
 
     public int brushRadius = 10;
 
+    SpriteRenderer spriteRenderer;
+
+    private bool isStateLocked = false;
 
     public void ChangeState(PlayerState newState)
     {
-        if (currentState == newState) return;
+        if (currentState == newState || isStateLocked) return;
 
         currentState = newState;
 
@@ -51,7 +55,7 @@ public class PlayerContoller : MonoBehaviour
                 animator.SetBool("IsDigging", true);
                 break;
             case PlayerState.Damaged:
-                // Handle Damaged state logic
+                StartCoroutine(IDamageFlicker());
                 break;
         }
     }
@@ -61,6 +65,7 @@ public class PlayerContoller : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
         tilePositions = new Vector3Int[LayerManager.Instance.GetMaxTile()];
         nullTiles = new TileBase[LayerManager.Instance.GetMaxTile()];
@@ -72,40 +77,58 @@ public class PlayerContoller : MonoBehaviour
         jumpForce = PlayerStat.Instance.JumpForce;
     }
 
-    public void FixedUpdate()
+    private void Start()
 {
-    Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
-
-    if (inputDirection.magnitude < 0.1f)
-    {
-        ChangeState(PlayerState.Idle);
-        return;
-    }
-
-    float angle = Vector2.Angle(Vector2.up, inputDirection); 
-
-    bool isLeft = inputDirection.x < 0;
-
-    float signedAngle = isLeft ? 360f - angle : angle;
-
-    if (signedAngle >= 90f && signedAngle <= 270f)
-    {
-        // 아래 방향 → Dig
-        ChangeState(PlayerState.Dig);
-        rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
-        StartDig();
-    }
-    else if ((signedAngle >= 60f && signedAngle <= 120f))
-    {
-        // 좌우 부채꼴 → Idle
-        ChangeState(PlayerState.Idle);
-    }
-    else
-    {
-        // 나머지 위쪽 → Jump
-        ChangeState(PlayerState.Jump);
-    }
+    if (PlayerStat.Instance != null)
+        PlayerStat.Instance.OnDamaged += HandleDamaged;
 }
+
+private void OnDestroy()
+{
+    if (PlayerStat.Instance != null)
+        PlayerStat.Instance.OnDamaged -= HandleDamaged;
+}
+
+    private void HandleDamaged()
+    {
+        Debug.Log("damaged!!");
+        ChangeState(PlayerState.Damaged);
+    }
+
+    public void FixedUpdate()
+    {
+        Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
+
+        if (inputDirection.magnitude < 0.1f)
+        {
+            ChangeState(PlayerState.Idle);
+            return;
+        }
+
+        float angle = Vector2.Angle(Vector2.up, inputDirection);
+
+        bool isLeft = inputDirection.x < 0;
+
+        float signedAngle = isLeft ? 360f - angle : angle;
+
+        if (signedAngle >= 90f && signedAngle <= 270f)
+        {
+            // 아래 방향 → Dig
+            ChangeState(PlayerState.Dig);
+            rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
+            StartDig();
+        }
+        else if ((signedAngle >= 60f && signedAngle <= 120f))
+        {
+            // 좌우 부채꼴 → Idle
+            ChangeState(PlayerState.Idle);
+        }
+        else
+        {
+            // 나머지 위쪽 → Jump
+            ChangeState(PlayerState.Jump);
+        }
+    }
 
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
@@ -206,6 +229,32 @@ public class PlayerContoller : MonoBehaviour
         {
             removedTiles.Add(pos.ToVector3Int());
         }
+    }
+
+    private IEnumerator IDamageFlicker()
+    {
+        isStateLocked = true;
+
+        float duration = 1f;
+        float interval = 0.2f;
+        float elapsed = 0f;
+
+        Color origin = spriteRenderer.color;
+
+        while (elapsed < duration)
+        {
+            spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
+            yield return new WaitForSeconds(interval / 2f);
+            spriteRenderer.color = origin;
+            yield return new WaitForSeconds(interval / 2f);
+
+            elapsed += interval;
+        }
+
+        spriteRenderer.color = origin;
+        isStateLocked = false;
+
+        ChangeState(PlayerState.Idle);
     }
 
 }
