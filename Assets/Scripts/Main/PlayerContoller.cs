@@ -16,7 +16,8 @@ public enum PlayerState
     Idle,
     Jump,
     Dig,
-    Damaged
+    Damaged,
+    Die
 }
 
 public class PlayerContoller : MonoBehaviour
@@ -69,6 +70,9 @@ public class PlayerContoller : MonoBehaviour
                 animator.SetBool("IsDigging", false);
                 StartCoroutine(IDamageFlicker());
                 break;
+            case PlayerState.Die:
+                animator.SetTrigger("Die");
+                break;
         }
     }
 
@@ -92,7 +96,11 @@ public class PlayerContoller : MonoBehaviour
     private void Start()
     {
         if (PlayerStat.Instance != null)
+        {
             PlayerStat.Instance.OnDamaged += HandleDamaged;
+            PlayerStat.Instance.OnDied += HandleDied;
+        }
+
     }
 
     private void LateUpdate()
@@ -104,13 +112,21 @@ public class PlayerContoller : MonoBehaviour
     private void OnDestroy()
     {
         if (PlayerStat.Instance != null)
+        {
             PlayerStat.Instance.OnDamaged -= HandleDamaged;
+            PlayerStat.Instance.OnDied -= HandleDied;
+        }
     }
 
     private void HandleDamaged()
     {
         Debug.Log("damaged!!");
         ChangeState(PlayerState.Damaged);
+    }
+
+    private void HandleDied()
+    {
+        ChangeState(PlayerState.Die);
     }
 
     public void FixedUpdate()
@@ -129,7 +145,13 @@ public class PlayerContoller : MonoBehaviour
 
         bool isDigging = false;
 
-        if (signedAngle >= 135f && signedAngle <= 225f)
+        if (signedAngle < 45f || signedAngle > 315f)
+        {
+            // 위 방향 → Jump
+            ChangeState(PlayerState.Jump);
+            isDigging = false;
+        }
+        else if (signedAngle >= 135f && signedAngle <= 225f)
         {
             dir = DigDirection.Down;
             isDigging = true;
@@ -148,10 +170,7 @@ public class PlayerContoller : MonoBehaviour
             rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
             StartDig();
         }
-        else
-        {
-            ChangeState(PlayerState.Jump);
-        }
+
     }
 
 

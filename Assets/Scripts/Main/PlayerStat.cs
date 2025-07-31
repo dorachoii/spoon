@@ -21,6 +21,9 @@ public class PlayerStat : MonoBehaviour
     public event Action<float> OnHPChanged;
     public event Action OnDamaged;
     public event Action<float> OnStaminaChanged;
+    public event Action OnDied;
+
+    private bool isDead = false;
 
     private void Awake()
     {
@@ -66,12 +69,16 @@ public class PlayerStat : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isDead) return;
+        
         currentHP -= damage;
         if (currentHP < 0)
         {
             currentHP = 0;
-            // 사망 처리
+            isDead = true;
+            OnDied?.Invoke();
         }
+
         OnDamaged?.Invoke();
         OnHPChanged?.Invoke(currentHP);
     }
