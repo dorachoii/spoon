@@ -4,6 +4,13 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
 
+public enum DigDirection
+{
+    Down = 0,
+    Left = 1,
+    Right = 2
+}
+
 public enum PlayerState
 {
     Idle,
@@ -36,6 +43,8 @@ public class PlayerContoller : MonoBehaviour
     private bool isStateLocked = false;
 
     private float screenPadding = 1f;
+
+    private DigDirection dir;
 
     public void ChangeState(PlayerState newState)
     {
@@ -115,29 +124,36 @@ public class PlayerContoller : MonoBehaviour
         }
 
         float angle = Vector2.Angle(Vector2.up, inputDirection);
-
         bool isLeft = inputDirection.x < 0;
-
         float signedAngle = isLeft ? 360f - angle : angle;
 
-        if (signedAngle >= 90f && signedAngle <= 270f)
+        bool isDigging = false;
+
+        if (signedAngle >= 135f && signedAngle <= 225f)
         {
-            // 아래 방향 → Dig
+            dir = DigDirection.Down;
+            isDigging = true;
+        }
+        else if (signedAngle >= 45f || signedAngle <= 315f)
+        {
+            dir = isLeft ? DigDirection.Left : DigDirection.Right;
+            isDigging = true;
+        }
+
+
+        if (isDigging)
+        {
+            animator.SetInteger("DigDirection", (int)dir);
             ChangeState(PlayerState.Dig);
             rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
             StartDig();
         }
-        else if ((signedAngle >= 60f && signedAngle <= 120f))
-        {
-            // 좌우 부채꼴 → Idle
-            ChangeState(PlayerState.Idle);
-        }
         else
         {
-            // 나머지 위쪽 → Jump
             ChangeState(PlayerState.Jump);
         }
     }
+
 
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
@@ -163,14 +179,33 @@ public class PlayerContoller : MonoBehaviour
         isDigging = true;
         positionsToDig.Clear();
 
-        Vector2 playerPos = transform.position + Vector3.down * 0.5f;
+        Vector2 centerOffset = Vector2.zero;
+        Func<int, int, bool> isWithinDigArea = (x, y) => false;
+
+        switch (dir)
+        {
+            case DigDirection.Down:
+                centerOffset = Vector2.down * 0.5f;
+                isWithinDigArea = (x, y) => (x * x + y * y) <= brushRadius * brushRadius;
+                break;
+            case DigDirection.Left:
+                centerOffset = Vector2.left * 0.5f;
+                isWithinDigArea = (x, y) => (x <= 0) && (x * x + y * y) <= brushRadius * brushRadius;
+                break;
+            case DigDirection.Right:
+                centerOffset = Vector2.right * 0.5f;
+                isWithinDigArea = (x, y) => (x >= 0) && (x * x + y * y) <= brushRadius * brushRadius;
+                break;
+        }
+
+        Vector2 playerPos = (Vector2)transform.position + centerOffset;
         Vector3Int centerCell = tilemap.WorldToCell(playerPos);
 
-        for (int y = brushRadius; y > -brushRadius; y--)
+        for (int y = brushRadius; y >= -brushRadius; y--)
         {
             for (int x = -brushRadius; x <= brushRadius; x++)
             {
-                if (x * x + y * y > brushRadius * brushRadius) continue;
+                if (!isWithinDigArea(x, y)) continue;
 
                 Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
 
@@ -185,9 +220,9 @@ public class PlayerContoller : MonoBehaviour
         int total = positionsToDig.Count;
         int current = 0;
 
-        if (positionsToDig.Count > 0)
+        if (total > 0)
         {
-            float hardness = LayerManager.Instance.GetCurrentHardness(); // 또는 GetCurrentHardness()
+            float hardness = LayerManager.Instance.GetCurrentHardness();
             float digPower = PlayerStat.Instance.DigPower;
 
             if (digPower < hardness)
@@ -220,6 +255,7 @@ public class PlayerContoller : MonoBehaviour
         }
         isDigging = false;
     }
+
 
     private void OnDrawGizmosSelected()
     {
