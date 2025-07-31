@@ -518,14 +518,13 @@ GameObject:
   - component: {fileID: 536351640}
   - component: {fileID: 536351639}
   - component: {fileID: 536351638}
-  - component: {fileID: 536351642}
   m_Layer: 5
   m_Name: Canvas_Game
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &536351638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -610,18 +609,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!225 &536351642
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 536351637}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!1 &600226708
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,6 +621,7 @@ GameObject:
   - component: {fileID: 600226709}
   - component: {fileID: 600226711}
   - component: {fileID: 600226712}
+  - component: {fileID: 600226713}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -696,11 +684,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e0c3f75be2463340ad74fef552816e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  irisCircle: {fileID: 684162583}
-  canvasGame: {fileID: 536351642}
-  startRadius: 200
-  endRadius: 0
-  duration: 1
+  circle: {fileID: 684162583}
+  duration: 2
+--- !u!114 &600226713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600226708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09b554af378e80849803e1da1705e5be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  irisEffectController: {fileID: 600226712}
 --- !u!1 &626210238
 GameObject:
   m_ObjectHideFlags: 0
@@ -811,7 +809,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 500}
+  m_SizeDelta: {x: 3000, y: 3000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &684162585
 MonoBehaviour:

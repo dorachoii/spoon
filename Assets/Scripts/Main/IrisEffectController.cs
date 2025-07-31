@@ -1,99 +1,52 @@
-// using UnityEngine;
-// using UnityEngine.UI;
-// using System.Collections;
-// using System.IO;
-// using System;
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
 
-// public class IrisEffectController : MonoBehaviour
-// {
-//     public RectTransform irisCircle;  // 마스크용 원 Image RectTransform
-//     public CanvasGroup canvasGame;    // canvas_game 전체 제어용 CanvasGroup
-//     private Transform playerTransform; // 플레이어 Transform
+public class IrisEffectController : MonoBehaviour
+{
+    private Transform playerTransform;
 
-//     [Header("Iris Settings")]
-//     public float startRadius = 200f;   // 시작 원 크기 (화면 꽉 차는 크기)
-//     public float endRadius = 0f;       // 최종 원 크기 (0에 가깝게)
-//     public float duration = 1f;        // iris in 시간
+    public RectTransform circle;
+    private float startSize = 3000f;
+    private float endSize = 400f;
+    public float duration = 2f;
 
-//     private bool isAnimating = false;
+    private bool isAnimating = false;
 
-//     private void Awake()
-//     {
-//         // 초기에는 UI 투명, 비활성 상태로 설정
-//         canvasGame.alpha = 0;
-//         canvasGame.blocksRaycasts = false;
-//         canvasGame.interactable = false;
-//         irisCircle.sizeDelta = new Vector2(startRadius, startRadius);
+    private void Awake()
+    {
+        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+    }
 
-//         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
-//     }
+    public void IrisIn()
+    {
+        StartCoroutine(ShrinkCircle());
+}
 
-//     private void OnEnable()
-//     {
-//         Debug.Log("IrisEffectController enabled");
-//     }
+    private IEnumerator ShrinkCircle()
+    {
+        Vector2 targetLocalPos = playerTransform.position;
+        float elapsed = 0f;
+        Vector2 startPos = circle.localPosition;
 
-//     void Update()
-//     {
-//         Debug.Log("Update 호출 중...");
-//         if (Input.GetKeyDown(KeyCode.Space))
-//         {
-//             Debug.Log("Enter 키 눌림, IrisIn 시작");
-//             PlayIrisIn();
-//         }
-//     }
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
 
-//     public void PlayIrisIn()
-//     {
-//         if (isAnimating) return;
+            // 위치 보간
+            circle.localPosition = Vector2.Lerp(startPos, targetLocalPos, t);
 
-//         Debug.Log("iris in 시작");
+            // 크기 보간
+            float currentSize = Mathf.Lerp(startSize, endSize, t);
+            circle.sizeDelta = new Vector2(currentSize, currentSize);
 
-//         // UI 활성화
-//         canvasGame.alpha = 1;
-//         canvasGame.blocksRaycasts = true;
-//         canvasGame.interactable = true;
-//         gameObject.SetActive(true); // 활성화 (만약 비활성 상태였다면)
+            yield return null;
+        }
 
-//         // 플레이어 위치를 캔버스 로컬 좌표로 변환 후 원 위치 지정
-//         Vector2 irisPos;
-//         RectTransform canvasRect = canvasGame.GetComponent<RectTransform>();
-//         Vector3 screenPos = Camera.main.WorldToScreenPoint(playerTransform.position);
-//         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPos, null, out irisPos);
-//         irisCircle.localPosition = irisPos;
+        // 최종 정리
+        circle.localPosition = targetLocalPos;
+        circle.sizeDelta = new Vector2(endSize, endSize);
+    }
 
-//         irisCircle.sizeDelta = new Vector2(startRadius, startRadius); // 초기 크기 설정
-
-//         StartCoroutine(IrisInCoroutine());
-//     }
-
-//     private IEnumerator IrisInCoroutine()
-//     {
-//         isAnimating = true;
-
-//         float elapsed = 0f;
-//         while (elapsed < duration)
-//         {
-//             float t = elapsed / duration;
-//             float size = Mathf.Lerp(startRadius, endRadius, t);
-//             irisCircle.sizeDelta = new Vector2(size, size);
-
-//             elapsed += Time.deltaTime;
-//             yield return null;
-//         }
-
-//         irisCircle.sizeDelta = new Vector2(endRadius, endRadius);
-
-//         // 애니메이션 종료 후 UI 비활성화 및 상태 초기화
-//         canvasGame.alpha = 0;
-//         canvasGame.blocksRaycasts = false;
-//         canvasGame.interactable = false;
-//         gameObject.SetActive(false);
-
-//         isAnimating = false;
-
-//         Debug.Log("iris in 완료");
-
-//         // 여기에 리스타트 UI 활성화 같은 후속 작업 호출 가능
-//     }
-// }
+}
