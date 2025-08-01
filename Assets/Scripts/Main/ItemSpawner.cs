@@ -88,11 +88,11 @@ public class ItemSpawner : MonoBehaviour
         else if (itemPrefab.Length > 0)
         {
             // 나머지 75%는 아이템
-            //Instantiate(itemPrefab[Random.Range(0, itemPrefab.Length)], worldPos, Quaternion.identity);
-            int nextIndex = (lastIndex == 5) ? 6 : 5;
-            lastIndex = nextIndex;
+            Instantiate(itemPrefab[Random.Range(0, itemPrefab.Length)], worldPos, Quaternion.identity);
+            //int nextIndex = (lastIndex == 5) ? 6 : 5;
+            //lastIndex = nextIndex;
 
-            Instantiate(itemPrefab[nextIndex], worldPos, Quaternion.identity);
+            //Instantiate(itemPrefab[nextIndex], worldPos, Quaternion.identity);
         }
     }
 

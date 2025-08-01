@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8611061867228910223}
   - component: {fileID: 6878926362023819535}
   m_Layer: 0
-  m_Name: Enemy_Skeleton
+  m_Name: Enemy_Skeleton_2
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -77,7 +77,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_Sprite: {fileID: 21300000, guid: 4de6b162e6858244bb97af90cdf68e0b, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1764706, g: 0.99215686, b: 0.89411765, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -120,8 +120,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31d4e83bff33d2e4ba21966b297aaece, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletPrefab: {fileID: 3617216306211407076, guid: 90d2043c7a597d34c9aa129dc8706d03, type: 3}
+  bulletPrefab:
+  - {fileID: 3617216306211407076, guid: 90d2043c7a597d34c9aa129dc8706d03, type: 3}
+  - {fileID: 4299029023291798423, guid: 57bdda149d1bf1145a6afe73d9d12008, type: 3}
+  - {fileID: 4299029023291798423, guid: 57bdda149d1bf1145a6afe73d9d12008, type: 3}
   numOfDirections: 4
+  type: 1
 --- !u!114 &6878926362023819535
 MonoBehaviour:
   m_ObjectHideFlags: 0
