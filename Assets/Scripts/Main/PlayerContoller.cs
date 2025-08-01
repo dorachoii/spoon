@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
+using UnityEngine.Rendering;
 
 public enum DigDirection
 {
@@ -46,6 +47,9 @@ public class PlayerContoller : MonoBehaviour
     private float screenPadding = 1f;
 
     private DigDirection dir;
+    private SpriteColorEffect effector;
+    private Coroutine digCoroutine;
+    private Coroutine rainbowCoroutine;
 
     public void ChangeState(PlayerState newState)
     {
@@ -82,6 +86,7 @@ public class PlayerContoller : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        effector = GetComponent<SpriteColorEffect>();
 
         tilePositions = new Vector3Int[LayerManager.Instance.GetMaxTile()];
         nullTiles = new TileBase[LayerManager.Instance.GetMaxTile()];
@@ -99,6 +104,8 @@ public class PlayerContoller : MonoBehaviour
         {
             PlayerStat.Instance.OnDamaged += HandleDamaged;
             PlayerStat.Instance.OnDied += HandleDied;
+            PlayerStat.Instance.OnInvincibleStarted += HandleInvincibleStart;
+            PlayerStat.Instance.OnInvincibleEnded += HandleInvincibleEnd;
         }
 
     }
@@ -115,8 +122,29 @@ public class PlayerContoller : MonoBehaviour
         {
             PlayerStat.Instance.OnDamaged -= HandleDamaged;
             PlayerStat.Instance.OnDied -= HandleDied;
+            PlayerStat.Instance.OnInvincibleStarted -= HandleInvincibleStart;
+            PlayerStat.Instance.OnInvincibleEnded -= HandleInvincibleEnd;
         }
     }
+
+    private void OnEnable()
+{
+    if (PlayerStat.Instance != null)
+    {
+        PlayerStat.Instance.OnDamaged += HandleDamaged;
+        PlayerStat.Instance.OnDied += HandleDied;
+    }
+}
+
+private void OnDisable()
+{
+    if (PlayerStat.Instance != null)
+    {
+        PlayerStat.Instance.OnDamaged -= HandleDamaged;
+        PlayerStat.Instance.OnDied -= HandleDied;
+    }
+}
+
 
     private void HandleDamaged()
     {
@@ -128,6 +156,24 @@ public class PlayerContoller : MonoBehaviour
     {
         ChangeState(PlayerState.Die);
     }
+
+    private void HandleInvincibleStart()
+    {
+        if (rainbowCoroutine != null) StopCoroutine(rainbowCoroutine);
+        rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(GetComponent<SpriteRenderer>(), -1));
+    }
+
+    private void HandleInvincibleEnd()
+    {
+        if (rainbowCoroutine != null)
+        {
+            StopCoroutine(rainbowCoroutine);
+            rainbowCoroutine = null;
+        }
+
+        GetComponent<SpriteRenderer>().color = Color.white;
+    }
+
 
     public void FixedUpdate()
     {
@@ -189,8 +235,11 @@ public class PlayerContoller : MonoBehaviour
     {
         if (currentState != PlayerState.Dig || isDigging) return;
 
-        StopAllCoroutines();
-        StartCoroutine(DigCoroutine());
+         if (digCoroutine != null)
+        {
+            StopCoroutine(digCoroutine);
+        }
+        digCoroutine = StartCoroutine(DigCoroutine());
     }
 
     private IEnumerator DigCoroutine()
@@ -299,23 +348,7 @@ public class PlayerContoller : MonoBehaviour
     {
         isStateLocked = true;
 
-        float duration = 1f;
-        float interval = 0.2f;
-        float elapsed = 0f;
-
-        Color origin = spriteRenderer.color;
-
-        while (elapsed < duration)
-        {
-            spriteRenderer.color = new Color(1f, 0.4f, 0.4f);
-            yield return new WaitForSeconds(interval / 2f);
-            spriteRenderer.color = origin;
-            yield return new WaitForSeconds(interval / 2f);
-
-            elapsed += interval;
-        }
-
-        spriteRenderer.color = origin;
+        yield return StartCoroutine(effector.IFlicker(GetComponent<SpriteRenderer>()));
         isStateLocked = false;
 
         ChangeState(PlayerState.Idle);

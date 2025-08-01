@@ -23,7 +23,7 @@ public class EnemyBullet : ItemBase
 
     protected override void ApplyEffect(GameObject player)
     {
-         PlayerStat.Instance.TakeDamage(5);
+         PlayerStat.Instance.DamageHP(5);
     }
 
 }

@@ -22,8 +22,11 @@ public class PlayerStat : MonoBehaviour
     public event Action OnDamaged;
     public event Action<float> OnStaminaChanged;
     public event Action OnDied;
+    public event Action OnInvincibleStarted;
+    public event Action OnInvincibleEnded;
 
     private bool isDead = false;
+    private bool isInvincible = false;
 
     private void Awake()
     {
@@ -35,7 +38,8 @@ public class PlayerStat : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        currentHP = maxHP;
+        currentHP = 40;
+        //currentHP = maxHP;
         currentStamina = maxStamina;
     }
 
@@ -67,28 +71,83 @@ public class PlayerStat : MonoBehaviour
 
     }
 
-    public void TakeDamage(float damage)
+    public void DamageHP(float damage)
+    {
+        if (isDead || isInvincible) return;
+
+        ChangeHP(-damage);
+        OnDamaged?.Invoke();
+    }
+
+    public void HealHP(float amount)
     {
         if (isDead) return;
-        
-        currentHP -= damage;
-        if (currentHP < 0)
+        ChangeHP(amount);
+    }
+
+    private void ChangeHP(float amount)
+    {
+        currentHP = Mathf.Clamp(currentHP + amount, 0, maxHP);
+        OnHPChanged?.Invoke(currentHP);
+
+        if (currentHP <= 0 && !isDead)
         {
-            currentHP = 0;
             isDead = true;
             OnDied?.Invoke();
         }
-
-        OnDamaged?.Invoke();
-        OnHPChanged?.Invoke(currentHP);
     }
+
+    private Coroutine activeRecoverInvincible;
+
+    public IEnumerator RecoverHPAndInvincible(float invincibleDuration)
+    {
+        if (activeRecoverInvincible != null)
+            yield break; // 이미 진행 중이면 무시
+
+        activeRecoverInvincible = StartCoroutine(RecoverHPAndInvincibleImpl(invincibleDuration));
+        yield return activeRecoverInvincible;
+        activeRecoverInvincible = null;
+    }
+
+    private IEnumerator RecoverHPAndInvincibleImpl(float invincibleDuration)
+    {
+        float startHP = currentHP;
+        float elapsed = 0f;
+
+        isInvincible = true;
+        OnInvincibleStarted?.Invoke();
+
+        // HP 회복 (1초)
+        if (currentHP < maxHP)
+        {
+            while (elapsed < 1f)
+            {
+                elapsed += Time.deltaTime;
+                currentHP = Mathf.Lerp(startHP, maxHP, elapsed / 1f);
+                OnHPChanged?.Invoke(currentHP);
+                yield return null;
+            }
+            currentHP = maxHP;
+            OnHPChanged?.Invoke(currentHP);
+        }
+
+        // 무적 시작
+        yield return new WaitForSeconds(invincibleDuration);
+
+        // 무적 종료
+        isInvincible = false;
+        OnInvincibleEnded?.Invoke();
+    }
+
+
+
 
     public void ConsumeStamina(float amount)
     {
         currentStamina = Mathf.Max(0, currentStamina - amount);
         OnStaminaChanged?.Invoke(currentStamina);
     }
-    
+
     public void RecoverStamina(float amount)
     {
         currentStamina = Mathf.Min(maxStamina, currentStamina + amount);

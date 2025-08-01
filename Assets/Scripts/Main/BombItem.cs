@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 
 public class BombItem : ItemBase
 {
@@ -10,10 +11,29 @@ public class BombItem : ItemBase
     private float damageRadius = 15f;
     private float damageAmount = 20f;
 
+    public GameObject bombFX;
+    SpriteColorEffect effector;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        effector = gameObject.GetComponent<SpriteColorEffect>();
+        StartCoroutine(effector.IFlicker(gameObject.GetComponent<SpriteRenderer>(), SpriteEffectColor.Red, -1));
+    }
+    
+
+
     protected override void ApplyEffect(GameObject player)
     {
+        InstantiateFX();
         ExplodeTiles();
         Damage(player);
+    }
+
+    void InstantiateFX()
+    {
+        GameObject fx = Instantiate(bombFX, gameObject.transform.position, quaternion.identity);
+        Destroy(fx, 1);
     }
 
     void ExplodeTiles()
@@ -61,7 +81,7 @@ public class BombItem : ItemBase
         PlayerStat playerStat = player.GetComponent<PlayerStat>();
         if (playerStat != null)
         {
-            playerStat.TakeDamage(damageAmount);
+            playerStat.DamageHP(damageAmount);
         }
     }
 }

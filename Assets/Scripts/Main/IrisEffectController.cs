@@ -13,15 +13,15 @@ public class IrisEffectController : MonoBehaviour
 
     private bool isAnimating = false;
 
-    private void Awake()
+    void Update()
     {
-        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
     }
 
     public void IrisIn()
     {
         StartCoroutine(ShrinkCircle());
-}
+    }
 
     private IEnumerator ShrinkCircle()
     {

@@ -35,13 +35,10 @@ public class UIManager : MonoBehaviour
 
     private void HandlePlayerDied()
     {
-        // iris in 실행
         if (irisEffectController != null)
         {
             irisEffectController.IrisIn();
         }
 
     }
-
-  
 }
