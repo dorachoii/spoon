@@ -121,7 +121,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 3617216306211407076, guid: 90d2043c7a597d34c9aa129dc8706d03, type: 3}
-  numOfDirections: 8
+  numOfDirections: 4
 --- !u!114 &6878926362023819535
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,7 +6,7 @@ public class EnemyAttack : MonoBehaviour
 {
     public GameObject bulletPrefab;
     private float fireRate = 3.0f;
-    public int numOfDirections = 8;
+    public int numOfDirections = 4;
 
     float timer;
 
@@ -27,7 +27,7 @@ public class EnemyAttack : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            float angle = angleStep * i;
+            float angle = 45f + angleStep * i;
             Vector2 direction = AngleToDirection(angle);
 
             GameObject bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
