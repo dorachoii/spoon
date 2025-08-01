@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class PlayerStat : MonoBehaviour
@@ -140,14 +141,14 @@ public class PlayerStat : MonoBehaviour
         isInvincible = false;
         OnInvincibleEnded?.Invoke();
     }
-    
+
     public void StartPoisonEffect(float duration)
-{
-    if (!isPoisoned)
     {
-        StartCoroutine(ApplyPoisionEffect(duration));
+        if (!isPoisoned)
+        {
+            StartCoroutine(ApplyPoisionEffect(duration));
+        }
     }
-}
 
 
     public IEnumerator ApplyPoisionEffect(float duration)
@@ -159,9 +160,19 @@ public class PlayerStat : MonoBehaviour
         OnPoisonedStarted?.Invoke();
         yield return new WaitForSeconds(duration);
 
+        if (isPoisoned)
+        {
+            isPoisoned = false;
+            OnPoisonedEnded?.Invoke();
+        }
+        
+    }
+
+    public void CurePoision()
+    {
+        if (!isPoisoned) return;
         isPoisoned = false;
         OnPoisonedEnded?.Invoke();
-        Debug.Log("poison end playerStat");
     }
 
 
