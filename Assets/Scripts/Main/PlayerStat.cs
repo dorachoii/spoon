@@ -24,9 +24,12 @@ public class PlayerStat : MonoBehaviour
     public event Action OnDied;
     public event Action OnInvincibleStarted;
     public event Action OnInvincibleEnded;
+    public event Action OnPoisonedStarted;
+    public event Action OnPoisonedEnded;
 
     private bool isDead = false;
     private bool isInvincible = false;
+    public bool isPoisoned = false;
 
     private void Awake()
     {
@@ -38,8 +41,7 @@ public class PlayerStat : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        currentHP = 40;
-        //currentHP = maxHP;
+        currentHP = maxHP;
         currentStamina = maxStamina;
     }
 
@@ -138,8 +140,29 @@ public class PlayerStat : MonoBehaviour
         isInvincible = false;
         OnInvincibleEnded?.Invoke();
     }
+    
+    public void StartPoisonEffect(float duration)
+{
+    if (!isPoisoned)
+    {
+        StartCoroutine(ApplyPoisionEffect(duration));
+    }
+}
 
 
+    public IEnumerator ApplyPoisionEffect(float duration)
+    {
+        Debug.Log("poison start  playerStat");
+        if (isPoisoned) yield break;
+
+        isPoisoned = true;
+        OnPoisonedStarted?.Invoke();
+        yield return new WaitForSeconds(duration);
+
+        isPoisoned = false;
+        OnPoisonedEnded?.Invoke();
+        Debug.Log("poison end playerStat");
+    }
 
 
     public void ConsumeStamina(float amount)

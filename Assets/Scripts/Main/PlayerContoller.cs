@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
 using UnityEngine.Rendering;
+using UnityEngine.Lumin;
 
 public enum DigDirection
 {
@@ -50,6 +51,7 @@ public class PlayerContoller : MonoBehaviour
     private SpriteColorEffect effector;
     private Coroutine digCoroutine;
     private Coroutine rainbowCoroutine;
+    private Coroutine poisonFlickerCoroutine;
 
     public void ChangeState(PlayerState newState)
     {
@@ -106,6 +108,8 @@ public class PlayerContoller : MonoBehaviour
             PlayerStat.Instance.OnDied += HandleDied;
             PlayerStat.Instance.OnInvincibleStarted += HandleInvincibleStart;
             PlayerStat.Instance.OnInvincibleEnded += HandleInvincibleEnd;
+            PlayerStat.Instance.OnPoisonedStarted += HandlePoisonStart;
+            PlayerStat.Instance.OnPoisonedEnded += HandlePoisonEnd;
         }
 
     }
@@ -124,26 +128,48 @@ public class PlayerContoller : MonoBehaviour
             PlayerStat.Instance.OnDied -= HandleDied;
             PlayerStat.Instance.OnInvincibleStarted -= HandleInvincibleStart;
             PlayerStat.Instance.OnInvincibleEnded -= HandleInvincibleEnd;
+            PlayerStat.Instance.OnPoisonedStarted -= HandlePoisonStart;
+            PlayerStat.Instance.OnPoisonedEnded -= HandlePoisonEnd;
         }
     }
 
     private void OnEnable()
-{
-    if (PlayerStat.Instance != null)
     {
-        PlayerStat.Instance.OnDamaged += HandleDamaged;
-        PlayerStat.Instance.OnDied += HandleDied;
+        if (PlayerStat.Instance != null)
+        {
+            PlayerStat.Instance.OnDamaged += HandleDamaged;
+            PlayerStat.Instance.OnDied += HandleDied;
+        }
     }
-}
 
-private void OnDisable()
-{
-    if (PlayerStat.Instance != null)
+    private void OnDisable()
     {
-        PlayerStat.Instance.OnDamaged -= HandleDamaged;
-        PlayerStat.Instance.OnDied -= HandleDied;
+        if (PlayerStat.Instance != null)
+        {
+            PlayerStat.Instance.OnDamaged -= HandleDamaged;
+            PlayerStat.Instance.OnDied -= HandleDied;
+        }
     }
-}
+
+    private void HandlePoisonStart()
+    {
+        Debug.Log("poison start");
+        if (poisonFlickerCoroutine == null)
+        {
+            poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffect>().IFlicker(GetComponent<SpriteRenderer>(), SpriteEffectColor.Green, -1));
+        }
+    }
+
+    private void HandlePoisonEnd()
+    {
+         Debug.Log("poison end");
+        if (poisonFlickerCoroutine != null)
+        {
+            StopCoroutine(poisonFlickerCoroutine);
+            poisonFlickerCoroutine = null;
+        }
+        GetComponent<SpriteRenderer>().color = Color.white;
+    }
 
 
     private void HandleDamaged()
@@ -178,6 +204,11 @@ private void OnDisable()
     public void FixedUpdate()
     {
         Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
+
+        if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
+        {
+            inputDirection = -inputDirection;
+        }
 
         if (inputDirection.magnitude < 0.1f)
         {
@@ -235,7 +266,7 @@ private void OnDisable()
     {
         if (currentState != PlayerState.Dig || isDigging) return;
 
-         if (digCoroutine != null)
+        if (digCoroutine != null)
         {
             StopCoroutine(digCoroutine);
         }
@@ -353,6 +384,8 @@ private void OnDisable()
 
         ChangeState(PlayerState.Idle);
     }
+
+
 
     private void ClampPositionToCameraView()
     {

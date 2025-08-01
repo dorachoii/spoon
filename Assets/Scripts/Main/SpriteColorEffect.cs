@@ -16,7 +16,7 @@ public static class SpriteEffectColorExtensions
         return effectColor switch
         {
             SpriteEffectColor.Red => new Color(1f, 0.4f, 0.4f),
-            SpriteEffectColor.Green => new Color(0.4f, 1f, 0.4f),
+            SpriteEffectColor.Green => new Color(31f/255f, 230f/255f, 178f/255f),
             _ => Color.white,
         };
     }
