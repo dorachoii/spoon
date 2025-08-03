@@ -6,7 +6,7 @@ public class SaveItem : ItemBase
 {
     protected override void ApplyEffect(GameObject player)
     {
-        GameManager gameManager = FindObjectOfType<GameManager>();
+        PersistenceManager gameManager = FindObjectOfType<PersistenceManager>();
         if (gameManager != null)
         {
             gameManager.SaveGame();

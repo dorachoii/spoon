@@ -7,7 +7,7 @@ using System.IO;
 
 public enum TileType { Plain, Dotted, Gradient }
 
-public class TileMaker : MonoBehaviour
+public class TileMaker : MonoBehaviour, ISaveable
 {
     public static TileMaker Instance { get; private set; }
     public Tilemap tilemap;
@@ -27,6 +27,14 @@ public class TileMaker : MonoBehaviour
     private int lastLevel = -1;
     private int loadGradientLevel = -1;
 
+    public void WriteData(GameData data)
+    {
+        data.tilemapData = GetTileDataList();
+    }
+    public void ReadData(GameData data)
+    {
+        LoadTilemapData(data.tilemapData);
+    }
 
     void Awake()
     {

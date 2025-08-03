@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class PlayerStat : MonoBehaviour
+public class PlayerStat : MonoBehaviour, ISaveable
 {
     public static PlayerStat Instance { get; private set; }
     private float baseDigPower = 100f;
@@ -31,6 +31,15 @@ public class PlayerStat : MonoBehaviour
     private bool isDead = false;
     private bool isInvincible = false;
     public bool isPoisoned = false;
+
+    public void WriteData(GameData data)
+    {
+        data.playerPosition = gameObject.transform.position;
+    }
+    public void ReadData(GameData data)
+    {
+        gameObject.transform.position = data.playerPosition;
+    }
 
     private void Awake()
     {
