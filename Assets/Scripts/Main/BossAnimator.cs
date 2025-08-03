@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BossAnimatorManager : MonoBehaviour
+public class BossAnimator : MonoBehaviour
 {
     public Animator[] bodies;
     private float interval = 0.5f;
