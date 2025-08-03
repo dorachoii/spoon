@@ -97,6 +97,7 @@ public class PlayerStat : MonoBehaviour
         {
             isDead = true;
             OnDied?.Invoke();
+            GameManager.Instance.OnPlayerDeath();
         }
     }
 
