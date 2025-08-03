@@ -28,6 +28,7 @@ public class Debris : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        Debug.Log($"부딪 - {collision.name}");
         if (collision.CompareTag("Boss"))
         {
             var part = collision.GetComponent<BossBodyPart>();
@@ -37,7 +38,13 @@ public class Debris : MonoBehaviour
                 part.Damage(1);
                 Destroy(gameObject);
             }
-            
+
+        }
+
+        else if (collision.CompareTag("Player"))
+        {
+            Debug.Log("부딪 - 플레에어");
+            PlayerStat.Instance.DamageHP(3);
         }
     }
 }

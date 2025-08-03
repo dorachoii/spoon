@@ -23,7 +23,7 @@ public class BossBodyPart : MonoBehaviour
 
     void Oestroy()
     {
-        bossHP.OnDeath -= HandleDeath;       
+        bossHP.OnDeath -= HandleDeath;
     }
 
     void HandleDeath()
@@ -47,5 +47,29 @@ public class BossBodyPart : MonoBehaviour
         damagedTriggered = true;
         yield return new WaitForSeconds(damageTriggerCooldown);
         damagedTriggered = false;
+    }
+    
+      public void TriggerBounceY()
+    {
+        StartCoroutine(BounceY(1.5f, 0.3f));
+    }
+
+    private IEnumerator BounceY(float height, float duration)
+    {
+        Vector3 startPos = transform.position;
+        Vector3 apex = startPos + new Vector3(0, height, 0);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            float y = Mathf.Lerp(startPos.y, apex.y, Mathf.Sin(t * Mathf.PI));
+            transform.position = new Vector3(startPos.x, y, startPos.z);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        transform.position = startPos;
     }
 }
