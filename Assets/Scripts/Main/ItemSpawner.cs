@@ -40,7 +40,7 @@ public class ItemSpawner : MonoBehaviour
         Camera cam = Camera.main;
         float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
 
-        float xPadding = 0.15f; // 좌우 10% 패딩 (원하면 더 줄이거나 늘릴 수 있음)
+        float xPadding = 0.15f; 
 
         Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
         Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));

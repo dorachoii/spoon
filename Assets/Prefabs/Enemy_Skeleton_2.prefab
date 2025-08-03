@@ -123,7 +123,7 @@ MonoBehaviour:
   bulletPrefab:
   - {fileID: 3617216306211407076, guid: 90d2043c7a597d34c9aa129dc8706d03, type: 3}
   - {fileID: 4299029023291798423, guid: 57bdda149d1bf1145a6afe73d9d12008, type: 3}
-  - {fileID: 4299029023291798423, guid: 57bdda149d1bf1145a6afe73d9d12008, type: 3}
+  - {fileID: 3738318816054307862, guid: 1fef64ff7ccd8d545a2b82830d6b85db, type: 3}
   numOfDirections: 4
   type: 1
 --- !u!114 &6878926362023819535

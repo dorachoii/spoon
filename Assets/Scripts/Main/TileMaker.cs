@@ -9,6 +9,7 @@ public enum TileType { Plain, Dotted, Gradient }
 
 public class TileMaker : MonoBehaviour
 {
+    public static TileMaker Instance { get; private set; }
     public Tilemap tilemap;
     public TileBase[] tile_plain; // 5가지 색상
     private TileBase[,] tile_dotted = new TileBase[9, 9];
@@ -26,6 +27,17 @@ public class TileMaker : MonoBehaviour
     private int lastLevel = -1;
     private int loadGradientLevel = -1;
 
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
+    }
 
     void OnEnable()
     {
