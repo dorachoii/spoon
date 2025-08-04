@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
     public event Action OnInvincibleEnded;
     public event Action OnPoisonedStarted;
     public event Action OnPoisonedEnded;
+    public event Action<float> OnPowerUp;
 
     private bool isDead = false;
     private bool isInvincible = false;
@@ -80,6 +82,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
     {
         digPowerBonus += bonus;
         OnDigPowerChanged?.Invoke(DigPower);
+        OnPowerUp?.Invoke(bonus);
 
     }
 
@@ -115,7 +118,9 @@ public class PlayerStat : MonoBehaviour, ISaveable
     public IEnumerator RecoverHPAndInvincible(float invincibleDuration)
     {
         if (activeRecoverInvincible != null)
-            yield break; // 이미 진행 중이면 무시
+        {
+            StopCoroutine(activeRecoverInvincible);
+        }
 
         activeRecoverInvincible = StartCoroutine(RecoverHPAndInvincibleImpl(invincibleDuration));
         yield return activeRecoverInvincible;
@@ -127,8 +132,11 @@ public class PlayerStat : MonoBehaviour, ISaveable
         float startHP = currentHP;
         float elapsed = 0f;
 
+        bool wasAlreadyInvincible = isInvincible;
         isInvincible = true;
-        OnInvincibleStarted?.Invoke();
+
+        if (!wasAlreadyInvincible) OnInvincibleStarted?.Invoke();
+
 
         // HP 회복 (1초)
         if (currentHP < maxHP)
@@ -185,18 +193,6 @@ public class PlayerStat : MonoBehaviour, ISaveable
         OnPoisonedEnded?.Invoke();
     }
 
-
-    public void ConsumeStamina(float amount)
-    {
-        currentStamina = Mathf.Max(0, currentStamina - amount);
-        OnStaminaChanged?.Invoke(currentStamina);
-    }
-
-    public void RecoverStamina(float amount)
-    {
-        currentStamina = Mathf.Min(maxStamina, currentStamina + amount);
-        OnStaminaChanged?.Invoke(currentStamina);
-    }
 }
 
 

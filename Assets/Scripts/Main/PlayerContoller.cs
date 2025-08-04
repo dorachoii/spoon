@@ -5,6 +5,7 @@ using UnityEngine.Tilemaps;
 using System;
 using UnityEngine.Rendering;
 using UnityEngine.Lumin;
+using TMPro;
 
 public enum DigDirection
 {
@@ -53,6 +54,8 @@ public class PlayerContoller : MonoBehaviour
     private Coroutine rainbowCoroutine;
     private Coroutine poisonFlickerCoroutine;
 
+    public GameObject floatingText;
+
     public void ChangeState(PlayerState newState)
     {
         if (currentState == newState || isStateLocked) return;
@@ -97,7 +100,11 @@ public class PlayerContoller : MonoBehaviour
         {
             nullTiles[i] = null;
         }
-        jumpForce = PlayerStat.Instance.JumpForce;
+
+        if (floatingText != null)
+        {
+            floatingText.SetActive(false);
+        }
     }
 
     private void Start()
@@ -110,8 +117,13 @@ public class PlayerContoller : MonoBehaviour
             PlayerStat.Instance.OnInvincibleEnded += HandleInvincibleEnd;
             PlayerStat.Instance.OnPoisonedStarted += HandlePoisonStart;
             PlayerStat.Instance.OnPoisonedEnded += HandlePoisonEnd;
-        }
 
+            PlayerStat.Instance.OnPowerUp += HandlePowerUp;
+        }
+        jumpForce = PlayerStat.Instance.JumpForce;
+
+        if (floatingJoystick == null) floatingJoystick = FindAnyObjectByType<FloatingJoystick>();
+        if (tilemap == null) tilemap = FindObjectOfType<Tilemap>();
     }
 
     private void LateUpdate()
@@ -130,6 +142,8 @@ public class PlayerContoller : MonoBehaviour
             PlayerStat.Instance.OnInvincibleEnded -= HandleInvincibleEnd;
             PlayerStat.Instance.OnPoisonedStarted -= HandlePoisonStart;
             PlayerStat.Instance.OnPoisonedEnded -= HandlePoisonEnd;
+
+            PlayerStat.Instance.OnPowerUp -= HandlePowerUp;
         }
     }
 
@@ -151,30 +165,56 @@ public class PlayerContoller : MonoBehaviour
         }
     }
 
+    private void HandlePowerUp(float power)
+    {
+        ShowStatusText("Power Up!", Color.cyan);
+    }
+
     private void HandlePoisonStart()
     {
-        Debug.Log("poison start");
-        if (poisonFlickerCoroutine == null)
+        if (poisonFlickerCoroutine != null) return;
+
+        if (rainbowCoroutine != null)
         {
+            ShowStatusText("흠", Color.green);
+            StopCoroutine(rainbowCoroutine);
+            Color tint = Color.green * 0.6f + Color.white * 0.4f;
+            rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(spriteRenderer, -1, 2f, tint));
+        }
+        else
+        {
+            ShowStatusText("Poisoned!", SpriteEffectColor.Green.ToColor());
             poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffect>().IFlicker(GetComponent<SpriteRenderer>(), SpriteEffectColor.Green, -1));
         }
+
+
+
     }
 
     private void HandlePoisonEnd()
     {
-         Debug.Log("poison end");
+        Debug.Log("poison end");
         if (poisonFlickerCoroutine != null)
         {
             StopCoroutine(poisonFlickerCoroutine);
             poisonFlickerCoroutine = null;
         }
-        GetComponent<SpriteRenderer>().color = Color.white;
+
+        if (rainbowCoroutine == null)
+        {
+            spriteRenderer.color = Color.white;
+        }
+        else
+        {
+            StopCoroutine(rainbowCoroutine);
+            rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(spriteRenderer, -1, 2f, Color.white));
+        }
     }
 
 
     private void HandleDamaged()
     {
-        Debug.Log("damaged!!");
+        ShowStatusText("Damaged!", SpriteEffectColor.Red.ToColor());
         ChangeState(PlayerState.Damaged);
     }
 
@@ -186,7 +226,15 @@ public class PlayerContoller : MonoBehaviour
     private void HandleInvincibleStart()
     {
         if (rainbowCoroutine != null) StopCoroutine(rainbowCoroutine);
-        rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(GetComponent<SpriteRenderer>(), -1));
+        ShowStatusText("Invincible!", Color.white);
+
+        Color tint = Color.white;
+
+        if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
+        {
+            tint = Color.green * 0.6f + Color.white * 0.4f;
+        }
+        rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(GetComponent<SpriteRenderer>(), -1, 2f, tint));
     }
 
     private void HandleInvincibleEnd()
@@ -197,7 +245,14 @@ public class PlayerContoller : MonoBehaviour
             rainbowCoroutine = null;
         }
 
-        GetComponent<SpriteRenderer>().color = Color.white;
+        if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
+        {
+            poisonFlickerCoroutine = StartCoroutine(effector.IFlicker(spriteRenderer, SpriteEffectColor.Green, -1));
+        }
+        else
+        {
+            GetComponent<SpriteRenderer>().color = Color.white;
+        }
     }
 
 
@@ -405,5 +460,12 @@ public class PlayerContoller : MonoBehaviour
         pos.x = Mathf.Clamp(pos.x, minX, maxX);
         pos.y = Mathf.Clamp(pos.y, minY, maxY);
         transform.position = pos;
+    }
+
+    private void ShowStatusText(string text, Color color)
+    {
+        Debug.Log($"***{text}를 {color}로 띄우자!");
+        floatingText.SetActive(true);
+        floatingText.GetComponent<StatusText>().Initialize(text, color);
     }
 }

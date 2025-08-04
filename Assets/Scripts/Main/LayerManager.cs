@@ -1,7 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
 public class LayerManager : MonoBehaviour
@@ -20,9 +19,8 @@ public class LayerManager : MonoBehaviour
     private int maxTilesPerFrame = 40;
 
     private Tilemap tilemap;
-    private GameObject player;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -32,28 +30,79 @@ public class LayerManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
-        tilemap = FindObjectOfType<Tilemap>();
+        // 초기 바인딩은 씬 로드 시 재확인
     }
 
-    // Start is called before the first frame update
-    void Start()
+    private void OnEnable()
     {
-        mainCam = Camera.main;
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDisable()
     {
-        int newLayer = GetCurrentLayer();
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void Start()
+    {
+        TryRebindReferences();
+        UpdateLayer(); // 초기 레이어 계산
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        TryRebindReferences();
+        UpdateLayer();
+    }
+
+    private void Update()
+    {
+        UpdateLayer();
+    }
+
+    private void TryRebindReferences()
+    {
+        if (tilemap == null)
+            tilemap = FindObjectOfType<Tilemap>();
+        if (mainCam == null)
+            mainCam = Camera.main;
+    }
+
+    private void UpdateLayer()
+    {
+        int newLayer = CalculateCurrentLayer();
 
         if (newLayer != lastLayer)
         {
             CurrentLayer = newLayer;
             lastLayer = newLayer;
-
             OnLayerChanged?.Invoke(CurrentLayer);
         }
+    }
+
+    private int CalculateCurrentLayer()
+    {
+        if (tilemap == null)
+        {
+            tilemap = FindObjectOfType<Tilemap>();
+            if (tilemap == null)
+                return Mathf.Max(0, lastLayer);
+        }
+
+        if (mainCam == null)
+        {
+            mainCam = Camera.main;
+            if (mainCam == null)
+                return Mathf.Max(0, lastLayer);
+        }
+
+        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
+        Vector3Int bottomCenterCell = tilemap.WorldToCell(bottomCenterWorldPos);
+        Vector3 cellWorldPos = tilemap.CellToWorld(bottomCenterCell);
+
+        float originY = 0f;
+        int layer = Mathf.FloorToInt((originY - cellWorldPos.y) / layerHeight);
+        return Mathf.Max(0, layer);
     }
 
     public float GetLevelStartY(int layer)
@@ -65,18 +114,6 @@ public class LayerManager : MonoBehaviour
     {
         return -(layer + 1) * layerHeight;
     }
-
-
-    int GetCurrentLayer()
-    {
-        float originY = 0f;
-        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0, mainCam.nearClipPlane));
-        Vector3Int bottomCenterCell = tilemap.WorldToCell(bottomCenterWorldPos);
-
-        int layer = Mathf.FloorToInt((originY - tilemap.CellToWorld(bottomCenterCell).y) / layerHeight);
-        return Mathf.Max(0, layer);
-    }
-
 
     public float GetTilemapTotalHeight()
     {
@@ -92,8 +129,5 @@ public class LayerManager : MonoBehaviour
     {
         int layer = Mathf.Max(0, CurrentLayer);
         return CurrentLayerHardness = 40f + (layer * Mathf.Sqrt(layer)) * 20f;
-
     }
-
-
 }

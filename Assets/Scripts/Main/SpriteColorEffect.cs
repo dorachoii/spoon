@@ -61,11 +61,12 @@ public class SpriteColorEffect : MonoBehaviour
         }
     }
 
-    public IEnumerator IRainbowEffect(SpriteRenderer spriteRenderer, float duration = 0f, float hueSpeed = 2f)
+    public IEnumerator IRainbowEffect(SpriteRenderer spriteRenderer, float duration = 0f, float hueSpeed = 2f, Color? tint = null)
     {
         Color origin = spriteRenderer.color;
         float currentHue = 0f;
         float elapsed = 0f;
+        Color actualTint = tint ?? Color.white;
 
         while (duration <= 0f || elapsed < duration)
         {
@@ -73,13 +74,17 @@ public class SpriteColorEffect : MonoBehaviour
             if (currentHue > 1f) currentHue -= 1f;
 
             Color rainbowColor = Color.HSVToRGB(currentHue, 1f, 1f);
-            spriteRenderer.color = rainbowColor;
+            spriteRenderer.color = MultiplyColors(rainbowColor, actualTint);
 
             elapsed += Time.deltaTime;
-            yield return null; 
+            yield return null;
         }
 
         spriteRenderer.color = origin;
+    }
+
+    private Color MultiplyColors(Color a, Color b) {
+        return new Color(a.r * b.r, a.g * b.g, a.b * b.b, 1f);
     }
 
 }

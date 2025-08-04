@@ -89,7 +89,7 @@ public class TileMaker : MonoBehaviour, ISaveable
     void Start()
     {
         mainCamera = Camera.main;
-        FillTiles();
+        //FillTiles();
 
         // viewport point -> world point -> cell point
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
