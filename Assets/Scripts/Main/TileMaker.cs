@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.IO;
+using Unity.VisualScripting.Dependencies.Sqlite;
 
 public enum TileType { Plain, Dotted, Gradient }
 
@@ -77,6 +78,8 @@ public class TileMaker : MonoBehaviour, ISaveable
 
     void HandleLevelChanged(int newLevel)
     {
+        if (mainCamera == null) mainCamera = Camera.main;
+        
         currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
 
         Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));

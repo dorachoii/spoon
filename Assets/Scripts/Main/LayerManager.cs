@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering.Universal.Internal;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
@@ -14,11 +17,19 @@ public class LayerManager : MonoBehaviour
     private Camera mainCam;
 
     public Action<int> OnLayerChanged;
-    private int lastLayer = 0;
+    private int lastLayer = -1;
 
     private int maxTilesPerFrame = 40;
 
     private Tilemap tilemap;
+
+    [Header("Layer Display UI")]
+    [SerializeField] private TextMeshProUGUI titleText;
+    [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private float showDuration = 2f;
+    [SerializeField] private float fadeTime = 0.2f;
+
+    private Coroutine displayRoutine;
 
     private void Awake()
     {
@@ -29,8 +40,6 @@ public class LayerManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
-        // 초기 바인딩은 씬 로드 시 재확인
     }
 
     private void OnEnable()
@@ -47,6 +56,19 @@ public class LayerManager : MonoBehaviour
     {
         TryRebindReferences();
         UpdateLayer(); // 초기 레이어 계산
+    }
+
+    private string GetLayerName(int layerIndex)
+    {
+        return layerIndex switch
+        {
+            0 => "Mine Zone",
+            1 => "Crypt Zone 1",
+            2 => "Crypt Zone 2",
+            3 => "Lava Zone",
+            4 => "Ultimate Zone",
+            _ => $"Layer{layerIndex}"
+        };
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -77,6 +99,7 @@ public class LayerManager : MonoBehaviour
             CurrentLayer = newLayer;
             lastLayer = newLayer;
             OnLayerChanged?.Invoke(CurrentLayer);
+            ShowLayerText(CurrentLayer);
         }
     }
 
@@ -129,5 +152,37 @@ public class LayerManager : MonoBehaviour
     {
         int layer = Mathf.Max(0, CurrentLayer);
         return CurrentLayerHardness = 40f + (layer * Mathf.Sqrt(layer)) * 20f;
+    }
+
+    private void ShowLayerText(int layer)
+    {
+        string title = GetLayerName(layer);
+        titleText.text = title;
+        if (displayRoutine != null) StopCoroutine(displayRoutine);
+        displayRoutine = StartCoroutine(PlayDisplayRoutine());
+    }
+
+    private IEnumerator PlayDisplayRoutine()
+    {
+        float t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(0f, 1f, t / fadeTime);
+            yield return null;
+        }
+        canvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(showDuration - fadeTime * 2f);
+
+        t = 0f;
+
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha += Mathf.Lerp(1f, 0f, t / fadeTime);
+            yield return null;
+        }
+        canvasGroup.alpha = 0f;
     }
 }
