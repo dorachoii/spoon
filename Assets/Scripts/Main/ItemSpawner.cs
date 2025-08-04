@@ -1,17 +1,40 @@
 using System.Collections.Generic;
+using System.Data.Common;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+
+[System.Serializable]
+public class LayerSpawnData
+{
+    public GameObject[] itemPrefabs;
+    public GameObject[] enemyPrefabs;
+    public int savePointCount;
+}
 
 public class ItemSpawner : MonoBehaviour
 {
     private Tilemap tilemap;
-    public GameObject[] itemPrefab;
-    public GameObject[] enemyPrefab;
 
     private Transform player;
     private float lastDropY;
 
     public float dropInterval = 8f;
+
+    [Header("Spawn Data")]
+    public LayerSpawnData[] layerSpawnDatas;
+    private int currentLayer = 0;
+    public GameObject savePointPrefab;
+
+    void OnEnable()
+    {
+        LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
+    }
+
+    void OnDisable()
+    {
+        LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
+    }
+
 
     void Start()
     {
@@ -34,13 +57,21 @@ public class ItemSpawner : MonoBehaviour
         }
     }
 
+    private void HandleLayerChanged(int newLayer)
+    {
+        currentLayer = Mathf.Clamp(newLayer, 0, layerSpawnDatas.Length - 1);
+        SpawnSavePoints();
+    }
 
     void SpawnItemBelowScreen()
     {
+        LayerSpawnData data = layerSpawnDatas[currentLayer];
+        if (data == null) return;
+        
         Camera cam = Camera.main;
         float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
 
-        float xPadding = 0.15f; 
+        float xPadding = 0.15f;
 
         Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
         Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));
@@ -64,7 +95,7 @@ public class ItemSpawner : MonoBehaviour
         if (validTiles.Count > 0)
         {
             Vector3Int spawnTile = validTiles[Random.Range(0, validTiles.Count)];
-            SpawnItemAtTile(spawnTile);
+            SpawnItemAtTile(spawnTile, data);
             Debug.Log($"[ItemSpawner] Spawned item at {spawnTile}");
         }
         else
@@ -74,25 +105,61 @@ public class ItemSpawner : MonoBehaviour
     }
 
     private int lastIndex = 6;
-    void SpawnItemAtTile(Vector3Int tilePos)
+    void SpawnItemAtTile(Vector3Int tilePos, LayerSpawnData data)
     {
         Vector3 worldPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
 
         int spawnRoll = Random.Range(0, 4); // 0~3 중 하나
 
-        if (spawnRoll == 0 && enemyPrefab.Length > 0)
+        if (spawnRoll == 0 && data.enemyPrefabs.Length > 0)
         {
             // 적 25% 확률 (4번 중 1번)
-            Instantiate(enemyPrefab[Random.Range(0, enemyPrefab.Length)], worldPos, Quaternion.identity);
+            Instantiate(data.enemyPrefabs[Random.Range(0, data.enemyPrefabs.Length)], worldPos, Quaternion.identity);
         }
-        else if (itemPrefab.Length > 0)
+        else if (data.itemPrefabs.Length > 0)
         {
             // 나머지 75%는 아이템
-            Instantiate(itemPrefab[Random.Range(0, itemPrefab.Length)], worldPos, Quaternion.identity);
-            //int nextIndex = (lastIndex == 5) ? 6 : 5;
-            //lastIndex = nextIndex;
+            Instantiate(data.itemPrefabs[Random.Range(0, data.itemPrefabs.Length)], worldPos, Quaternion.identity);
+        }
+    }
 
-            //Instantiate(itemPrefab[nextIndex], worldPos, Quaternion.identity);
+    void SpawnSavePoints()
+    {
+        LayerSpawnData data = layerSpawnDatas[currentLayer];
+        if (savePointPrefab == null || data == null) return;
+
+        int count = Random.Range(1, data.savePointCount + 1);
+
+        Camera cam = Camera.main;
+        float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
+
+        Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f, 0f, z));
+        Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f, 1f, z));
+
+        Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
+        Vector3Int max = tilemap.WorldToCell(topRightWorld);
+
+        List<Vector3Int> validTiles = new List<Vector3Int>();
+        for (int x = min.x; x <= max.x; x++)
+        {
+            for (int y = min.y; y <= max.y; y++)
+            {
+                Vector3Int tilePos = new Vector3Int(x, y, 0);
+                if (tilemap.HasTile(tilePos))
+                    validTiles.Add(tilePos);
+            }
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            if (validTiles.Count == 0) break;
+
+            int idx = Random.Range(0, validTiles.Count);
+            Vector3Int spawnTile = validTiles[idx];
+            validTiles.RemoveAt(idx);
+
+            Vector3 spawnPos = tilemap.CellToWorld(spawnTile) + tilemap.tileAnchor;
+            Instantiate(savePointPrefab, spawnPos, Quaternion.identity);
         }
     }
 

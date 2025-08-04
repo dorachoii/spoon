@@ -79,6 +79,7 @@ public class TileMaker : MonoBehaviour, ISaveable
     void HandleLevelChanged(int newLevel)
     {
         if (mainCamera == null) mainCamera = Camera.main;
+
         
         currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
 

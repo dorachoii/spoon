@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680a3749196114c4aa8343a923280b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layerHeight: 20
+  layerHeight: 50
   titleText: {fileID: 915005144}
   canvasGroup: {fileID: 2121093355}
   showDuration: 2
@@ -166974,6 +166974,33 @@ MonoBehaviour:
   - {fileID: 8535364043472169121, guid: 33513c6389a9f9a4d8135acf85f30520, type: 3}
   - {fileID: 8535364043472169121, guid: f1d93d89076153a48b2dc345c8258bfb, type: 3}
   dropInterval: 5
+  layerSpawnDatas:
+  - itemPrefabs:
+    - {fileID: 9147467908412981061, guid: 31318578f5aad7c4892e716efec35853, type: 3}
+    - {fileID: 7904862957865094235, guid: 22a0329d3f904844c89cec40112a3f5a, type: 3}
+    enemyPrefabs: []
+    savePointCount: 1
+  - itemPrefabs:
+    - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
+    - {fileID: 7904862957865094235, guid: 22a0329d3f904844c89cec40112a3f5a, type: 3}
+    enemyPrefabs:
+    - {fileID: 8535364043472169121, guid: 6ad0dcaf73f020145b13bfc16a0b6cc7, type: 3}
+    savePointCount: 1
+  - itemPrefabs:
+    - {fileID: 7904862957865094235, guid: baaa2bafdcc44204c88999e358385604, type: 3}
+    - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
+    enemyPrefabs:
+    - {fileID: 8535364043472169121, guid: 33513c6389a9f9a4d8135acf85f30520, type: 3}
+    savePointCount: 2
+  - itemPrefabs:
+    - {fileID: 5680816269859317106, guid: b7a7334bdca243b419cf8a64954228a7, type: 3}
+    enemyPrefabs: []
+    savePointCount: 1
+  - itemPrefabs:
+    - {fileID: 2528253473108633248, guid: 814a17c8f997eae49b28458174ea1be3, type: 3}
+    - {fileID: 1496157776698782910, guid: 923d1d2706aee484ca46927339377a11, type: 3}
+    enemyPrefabs: []
+    savePointCount: 1
 --- !u!1 &1806671223
 GameObject:
   m_ObjectHideFlags: 0

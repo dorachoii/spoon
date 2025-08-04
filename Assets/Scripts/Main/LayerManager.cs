@@ -12,7 +12,7 @@ public class LayerManager : MonoBehaviour
 
     public int CurrentLayer { get; private set; } = 0;
     public float CurrentLayerHardness { get; private set; } = 1f;
-    public float layerHeight = 20f;
+    public float layerHeight = 50f;
 
     private Camera mainCam;
 
