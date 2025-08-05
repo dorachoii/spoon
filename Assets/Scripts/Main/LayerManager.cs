@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering.Universal.Internal;
@@ -13,6 +14,9 @@ public class LayerManager : MonoBehaviour
     public int CurrentLayer { get; private set; } = 0;
     public float CurrentLayerHardness { get; private set; } = 1f;
     public float layerHeight = 50f;
+
+    public int CurrentBossLayer { get; private set; } = -1;
+    private int lastBossLayer = -1;
 
     private Camera mainCam;
 
@@ -54,9 +58,24 @@ public class LayerManager : MonoBehaviour
 
     private void Start()
     {
-        TryRebindReferences();
-        UpdateLayer(); // 초기 레이어 계산
+        if (tilemap == null)
+            tilemap = FindObjectOfType<Tilemap>();
+        if (mainCam == null)
+            mainCam = Camera.main;
+
+        UpdateLayer();
     }
+
+    // ** 요구사항
+    // 기본 레이어들은 layerheight = 50f을 가짐
+    // 근데 특수로 보스 레이어가 두번 등장함.
+    // 1) 2와 3 사이
+    // 2) 4의 끝
+
+    // 이 보스 레이어들은 기존 layerHeight와 관계없이 생성되어야함.
+    // 어떻게 구현하는 게 가장 좋을까?
+    // 예를 들어 2가 끝났다! 트리거를 주고 보스 생성, 보스 생성 후 다시 기본 레이어 생성시기라는 플래그 주기?
+
 
     private string GetLayerName(int layerIndex)
     {
@@ -73,7 +92,10 @@ public class LayerManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        TryRebindReferences();
+        if (tilemap == null)
+            tilemap = FindObjectOfType<Tilemap>();
+        if (mainCam == null)
+            mainCam = Camera.main;
         UpdateLayer();
     }
 
@@ -82,26 +104,57 @@ public class LayerManager : MonoBehaviour
         UpdateLayer();
     }
 
-    private void TryRebindReferences()
-    {
-        if (tilemap == null)
-            tilemap = FindObjectOfType<Tilemap>();
-        if (mainCam == null)
-            mainCam = Camera.main;
-    }
-
     private void UpdateLayer()
     {
         int newLayer = CalculateCurrentLayer();
+        int newBossLayer = CalculateBossLayer();
+
+        bool changed = false;
 
         if (newLayer != lastLayer)
         {
             CurrentLayer = newLayer;
             lastLayer = newLayer;
             OnLayerChanged?.Invoke(CurrentLayer);
-            ShowLayerText(CurrentLayer);
+            changed = true;
+        }
+
+        if (newBossLayer != lastBossLayer)
+        {
+            CurrentBossLayer = newBossLayer;
+            lastBossLayer = newBossLayer;
+
+            // 여기서 보스 등장 관련 처리
+            if (CurrentBossLayer >= 0)
+            {
+                Debug.Log($"보스 {CurrentBossLayer + 1} 등장!");
+                // 예: BossManager.Instance.SpawnBoss(CurrentBossLayer);
+            }
+
+            changed = true;
+        }
+
+        if (changed)
+        {
+            ShowLayerText(); // 보스 또는 일반 레이어 이름
         }
     }
+    private void ShowLayerText()
+    {
+        string title = CurrentBossLayer switch
+        {
+            0 => "Boss Chamber I",
+            1 => "Boss Chamber II",
+            _ => GetLayerName(CurrentLayer)
+        };
+
+        titleText.text = title;
+
+        if (displayRoutine != null) StopCoroutine(displayRoutine);
+        displayRoutine = StartCoroutine(PlayDisplayRoutine());
+    }
+
+
 
     private int CalculateCurrentLayer()
     {
@@ -128,15 +181,43 @@ public class LayerManager : MonoBehaviour
         return Mathf.Max(0, layer);
     }
 
-    public float GetLevelStartY(int layer)
+    private int CalculateBossLayer()
     {
-        return -layer * layerHeight;
+        float playerY = GetCameraBottomY();
+
+        // 2와 3 사이에 첫 보스 구간
+        float boss1StartY = GetLevelEndY(2);
+        float boss1EndY = GetLevelStartY(3);
+
+        // 4 끝에 두 번째 보스 구간
+        float boss2StartY = GetLevelEndY(4);
+        float boss2EndY = boss2StartY - 50f; // 예시: 보스 높이 50f
+
+        if (playerY <= boss1StartY && playerY >= boss1EndY)
+            return 0; // 첫 번째 보스
+        if (playerY <= boss2StartY && playerY >= boss2EndY)
+            return 1; // 두 번째 보스
+
+        return -1; // 보스 없음
     }
 
-    public float GetLevelEndY(int layer)
+    public float levelHeight = 20f;
+    public List<Transform> levelList;
+
+    // 해당 레벨의 시작 Y 좌표
+    public float GetLevelStartY(int levelIndex)
     {
-        return -(layer + 1) * layerHeight;
+        if (levelIndex < 0 || levelIndex >= levelList.Count) return 0f;
+        return levelList[levelIndex].position.y;
     }
+
+    // 해당 레벨의 끝 Y 좌표
+    public float GetLevelEndY(int levelIndex)
+    {
+        return GetLevelStartY(levelIndex) + levelHeight;
+    }
+
+
 
     public float GetTilemapTotalHeight()
     {
@@ -185,4 +266,11 @@ public class LayerManager : MonoBehaviour
         }
         canvasGroup.alpha = 0f;
     }
+
+    private float GetCameraBottomY()
+    {
+        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
+        return bottomCenterWorldPos.y;
+    }
+
 }

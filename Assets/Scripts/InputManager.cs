@@ -6,9 +6,7 @@ using System;
 public class InputManager : MonoBehaviour
 {
     private bool clicking;
-
-    [Header(" Action ")]
-    public static Action<Vector3> onTouching;
+    public static event Action<Vector3> onTouching;
 
     // Start is called before the first frame update
     void Start()
@@ -21,6 +19,7 @@ public class InputManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+           
             clicking = true;
         }
         else if (Input.GetMouseButton(0) && clicking)
@@ -35,6 +34,7 @@ public class InputManager : MonoBehaviour
 
     private void Clicking()
     {
+        Debug.Log("clicking");
         RaycastHit hit;
         Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 50);
 

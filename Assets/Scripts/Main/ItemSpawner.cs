@@ -11,6 +11,14 @@ public class LayerSpawnData
     public int savePointCount;
 }
 
+[System.Serializable]
+public class BossLayerData
+{
+    public int layerIndex;
+    public GameObject bossPrefab;
+    public Vector3 offset;
+}
+
 public class ItemSpawner : MonoBehaviour
 {
     private Tilemap tilemap;
@@ -22,6 +30,10 @@ public class ItemSpawner : MonoBehaviour
 
     [Header("Spawn Data")]
     public LayerSpawnData[] layerSpawnDatas;
+
+    [Header("Boss Spawn Data")]
+    public List<BossLayerData> bossLayerDatas;
+
     private int currentLayer = 0;
     public GameObject savePointPrefab;
 
@@ -61,13 +73,49 @@ public class ItemSpawner : MonoBehaviour
     {
         currentLayer = Mathf.Clamp(newLayer, 0, layerSpawnDatas.Length - 1);
         SpawnSavePoints();
+
+        TrySpawnBossForLayer(newLayer);
     }
+
+    private bool bossSpawned = false;
+
+    void TrySpawnBossForLayer(int layerIndex)
+    {
+        if (bossSpawned) return; // 이미 생성됐으면 무시
+
+        foreach (var bossData in bossLayerDatas)
+        {
+            if (bossData.layerIndex == layerIndex && bossData.bossPrefab != null)
+            {
+                // 보스 위치 계산
+                Vector3 spawnPos = GetBossSpawnPosition() + bossData.offset;
+                Instantiate(bossData.bossPrefab, spawnPos, Quaternion.identity);
+                bossSpawned = true;
+                Debug.Log($"[ItemSpawner] Boss spawned on layer {layerIndex} at {spawnPos}");
+                break;
+            }
+        }
+    }
+
+    Vector3 GetBossSpawnPosition()
+    {
+        Camera cam = Camera.main;
+        float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
+
+        Vector3 midWorld = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.2f, z)); // 화면 아래쪽 중앙
+
+        Vector3Int tilePos = tilemap.WorldToCell(midWorld);
+        Vector3 spawnPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
+
+        return spawnPos;
+    }
+
 
     void SpawnItemBelowScreen()
     {
         LayerSpawnData data = layerSpawnDatas[currentLayer];
         if (data == null) return;
-        
+
         Camera cam = Camera.main;
         float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
 
