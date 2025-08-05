@@ -99,8 +99,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8a4b9652ca0fbb4680083dbb627671b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHeight: 30
-  bombFX: {fileID: 3035650337442887019, guid: e1ce18ab0316be74ebf2f6bfa57bb21e, type: 3}
+  effectPrefab: {fileID: 3035650337442887019, guid: e1ce18ab0316be74ebf2f6bfa57bb21e, type: 3}
+  explosionRadius: 30
+  explosionForce: 0.001
+  damageRadius: 15
+  damageAmount: 20
 --- !u!58 &4737842280975421179
 CircleCollider2D:
   m_ObjectHideFlags: 0

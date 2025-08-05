@@ -156,8 +156,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d58fa135b5c8e14c8867545bde7eef5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHeight: 30
-  hpFX: {fileID: 4804870677556975355, guid: 0be22041453db044b872727706cc4ca5, type: 3}
+  effectPrefab: {fileID: 4804870677556975355, guid: 0be22041453db044b872727706cc4ca5, type: 3}
 --- !u!114 &-5085780962504577853
 MonoBehaviour:
   m_ObjectHideFlags: 0

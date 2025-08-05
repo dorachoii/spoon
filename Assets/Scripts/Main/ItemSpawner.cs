@@ -37,6 +37,9 @@ public class ItemSpawner : MonoBehaviour
     private int currentLayer = 0;
     public GameObject savePointPrefab;
 
+    public GameObject breakableTilemap;
+    public GameObject grid;
+
     void OnEnable()
     {
         LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
@@ -80,22 +83,37 @@ public class ItemSpawner : MonoBehaviour
     private bool bossSpawned = false;
 
     void TrySpawnBossForLayer(int layerIndex)
-    {
-        if (bossSpawned) return; // 이미 생성됐으면 무시
+{
+    if (bossSpawned) return; // 이미 생성됐으면 무시
 
-        foreach (var bossData in bossLayerDatas)
+    foreach (var bossData in bossLayerDatas)
+    {
+        if (bossData.layerIndex == layerIndex && bossData.bossPrefab != null)
         {
-            if (bossData.layerIndex == layerIndex && bossData.bossPrefab != null)
+            // 보스 위치 계산
+            Vector3 spawnPos = GetBossSpawnPosition() + bossData.offset;
+
+            // 1. 보스 생성
+            Instantiate(bossData.bossPrefab, spawnPos, Quaternion.identity);
+            bossSpawned = true;
+            Debug.Log($"[ItemSpawner] Boss spawned on layer {layerIndex} at {spawnPos}");
+
+            // 2. Breakable 타일맵 생성 (선택사항)
+            if (breakableTilemap != null)
             {
-                // 보스 위치 계산
-                Vector3 spawnPos = GetBossSpawnPosition() + bossData.offset;
-                Instantiate(bossData.bossPrefab, spawnPos, Quaternion.identity);
-                bossSpawned = true;
-                Debug.Log($"[ItemSpawner] Boss spawned on layer {layerIndex} at {spawnPos}");
-                break;
+                // 보스보다 살짝 위에 생성 (위치는 필요에 따라 조정)
+                Vector3 tilemapPos = spawnPos + new Vector3(0, 2f, 0);
+
+                GameObject tilemapObj = Instantiate(breakableTilemap, tilemapPos, Quaternion.identity);
+                    tilemapObj.transform.SetParent(grid.transform);
+                
             }
+
+            break;
         }
     }
+}
+
 
     Vector3 GetBossSpawnPosition()
     {

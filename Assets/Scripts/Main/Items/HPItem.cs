@@ -1,15 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PoisonItem : ItemBase
+public class HPItem : ItemBase
 {
+    [SerializeField] private float healAmount = 10f;
+    
     protected override void ApplyEffect(GameObject player)
     {
         PlayerStat playerStat = player.GetComponent<PlayerStat>();
         if (playerStat != null)
         {
-            playerStat.StartPoisonEffect(20f);
+            playerStat.HealHP(healAmount);
         }
     }
 }

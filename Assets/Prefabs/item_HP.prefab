@@ -155,6 +155,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01af298c010ad2943889565f2c1e0924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHeight: 30
-  hpFX: {fileID: 4804870677556975355, guid: 0be22041453db044b872727706cc4ca5, type: 3}
-  healamount: 10
+  effectPrefab: {fileID: 4804870677556975355, guid: 0be22041453db044b872727706cc4ca5, type: 3}
+  healAmount: 10

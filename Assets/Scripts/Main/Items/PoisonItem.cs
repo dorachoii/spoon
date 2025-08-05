@@ -1,15 +1,17 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DetoxItem : ItemBase
+public class PoisonItem : ItemBase
 {
+    [Header("Poison Item Settings")]
+    [SerializeField] private float poisonDuration = 20f;
+    
     protected override void ApplyEffect(GameObject player)
     {
         PlayerStat playerStat = player.GetComponent<PlayerStat>();
         if (playerStat != null)
         {
-            playerStat.CurePoision();
+            playerStat.StartPoisonEffect(poisonDuration);
         }
     }
 }

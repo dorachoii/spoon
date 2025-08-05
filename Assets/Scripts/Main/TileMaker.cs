@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.IO;
 using Unity.VisualScripting.Dependencies.Sqlite;
+using Unity.VisualScripting;
 
 public enum TileType { Plain, Dotted, Gradient }
 
@@ -15,6 +16,7 @@ public class TileMaker : MonoBehaviour, ISaveable
     public TileBase[] tile_plain; // 5가지 색상
     private TileBase[,] tile_dotted = new TileBase[9, 9];
     private TileBase[,] tile_gradient = new TileBase[12, 12];
+    private TileBase[,] tile_breakable = new TileBase[24, 24];
 
     private Vector3Int lastBottomLeftCell;
     private Vector3Int lastTopRightCell;
@@ -27,6 +29,7 @@ public class TileMaker : MonoBehaviour, ISaveable
     private int lastGradientLineY = int.MinValue;
     private int lastLevel = -1;
     private int loadGradientLevel = -1;
+
 
     public void WriteData(GameData data)
     {
@@ -45,6 +48,8 @@ public class TileMaker : MonoBehaviour, ISaveable
             return;
         }
         Instance = this;
+
+
 
     }
 
@@ -70,38 +75,31 @@ public class TileMaker : MonoBehaviour, ISaveable
 
     void LoadTile()
     {
-        Debug.Log("[타일생성] LoadTile"); 
+        Debug.Log("[타일생성] LoadTile");
         // load되고, 플레이어 
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
     }
 
     void HandleLevelChanged(int newLevel)
-{
-    if (mainCamera == null) mainCamera = Camera.main;
-
-    currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
-
-    Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-
-    FillGradientLine(currentBottomLeft.y, currentLevel - 1);
-
-    // 보스 직전 층이면 Breakable 찍기
-    if (IsLevelBeforeBoss(currentLevel))
     {
-        StampBreakableTilesLine(currentBottomLeft.y + 24); // 보스 바로 전 위치 (약간 위)
+        if (mainCamera == null) mainCamera = Camera.main;
+
+        currentLevel = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
+
+        Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+
+        FillGradientLine(currentBottomLeft.y, currentLevel - 1);
+
+
+        lastGradientLineY = currentBottomLeft.y;
+        lastLevel = currentLevel;
     }
 
-    lastGradientLineY = currentBottomLeft.y;
-    lastLevel = currentLevel;
-}
 
-bool IsLevelBeforeBoss(int level)
-{
-    return bossSpawnLevels.Contains(level + 1);
-}
-[SerializeField]
-private List<int> bossSpawnLevels;
+    [SerializeField]
+    private List<int> bossSpawnLevels;
+
 
 
     void Start()
@@ -183,56 +181,8 @@ private List<int> bossSpawnLevels;
             tilemap.SetTilesBlock(bounds, tiles);
         }
     }
-    private TileBase[,] tile_breakable = new TileBase[24, 24];
 
-void LoadBreakableTiles()
-{
-    for (int y = 0; y < 24; y++)
-    {
-        for (int x = 0; x < 24; x++)
-        {
-            int index = y * 24 + x;
-            string path = $"TileMap/BG_Breakable_01_{index}";
-            TileBase tile = Resources.Load<TileBase>(path);
-            if (tile == null)
-            {
-                Debug.LogError($"Breakable tile not found at path: {path}");
-                continue;
-            }
-            tile_breakable[x, y] = tile;
-        }
-    }
-}
-void StampBreakableTilesLine(int y)
-{
-    Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-    Vector3Int currentTopRight = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
-    int cellWidth = currentTopRight.x - currentBottomLeft.x + 1;
-    int chunkCount = Mathf.CeilToInt((float)cellWidth / 24);
-
-    int startX = currentBottomLeft.x;
-
-    for (int i = 0; i < chunkCount; i++)
-    {
-        int originX = startX + i * 24;
-
-        BoundsInt bounds = new BoundsInt(originX, y, 0, 24, 24, 1);
-
-        TileBase[] tiles = new TileBase[24 * 24];
-        for (int dx = 0; dx < 24; dx++)
-        {
-            for (int dy = 0; dy < 24; dy++)
-            {
-                int index = dy * 24 + dx;
-                int reverseIndex = (24 * 24 - 1) - index;
-                tiles[reverseIndex] = tile_breakable[dx, dy];
-            }
-        }
-
-        tilemap.SetTilesBlock(bounds, tiles);
-    }
-}
 
 
 
@@ -392,7 +342,7 @@ void StampBreakableTilesLine(int y)
         List<TileData> tileList = new List<TileData>();
         BoundsInt bounds = tilemap.cellBounds;
 
-        Debug.Log($"[Save&Load] 저장 시, Tilemap.cellBounds Y Range: {bounds.yMin} ~ {bounds.yMax - 1}"); 
+        Debug.Log($"[Save&Load] 저장 시, Tilemap.cellBounds Y Range: {bounds.yMin} ~ {bounds.yMax - 1}");
 
         for (int y = bounds.yMin; y < bounds.yMax; y++)
         {
