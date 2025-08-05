@@ -118,7 +118,7 @@ public class PlayerContoller : MonoBehaviour
             PlayerStat.Instance.OnPoisonedStarted += HandlePoisonStart;
             PlayerStat.Instance.OnPoisonedEnded += HandlePoisonEnd;
 
-            PlayerStat.Instance.OnPowerUp += HandlePowerUp;
+            //PlayerStat.Instance.OnPowerUp += HandlePowerUp;
         }
         jumpForce = PlayerStat.Instance.JumpForce;
 
@@ -143,7 +143,7 @@ public class PlayerContoller : MonoBehaviour
             PlayerStat.Instance.OnPoisonedStarted -= HandlePoisonStart;
             PlayerStat.Instance.OnPoisonedEnded -= HandlePoisonEnd;
 
-            PlayerStat.Instance.OnPowerUp -= HandlePowerUp;
+            //PlayerStat.Instance.OnPowerUp -= HandlePowerUp;
         }
     }
 
@@ -165,10 +165,7 @@ public class PlayerContoller : MonoBehaviour
         }
     }
 
-    private void HandlePowerUp(float power)
-    {
-        ShowStatusText("Power Up!", Color.cyan);
-    }
+
 
     private void HandlePoisonStart()
     {
@@ -176,14 +173,14 @@ public class PlayerContoller : MonoBehaviour
 
         if (rainbowCoroutine != null)
         {
-            ShowStatusText("흠", Color.green);
+       
             StopCoroutine(rainbowCoroutine);
             Color tint = Color.green * 0.6f + Color.white * 0.4f;
             rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(spriteRenderer, -1, 2f, tint));
         }
         else
         {
-            ShowStatusText("Poisoned!", SpriteEffectColor.Green.ToColor());
+            
             poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffect>().IFlicker(GetComponent<SpriteRenderer>(), SpriteEffectColor.Green, -1));
         }
 
@@ -214,7 +211,7 @@ public class PlayerContoller : MonoBehaviour
 
     private void HandleDamaged()
     {
-        ShowStatusText("Damaged!", SpriteEffectColor.Red.ToColor());
+        
         ChangeState(PlayerState.Damaged);
     }
 
@@ -226,7 +223,7 @@ public class PlayerContoller : MonoBehaviour
     private void HandleInvincibleStart()
     {
         if (rainbowCoroutine != null) StopCoroutine(rainbowCoroutine);
-        ShowStatusText("Invincible!", Color.white);
+      
 
         Color tint = Color.white;
 
@@ -462,7 +459,7 @@ public class PlayerContoller : MonoBehaviour
         transform.position = pos;
     }
 
-    private void ShowStatusText(string text, Color color)
+    public void ShowStatusText(string text, Color color)
     {
         Debug.Log($"***{text}를 {color}로 띄우자!");
         floatingText.SetActive(true);

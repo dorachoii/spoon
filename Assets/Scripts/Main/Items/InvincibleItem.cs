@@ -18,6 +18,7 @@ public class InvincibleItem : ItemBase
         if (playerStat != null)
         {
             StartCoroutine(playerStat.RecoverHPAndInvincible(5f));
+            ShowStatusText("Invincible", Color.blue);
         }
     }
 }

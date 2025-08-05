@@ -9,6 +9,7 @@ public class AntidoteItem : ItemBase
         if (playerStat != null)
         {
             playerStat.CurePoision();
+            ShowStatusText("Poison Cure", Color.green);
         }
     }
 }

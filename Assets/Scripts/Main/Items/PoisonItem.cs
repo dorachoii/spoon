@@ -12,6 +12,7 @@ public class PoisonItem : ItemBase
         if (playerStat != null)
         {
             playerStat.StartPoisonEffect(poisonDuration);
+            ShowStatusText("Poisoned", Color.red);
         }
     }
 }

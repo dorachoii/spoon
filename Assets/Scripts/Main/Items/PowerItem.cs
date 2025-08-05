@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PowerItem : ItemBase
@@ -12,12 +10,9 @@ public class PowerItem : ItemBase
         if (playerStat != null)
         {
             playerStat.AddDigPowerBonus(powerIncrease);
-            Debug.Log($"[PowerItem] Increased dig power by {powerIncrease}. New dig power: {playerStat.DigPower}");
+            ShowStatusText("Power Up!", Color.cyan);
         }
-        else
-        {
-            Debug.LogWarning("[PowerItem] PlayerStat component not found on player.");
-        }
+
     }
 }
 

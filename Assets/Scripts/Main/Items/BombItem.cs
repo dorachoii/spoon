@@ -26,6 +26,7 @@ public class BombItem : ItemBase
     {
         ExplodeTiles();
         Damage(player);
+        ShowStatusText("Damaged", Color.red);
     }
 
     void ExplodeTiles()

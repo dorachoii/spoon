@@ -4,10 +4,10 @@ using UnityEngine.Tilemaps;
 public abstract class ItemBase : MonoBehaviour
 {
     float maxHeight = 1.1f; // Auto Destroyの基準
-    
+
     [Header("Effect Settings")]
-    [SerializeField] protected GameObject effectPrefab; 
-    
+    [SerializeField] protected GameObject effectPrefab;
+
     protected Tilemap tilemap;
     protected Camera mainCamera;
 
@@ -23,7 +23,7 @@ public abstract class ItemBase : MonoBehaviour
 
     protected virtual void Update()
     {
-        if (mainCamera == null) return; 
+        if (mainCamera == null) return;
         Vector3 viewportPos = mainCamera.WorldToViewportPoint(transform.position);
 
         // 画面外に出たらAuto Destroy
@@ -38,7 +38,7 @@ public abstract class ItemBase : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            InstantiateFX(); 
+            InstantiateFX();
             ApplyEffect(collision.gameObject);
             Destroy(gameObject);
         }
@@ -51,6 +51,20 @@ public abstract class ItemBase : MonoBehaviour
         {
             GameObject fx = Instantiate(effectPrefab, transform.position, Quaternion.identity);
             Destroy(fx, 1f);
+        }
+    }
+
+    // ステータステキスト表示
+    protected void ShowStatusText(string text, Color color)
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            PlayerContoller controller = player.GetComponent<PlayerContoller>();
+            if (controller != null)
+            {
+                controller.ShowStatusText(text, color);  
+            }
         }
     }
 
