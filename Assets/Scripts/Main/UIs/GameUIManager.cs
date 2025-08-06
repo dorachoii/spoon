@@ -10,7 +10,7 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject restartButton;
     [SerializeField] private GameObject gameResumeButton;
 
-    [SerializeField] private IrisEffectController irisEffectController;
+    [SerializeField] private IrisEffector irisEffectController;
 
     private void Awake()
     {
