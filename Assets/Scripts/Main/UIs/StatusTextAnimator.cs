@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(CanvasGroup))]
-public class StatusText : MonoBehaviour
+public class StatusTextAnimator : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI tmp;
     [SerializeField] private CanvasGroup canvasGroup;
@@ -13,13 +13,13 @@ public class StatusText : MonoBehaviour
     private float startY = 1f;
     private float endY = 0.5f;
 
-    private Coroutine routine;
+    private Coroutine animationCoroutine;
     private RectTransform rect;
 
     private void Awake()
     {
-        if (tmp == null) tmp = GetComponentInChildren<TextMeshProUGUI>();
-        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        tmp = GetComponentInChildren<TextMeshProUGUI>();
+        canvasGroup = GetComponent<CanvasGroup>();
         rect = GetComponent<RectTransform>();
     }
 
@@ -29,12 +29,12 @@ public class StatusText : MonoBehaviour
         tmp.color = color;
         canvasGroup.alpha = 1f;
 
-
-        if (routine != null) StopCoroutine(routine);
-        routine = StartCoroutine(PlayRoutine());
+        if (animationCoroutine != null) StopCoroutine(animationCoroutine);
+        animationCoroutine = StartCoroutine(PlayAnimation());
     }
 
-    private IEnumerator PlayRoutine()
+    // fade out & fall
+    private IEnumerator PlayAnimation()
     {
         float elapsed = 0f;
 
@@ -43,13 +43,10 @@ public class StatusText : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
 
-            // Y 애니메이션: startY → endY
             float currentY = Mathf.Lerp(startY, endY, t);
             Vector3 local = rect.localPosition;
             local.y = currentY;
             rect.localPosition = local;
-
-            // 페이드
             canvasGroup.alpha = Mathf.SmoothStep(1f, 0f, t);
 
             yield return null;

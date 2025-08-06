@@ -463,6 +463,6 @@ public class PlayerContoller : MonoBehaviour
     {
         Debug.Log($"***{text}를 {color}로 띄우자!");
         floatingText.SetActive(true);
-        floatingText.GetComponent<StatusText>().Initialize(text, color);
+        floatingText.GetComponent<StatusTextAnimator>().Initialize(text, color);
     }
 }
