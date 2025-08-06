@@ -2,53 +2,45 @@ using UnityEngine;
 
 public class MinimapUI : MonoBehaviour
 {
-    public RectTransform minimapBar;
-    public RectTransform character;
+    [Header("Minimap Components")]
+    [SerializeField] private RectTransform minimapBar;
+    [SerializeField] private RectTransform character;
 
-    private Camera mainCam;
-    private float viewHeightInWorld;
-    private float totalHeight;
+    private Camera mainCamera;
+    private float startY;
+    private float endY;
+    private float miniBarHeight;
 
-    private float startY, endY;
-    private bool initialized = false;
-
-    void Start()
+    private void Start()
     {
-        TryInitialize();
+        InitializeMinimap();
     }
 
-    void Update()
-    {
-        if (!initialized)
-            TryInitialize();
-
-        if (!initialized) return;
-        if (mainCam == null) return;
-        if (minimapBar == null || character == null) return;
-
-        float cameraY = mainCam.transform.position.y;
-        float minimapHeight = minimapBar.rect.height;
-
-        float normalizedY = Mathf.InverseLerp(startY, endY, cameraY);
-        float indicatorY = -minimapHeight * normalizedY;
-
-        character.anchoredPosition = new Vector2(character.anchoredPosition.x, indicatorY);
+    private void Update()
+    {       
+        UpdateCharacterPosition();
     }
 
-    private void TryInitialize()
+    private void InitializeMinimap()
     {
-        if (mainCam == null)
-            mainCam = Camera.main;
-        if (mainCam == null) return;
+        if (minimapBar == null || character == null || LayerManager.Instance == null) return;
 
-        if (LayerManager.Instance == null) return;
+        mainCamera = Camera.main;
 
-        totalHeight = LayerManager.Instance.GetTilemapTotalHeight();
-        viewHeightInWorld = mainCam.orthographicSize * 2f;
-
-        startY = mainCam.transform.position.y;
+        float totalHeight = LayerManager.Instance.GetTilemapTotalHeight();
+        startY = mainCamera.transform.position.y;
         endY = startY - totalHeight;
 
-        initialized = true;
+        miniBarHeight = minimapBar.rect.height + minimapBar.rect.y;
+    }
+
+    private void UpdateCharacterPosition()
+    {
+        float cameraY = mainCamera.transform.position.y;
+        float normalizedProgress = Mathf.InverseLerp(startY, endY, cameraY);
+        float characterY = -miniBarHeight * normalizedProgress;
+
+        Vector2 currentPosition = character.anchoredPosition;
+        character.anchoredPosition = new Vector2(currentPosition.x, characterY);
     }
 }
