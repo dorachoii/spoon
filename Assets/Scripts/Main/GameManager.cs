@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
         if (AutoLoadOnStart)
         {
             AutoLoadOnStart = false;
-            if (PersistenceManager.Instance != null && PersistenceManager.Instance.HasSaveData())
+            if (PersistenceManager.Instance != null && PersistenceManager.Instance.HasSavedData())
             {
                 PersistenceManager.Instance.LoadGame();
                 OnGameLoaded?.Invoke();
@@ -61,7 +61,7 @@ public class GameManager : MonoBehaviour
 
     public void ResumeGame()
     {
-        if (PersistenceManager.Instance == null || !PersistenceManager.Instance.HasSaveData())
+        if (PersistenceManager.Instance == null || !PersistenceManager.Instance.HasSavedData())
         {
             Debug.LogWarning("[GameManager] No save to resume from. Restarting.");
             RestartGame();

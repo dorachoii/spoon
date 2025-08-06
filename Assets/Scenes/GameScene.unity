@@ -1360,7 +1360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   restartButton: {fileID: 2009190241}
   gameResumeButton: {fileID: 212426194}
-  irisEffectController: {fileID: 600226712}
+  irisEffector: {fileID: 600226712}
 --- !u!1 &626210238
 GameObject:
   m_ObjectHideFlags: 0

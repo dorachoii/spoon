@@ -53,7 +53,8 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        currentHP = maxHP;
+        //currentHP = maxHP;
+        currentHP = 10f;
         currentPower = basePower;
     }
 

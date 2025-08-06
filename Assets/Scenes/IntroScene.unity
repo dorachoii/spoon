@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 212426197}
   - component: {fileID: 212426196}
   m_Layer: 5
-  m_Name: Btn_Resume
+  m_Name: Btn_Continue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -341,7 +341,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Resume
+  m_Text: Continue
 --- !u!222 &241141396
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -976,7 +976,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startBtn: {fileID: 2009190241}
-  resumeBtn: {fileID: 212426194}
+  continueBtn: {fileID: 212426194}
 --- !u!1 &2009190241
 GameObject:
   m_ObjectHideFlags: 0

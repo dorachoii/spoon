@@ -98,7 +98,7 @@ public class PersistenceManager : MonoBehaviour
         }
     }
 
-    public bool HasSaveData()
+    public bool HasSavedData()
     {
         return File.Exists(savePath);
     }

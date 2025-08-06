@@ -1,48 +1,53 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+public static class SceneNames
+{
+    public const string INTRO_SCENE_NAME = "IntroScene";
+    public const string GAME_SCENE_NAME = "GameScene";
+}
+
 public class IntroUIManager : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject startBtn;
-    [SerializeField] private GameObject resumeBtn;
+    [SerializeField] private GameObject continueBtn;
 
     private Button startButtonComp;
-    private Button resumeButtonComp;
+    private Button continueButtonComp;
 
     private void Awake()
     {
         if (startBtn != null)
             startButtonComp = startBtn.GetComponent<Button>();
-        if (resumeBtn != null)
-            resumeButtonComp = resumeBtn.GetComponent<Button>();
+        if (continueBtn != null)
+            continueButtonComp = continueBtn.GetComponent<Button>();
     }
 
     void Start()
     {
-        // Resume 활성화 여부 (저장된 게 있으면)
-        bool hasSave = PersistenceManager.Instance != null && PersistenceManager.Instance.HasSaveData();
-        if (resumeBtn != null)
-            resumeBtn.SetActive(hasSave);
+        // saved data exists: Resume Button 활성화 (有効化)
+        bool hasSavedData = PersistenceManager.Instance != null && PersistenceManager.Instance.HasSavedData();
+        continueBtn.SetActive(hasSavedData);
 
-        // 버튼 이벤트 연결
+        // Button Event 연결 (接続)
         if (startButtonComp != null)
         {
             startButtonComp.onClick.RemoveAllListeners();
             startButtonComp.onClick.AddListener(() =>
             {
-                // 새 게임: 기존 저장 지우고 GameScene 로드
-                GameManager.Instance.StartNewGame("GameScene"); // 씬 이름 맞추기
+                // new game
+                GameManager.Instance.StartNewGame(SceneNames.GAME_SCENE_NAME); 
             });
         }
 
-        if (resumeButtonComp != null)
+        if (continueButtonComp != null)
         {
-            resumeButtonComp.onClick.RemoveAllListeners();
-            resumeButtonComp.onClick.AddListener(() =>
+            continueButtonComp.onClick.RemoveAllListeners();
+            continueButtonComp.onClick.AddListener(() =>
             {
-                // 이어하기: 플래그 세우고 GameScene 로드
-                GameManager.Instance.ResumeFromIntro("GameScene");
+                // continue
+                GameManager.Instance.ResumeFromIntro(SceneNames.GAME_SCENE_NAME);
             });
         }
     }

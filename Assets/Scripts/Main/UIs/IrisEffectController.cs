@@ -26,7 +26,6 @@ public class IrisEffector : MonoBehaviour
     private IEnumerator AnimateIrisIn()
     {
         float elapsed = 0f;
-        Vector2 targetPos = playerTransform.position;
         Vector2 startPos = circle.position;
 
         while (elapsed < duration)
@@ -34,15 +33,15 @@ public class IrisEffector : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);    // Normalize(0~1)
 
-            circle.position = Vector2.Lerp(startPos, targetPos, t);
+            circle.position = Vector2.Lerp(startPos, playerTransform.position, t);
 
             float currentSize = Mathf.Lerp(startSize, endSize, t);
             circle.sizeDelta = new Vector2(currentSize, currentSize);
 
             yield return null;
         }
-
-        circle.position = targetPos;
+        
+        circle.position = playerTransform.position;
         circle.sizeDelta = new Vector2(endSize, endSize);
     }
 

@@ -3,89 +3,67 @@ using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
-    public static GameUIManager Instance { get; private set; }
-
-
-    [Header("Game UI (Death UI)")]
+    [Header("Game UI")]
     [SerializeField] private GameObject restartButton;
     [SerializeField] private GameObject gameResumeButton;
+    [SerializeField] private IrisEffector irisEffector;
 
-    [SerializeField] private IrisEffector irisEffectController;
+    private Button restartButtonComp;
+    private Button resumeButtonComp;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-
         restartButton.SetActive(false);
         gameResumeButton.SetActive(false);
+        irisEffector = GetComponent<IrisEffector>();
+        if (restartButton != null)
+            restartButtonComp = restartButton.GetComponent<Button>();
+        if (gameResumeButton != null)
+            resumeButtonComp = gameResumeButton.GetComponent<Button>();
     }
 
-    private void OnEnable()
+    void Start()
     {
-        GameManager.OnGameLoaded += HandleGameLoaded;
+        PlayerStat.Instance.OnDied += HandlePlayerDied;
 
-        if (PlayerStat.Instance != null)
-            PlayerStat.Instance.OnDied += HandlePlayerDied;
+        // Button Event 연결 (接続)
+        if (restartButtonComp != null)
+        {
+            restartButtonComp.onClick.RemoveAllListeners();
+            restartButtonComp.onClick.AddListener(() =>
+            {
+                // new game
+                GameManager.Instance.StartNewGame(SceneNames.GAME_SCENE_NAME); 
+            });
+        }
 
+        if (resumeButtonComp != null)
+        {
+            resumeButtonComp.onClick.RemoveAllListeners();
+            resumeButtonComp.onClick.AddListener(() =>
+            {
+                // continue
+                GameManager.Instance.ResumeFromIntro(SceneNames.GAME_SCENE_NAME);
+            });
+        }
     }
 
-    private void OnDisable()
+    void OnDestroy()
     {
-        GameManager.OnGameLoaded -= HandleGameLoaded;
-
-        if (PlayerStat.Instance != null)
-            PlayerStat.Instance.OnDied -= HandlePlayerDied;
-    }
-
-    private void HandleGameLoaded()
-    {
-        UpdateGameResumeButton();
+        PlayerStat.Instance.OnDied -= HandlePlayerDied;
     }
 
     private void HandlePlayerDied()
     {
-        if (irisEffectController != null)
-        {
-            irisEffectController.IrisIn();
-        }
+        // iris in
+        if (irisEffector != null) irisEffector.IrisIn();
+
+        // button 갱신 (更新)
+        bool hasSavedData = PersistenceManager.Instance != null && PersistenceManager.Instance.HasSavedData();
+        if (gameResumeButton != null) gameResumeButton.SetActive(hasSavedData);
 
         if (restartButton != null) restartButton.SetActive(true);
-        if (gameResumeButton != null) gameResumeButton.SetActive(PersistenceManager.Instance != null && PersistenceManager.Instance.HasSaveData());
     }
 
 
-    public void UpdateGameResumeButton()
-    {
-        if (gameResumeButton != null)
-        {
-            bool hasSave = PersistenceManager.Instance != null && PersistenceManager.Instance.HasSaveData();
-            gameResumeButton.SetActive(hasSave);
-        }
-    }
-
-    // UI 버튼에 연결 (GameObject SetActive는 UIManager에서 담당)
-    public void OnStartButtonClicked()
-    {
-        GameManager.Instance.StartNewGame("GameScene"); // 예시 씬명
-    }
-
-    public void OnIntroResumeButtonClicked()
-    {
-        GameManager.Instance.ResumeFromIntro("GameScene");
-    }
-
-    public void OnRestartButtonClicked()
-    {
-        GameManager.Instance.RestartGame();
-    }
-
-    public void OnGameResumeButtonClicked()
-    {
-        GameManager.Instance.ResumeGame();
-    }
 }
