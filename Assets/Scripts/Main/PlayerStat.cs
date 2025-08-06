@@ -52,7 +52,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+       
         //currentHP = maxHP;
         currentHP = 10f;
         currentPower = basePower;
@@ -108,7 +108,6 @@ public class PlayerStat : MonoBehaviour, ISaveable
         {
             isDead = true;
             OnDied?.Invoke();
-            GameManager.Instance.OnPlayerDeath();
         }
     }
 

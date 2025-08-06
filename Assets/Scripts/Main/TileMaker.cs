@@ -60,7 +60,7 @@ public class TileMaker : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
         }
 
-        GameManager.OnGameLoaded += LoadTile;
+        GameManager.OnGameReady += LoadTile;
     }
 
     void OnDisable()
@@ -70,7 +70,7 @@ public class TileMaker : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
         }
 
-        GameManager.OnGameLoaded -= LoadTile;
+        GameManager.OnGameReady -= LoadTile;
     }
 
     void LoadTile()
@@ -356,7 +356,7 @@ public class TileMaker : MonoBehaviour, ISaveable
                     {
                         x = x,
                         y = y,
-                        tileName = tile.name
+                        tilebaseName = tile.name
                     });
                 }
             }
@@ -405,11 +405,11 @@ public class TileMaker : MonoBehaviour, ISaveable
             int y = tileData.y - minY;
             int index = y * width + x;
 
-            Tile tile = Resources.Load<Tile>("Tilemap/" + tileData.tileName);
+            Tile tile = Resources.Load<Tile>("Tilemap/" + tileData.tilebaseName);
             if (tile != null)
                 tiles[index] = tile;
             else
-                Debug.LogWarning($"[TileMaker] Failed to load tile: {tileData.tileName}");
+                Debug.LogWarning($"[TileMaker] Failed to load tile: {tileData.tilebaseName}");
         }
 
         BoundsInt bounds = new BoundsInt(minX, minY, 0, width, height, 1);

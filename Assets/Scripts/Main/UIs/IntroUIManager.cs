@@ -37,7 +37,7 @@ public class IntroUIManager : MonoBehaviour
             startButtonComp.onClick.AddListener(() =>
             {
                 // new game
-                GameManager.Instance.StartNewGame(SceneNames.GAME_SCENE_NAME); 
+                GameManager.Instance.StartNewGame(); 
             });
         }
 
@@ -47,7 +47,7 @@ public class IntroUIManager : MonoBehaviour
             continueButtonComp.onClick.AddListener(() =>
             {
                 // continue
-                GameManager.Instance.ResumeFromIntro(SceneNames.GAME_SCENE_NAME);
+                GameManager.Instance.StartFromSavedGame();
             });
         }
     }

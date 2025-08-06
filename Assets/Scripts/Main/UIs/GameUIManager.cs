@@ -3,23 +3,45 @@ using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
-    [Header("Game UI")]
-    [SerializeField] private GameObject restartButton;
-    [SerializeField] private GameObject gameResumeButton;
+    [Header("Game UI - GameOver")]
+    [SerializeField] private GameObject gameover_restartButton;
+    [SerializeField] private GameObject gameover_resumeButton;
     [SerializeField] private IrisEffector irisEffector;
 
-    private Button restartButtonComp;
-    private Button resumeButtonComp;
+    [Header("Game UI - Pause")]
+    [SerializeField] private GameObject pauseButton;
+    [SerializeField] private GameObject pause_resumeButton;
+    [SerializeField] private GameObject pause_newGameButton;
+    [SerializeField] private GameObject pause_backToTitleButton;
+
+
+    private Button gameover_restartButtonComp;
+    private Button gameover_resumeButtonComp;
+    private Button pause_resumeButtonComp;
+    private Button pause_newGameButtonComp;
+    private Button pause_backToTitleButtonComp;
 
     private void Awake()
     {
-        restartButton.SetActive(false);
-        gameResumeButton.SetActive(false);
+        gameover_restartButton.SetActive(false);
+        gameover_resumeButton.SetActive(false);
         irisEffector = GetComponent<IrisEffector>();
-        if (restartButton != null)
-            restartButtonComp = restartButton.GetComponent<Button>();
-        if (gameResumeButton != null)
-            resumeButtonComp = gameResumeButton.GetComponent<Button>();
+
+        pause_resumeButton.SetActive(false);
+        pause_newGameButton.SetActive(false);
+        pause_backToTitleButton.SetActive(false);
+
+        if (gameover_restartButton != null)
+            gameover_restartButtonComp = gameover_restartButton.GetComponent<Button>();
+        if (gameover_resumeButton != null)
+            gameover_resumeButtonComp = gameover_resumeButton.GetComponent<Button>();
+        
+        if (pause_resumeButton != null)
+            pause_resumeButtonComp = pause_resumeButton.GetComponent<Button>();
+        if (pause_newGameButton != null)
+            pause_newGameButtonComp = pause_newGameButton.GetComponent<Button>();
+        if (pause_backToTitleButton != null)
+            pause_backToTitleButtonComp = pause_backToTitleButton.GetComponent<Button>();
     }
 
     void Start()
@@ -27,24 +49,68 @@ public class GameUIManager : MonoBehaviour
         PlayerStat.Instance.OnDied += HandlePlayerDied;
 
         // Button Event 연결 (接続)
-        if (restartButtonComp != null)
+        if (gameover_restartButtonComp != null)
         {
-            restartButtonComp.onClick.RemoveAllListeners();
-            restartButtonComp.onClick.AddListener(() =>
+            gameover_restartButtonComp.onClick.RemoveAllListeners();
+            gameover_restartButtonComp.onClick.AddListener(() =>
             {
                 // new game
-                GameManager.Instance.StartNewGame(SceneNames.GAME_SCENE_NAME); 
+                GameManager.Instance.StartNewGame(); 
             });
         }
 
-        if (resumeButtonComp != null)
+        if (gameover_resumeButtonComp != null)
         {
-            resumeButtonComp.onClick.RemoveAllListeners();
-            resumeButtonComp.onClick.AddListener(() =>
+            gameover_resumeButtonComp.onClick.RemoveAllListeners();
+            gameover_resumeButtonComp.onClick.AddListener(() =>
             {
                 // continue
-                GameManager.Instance.ResumeFromIntro(SceneNames.GAME_SCENE_NAME);
+                GameManager.Instance.StartFromSavedGame();
             });
+        }
+
+        if (pause_resumeButtonComp != null)
+        {
+            pause_resumeButtonComp.onClick.RemoveAllListeners();
+            pause_resumeButtonComp.onClick.AddListener(() =>
+            {
+                // resume
+                TogglePauseUI();
+            });
+        }
+
+        if (pause_newGameButtonComp != null)
+        {
+            pause_newGameButtonComp.onClick.RemoveAllListeners();
+            pause_newGameButtonComp.onClick.AddListener(() =>
+            {
+                // new game
+                GameManager.Instance.StartNewGame();
+            });
+        }
+
+        if (pause_backToTitleButtonComp != null)
+        {
+            pause_backToTitleButtonComp.onClick.RemoveAllListeners();
+            pause_backToTitleButtonComp.onClick.AddListener(() =>
+            {
+                // back to title
+                GameManager.Instance.BackToTitle();
+            });
+        }
+
+        if (pauseButton != null)
+        {
+            Button pauseButtonComp = pauseButton.GetComponent<Button>();
+            if (pauseButtonComp != null)
+            {
+                pauseButtonComp.onClick.RemoveAllListeners();
+                pauseButtonComp.onClick.AddListener(() =>
+                {
+                    // pause UI toggle
+                    TogglePauseUI();
+                });
+            }
         }
     }
 
@@ -60,10 +126,19 @@ public class GameUIManager : MonoBehaviour
 
         // button 갱신 (更新)
         bool hasSavedData = PersistenceManager.Instance != null && PersistenceManager.Instance.HasSavedData();
-        if (gameResumeButton != null) gameResumeButton.SetActive(hasSavedData);
+        if (gameover_resumeButton != null) gameover_resumeButton.SetActive(hasSavedData);
 
-        if (restartButton != null) restartButton.SetActive(true);
+        if (gameover_restartButton != null) gameover_restartButton.SetActive(true);
     }
 
-
+    private void TogglePauseUI()
+    {
+        bool isPauseUIActive = pause_resumeButton.activeSelf;
+        
+        pause_resumeButton.SetActive(!isPauseUIActive);
+        pause_newGameButton.SetActive(!isPauseUIActive);
+        pause_backToTitleButton.SetActive(!isPauseUIActive);
+        
+        Time.timeScale = isPauseUIActive ? 1f : 0f;
+    }
 }
