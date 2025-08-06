@@ -1,42 +1,39 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerStatUI : MonoBehaviour
 {
+    [Header("Player Stat UI")]
     public Slider powerSlider;
-    public Slider HPSlider;
+    public Slider hpSlider;
 
-
-    // Start is called before the first frame update
+    // OnEnable:  PlayerStat.Instanceがまだnullの可能性がある
+    // Start: 安全な初期化    
     void Start()
     {
-        HPSlider.maxValue = PlayerStat.Instance.MaxHP;
-        powerSlider.maxValue = 300f;
+        hpSlider.maxValue = PlayerStat.Instance.MaxHP;
+        powerSlider.maxValue = PlayerStat.Instance.MaxPower;
 
-        UpdateHPUI(PlayerStat.Instance.CurrentHP);
-        UpdateDigUI(PlayerStat.Instance.DigPower);
+        UpdateHPValue(PlayerStat.Instance.CurrentHP);
+        UpdatePowerValue(PlayerStat.Instance.CurrentPower);
 
-        PlayerStat.Instance.OnHPChanged += UpdateHPUI;
-        PlayerStat.Instance.OnDigPowerChanged += UpdateDigUI;
+        PlayerStat.Instance.OnHPChanged += UpdateHPValue;
+        PlayerStat.Instance.OnDigPowerChanged += UpdatePowerValue;
     }
 
-
-    void OnDisable()
+    void OnDestroy()
     {
-        PlayerStat.Instance.OnHPChanged -= UpdateHPUI;
-        PlayerStat.Instance.OnDigPowerChanged -= UpdateDigUI;
+        PlayerStat.Instance.OnHPChanged -= UpdateHPValue;
+        PlayerStat.Instance.OnDigPowerChanged -= UpdatePowerValue;
     }
 
-    private void UpdateDigUI(float digPower)
+    private void UpdatePowerValue(float digPower)
     {
-        Debug.Log($"Updating dig power UI: {digPower}");
         powerSlider.value = digPower;
     }
 
-    private void UpdateHPUI(float hp)
+    private void UpdateHPValue(float hp)
     {
-        HPSlider.value = hp;
+        hpSlider.value = hp;
     }
 }

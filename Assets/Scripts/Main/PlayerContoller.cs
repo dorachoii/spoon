@@ -374,7 +374,7 @@ public class PlayerContoller : MonoBehaviour
         if (total > 0)
         {
             float hardness = LayerManager.Instance.GetCurrentHardness();
-            float digPower = PlayerStat.Instance.DigPower;
+            float digPower = PlayerStat.Instance.CurrentPower;
 
             if (digPower < hardness)
             {

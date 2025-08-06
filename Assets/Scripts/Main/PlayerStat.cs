@@ -8,16 +8,16 @@ using UnityEngine;
 public class PlayerStat : MonoBehaviour, ISaveable
 {
     public static PlayerStat Instance { get; private set; }
-    private float baseDigPower = 100f;
-    private float digPowerBonus = 0f;
+    private float maxPower = 300f;
+    private float basePower = 100f;
+    private float powerBonus = 0f;
+    private float currentPower;
 
     private float jumpForce = 0.0005f;
 
     private float maxHP = 100f;
     private float currentHP;
 
-    private float maxStamina = 100f;
-    private float currentStamina;
 
     public event Action<float> OnDigPowerChanged;
     public event Action<float> OnHPChanged;
@@ -54,22 +54,20 @@ public class PlayerStat : MonoBehaviour, ISaveable
         Instance = this;
         DontDestroyOnLoad(gameObject);
         currentHP = maxHP;
-        currentStamina = maxStamina;
+        currentPower = basePower;
     }
 
-    public float DigPower => baseDigPower + digPowerBonus;
+    public float CurrentPower => basePower + powerBonus;
 
     public float JumpForce => jumpForce;
     public float MaxHP => maxHP;
+    public float MaxPower => maxPower;   
     public float CurrentHP => currentHP;
-
-    public float MaxStamina => maxStamina;
-    public float CurrentStamina => currentStamina;
 
     public float CalculateDigSpeed()
     {
         float hardness = LayerManager.Instance.GetCurrentHardness();
-        return (DigPower / Mathf.Max(1f, hardness)) * 5f;
+        return (CurrentPower / Mathf.Max(1f, hardness)) * 5f;
     }
 
     public float GetDigDelay()
@@ -80,8 +78,8 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
     public void AddDigPowerBonus(float bonus)
     {
-        digPowerBonus += bonus;
-        OnDigPowerChanged?.Invoke(DigPower);
+        powerBonus += bonus;
+        OnDigPowerChanged?.Invoke(CurrentPower);
         OnPowerUp?.Invoke(bonus);
 
     }
