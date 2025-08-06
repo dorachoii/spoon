@@ -49,7 +49,7 @@ public class PlayerContoller : MonoBehaviour
     private float screenPadding = 1f;
 
     private DigDirection dir;
-    private SpriteColorEffect effector;
+    private SpriteColorEffector effector;
     private Coroutine digCoroutine;
     private Coroutine rainbowCoroutine;
     private Coroutine poisonFlickerCoroutine;
@@ -91,7 +91,7 @@ public class PlayerContoller : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        effector = GetComponent<SpriteColorEffect>();
+        effector = GetComponent<SpriteColorEffector>();
 
         tilePositions = new Vector3Int[LayerManager.Instance.GetMaxTile()];
         nullTiles = new TileBase[LayerManager.Instance.GetMaxTile()];
@@ -176,12 +176,12 @@ public class PlayerContoller : MonoBehaviour
        
             StopCoroutine(rainbowCoroutine);
             Color tint = Color.green * 0.6f + Color.white * 0.4f;
-            rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(spriteRenderer, -1, 2f, tint));
+            rainbowCoroutine = StartCoroutine(effector.IRainbow(spriteRenderer, loop: true, hueSpeed: 2f, tint: tint));
         }
         else
         {
             
-            poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffect>().IFlicker(GetComponent<SpriteRenderer>(), SpriteEffectColor.Green, -1));
+            poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffector>().IFlicker(GetComponent<SpriteRenderer>(), PlayerColor.Green, loop: true));
         }
 
 
@@ -204,7 +204,7 @@ public class PlayerContoller : MonoBehaviour
         else
         {
             StopCoroutine(rainbowCoroutine);
-            rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(spriteRenderer, -1, 2f, Color.white));
+            rainbowCoroutine = StartCoroutine(effector.IRainbow(spriteRenderer, loop: true, hueSpeed: 2f, tint: Color.white));
         }
     }
 
@@ -231,7 +231,7 @@ public class PlayerContoller : MonoBehaviour
         {
             tint = Color.green * 0.6f + Color.white * 0.4f;
         }
-        rainbowCoroutine = StartCoroutine(effector.IRainbowEffect(GetComponent<SpriteRenderer>(), -1, 2f, tint));
+        rainbowCoroutine = StartCoroutine(effector.IRainbow(GetComponent<SpriteRenderer>(), loop: true, hueSpeed: 2f, tint: tint));
     }
 
     private void HandleInvincibleEnd()
@@ -244,7 +244,7 @@ public class PlayerContoller : MonoBehaviour
 
         if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
         {
-            poisonFlickerCoroutine = StartCoroutine(effector.IFlicker(spriteRenderer, SpriteEffectColor.Green, -1));
+            poisonFlickerCoroutine = StartCoroutine(effector.IFlicker(spriteRenderer, PlayerColor.Green, loop: true));
         }
         else
         {

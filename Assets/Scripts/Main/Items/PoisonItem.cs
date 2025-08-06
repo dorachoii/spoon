@@ -10,7 +10,7 @@ public class PoisonItem : ItemBase
         if (playerStat != null)
         {
             playerStat.StartPoisonEffect(poisonDuration);
-            ShowStatusText("Poisoned!", SpriteEffectColor.Green.ToColor());
+            ShowStatusText("Poisoned!", PlayerColor.Green.ToColor());
         }
     }
 }

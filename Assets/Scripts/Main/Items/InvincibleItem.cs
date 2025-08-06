@@ -3,13 +3,13 @@ using UnityEngine;
 // 무적 (無敵)
 public class InvincibleItem : ItemBase
 {
-    SpriteColorEffect effector;
+    SpriteColorEffector effector;
 
     protected override void Awake()
     {
         base.Awake();
-        effector = GetComponent<SpriteColorEffect>();
-        StartCoroutine(effector.IRainbowEffect(GetComponent<SpriteRenderer>(), -1));
+        effector = GetComponent<SpriteColorEffector>();
+        StartCoroutine(effector.IRainbow(GetComponent<SpriteRenderer>(), loop: true));
     }
 
     protected override void ApplyEffect(GameObject player)

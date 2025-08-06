@@ -10,15 +10,15 @@ public class BombItem : ItemBase
     [SerializeField] private float dmgRadius = 15f;
     [SerializeField] private float dmg = 20f;
     
-    private SpriteColorEffect effector;
+    private SpriteColorEffector effector;
 
     protected override void Awake()
     {
         base.Awake();
-        effector = gameObject.GetComponent<SpriteColorEffect>();
+        effector = gameObject.GetComponent<SpriteColorEffector>();
         if (effector != null)
         {
-            StartCoroutine(effector.IFlicker(gameObject.GetComponent<SpriteRenderer>(), SpriteEffectColor.Red, -1));
+            StartCoroutine(effector.IFlicker(gameObject.GetComponent<SpriteRenderer>(), PlayerColor.Red, loop: true));
         }
     }
 
