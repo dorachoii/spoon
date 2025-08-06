@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3825782365437073258}
   - component: {fileID: 2042229036120823188}
   m_Layer: 0
-  m_Name: BreakableTilemap
+  m_Name: CrumblingTilemap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -35614,10 +35614,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2af39b0309657a749a6aa7ca4c73213a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundTilemap: {fileID: 4250510640456503426}
-  shardPrefab: {fileID: 7177396161285958078, guid: a2e9b85eaf2b1934b95832848913245a, type: 3}
-  shardSpread: 0.2
-  shardMinImpulse: 0.5
-  shardMaxImpulse: 1.5
+  crumblingTilemap: {fileID: 4250510640456503426}
+  debrisPrefab: {fileID: 7177396161285958078, guid: a2e9b85eaf2b1934b95832848913245a, type: 3}
+  spread: 0.2
+  minForce: 0.5
+  maxForce: 1.5
   cellCooldown: 0.3
-  verbose: 0
