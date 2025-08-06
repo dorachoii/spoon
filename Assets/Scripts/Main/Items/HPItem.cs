@@ -10,7 +10,7 @@ public class HPItem : ItemBase
         if (playerStat != null)
         {
             playerStat.HealHP(healAmount);
-            ShowStatusText("Healed", Color.green);
+            ShowStatusText("HP Up!", Color.cyan);
         }
     }
 }

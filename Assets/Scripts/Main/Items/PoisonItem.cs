@@ -1,9 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PoisonItem : ItemBase
 {
-    [Header("Poison Item Settings")]
     [SerializeField] private float poisonDuration = 20f;
     
     protected override void ApplyEffect(GameObject player)
@@ -12,7 +10,7 @@ public class PoisonItem : ItemBase
         if (playerStat != null)
         {
             playerStat.StartPoisonEffect(poisonDuration);
-            ShowStatusText("Poisoned", Color.red);
+            ShowStatusText("Poisoned!", SpriteEffectColor.Green.ToColor());
         }
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine.Tilemaps;
 
 public abstract class ItemBase : MonoBehaviour
 {
-    float maxHeight = 1.1f; // Auto Destroyの基準
+    float maxHeight = 1.1f; // 자동삭제 기준(Auto Destroyの基準)
 
     [Header("Effect Settings")]
     [SerializeField] protected GameObject effectPrefab;
@@ -26,7 +26,7 @@ public abstract class ItemBase : MonoBehaviour
         if (mainCamera == null) return;
         Vector3 viewportPos = mainCamera.WorldToViewportPoint(transform.position);
 
-        // 画面外に出たらAuto Destroy
+        // 화면 밖으로 나가면 삭제(画面外に出たらAuto Destroy)
         if (viewportPos.y > maxHeight)
         {
             Destroy(gameObject);
@@ -44,7 +44,7 @@ public abstract class ItemBase : MonoBehaviour
         }
     }
 
-    // エフェクト生成
+    // 삭제 시 효과 생성(エフェクト生成)
     protected virtual void InstantiateFX()
     {
         if (effectPrefab != null)
@@ -54,7 +54,7 @@ public abstract class ItemBase : MonoBehaviour
         }
     }
 
-    // ステータステキスト表示
+    // 플레이어 상태 텍스트 표시(ステータステキスト表示)
     protected void ShowStatusText(string text, Color color)
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -68,6 +68,6 @@ public abstract class ItemBase : MonoBehaviour
         }
     }
 
-    // 各アイテム固有の効果 abstract method
+    // 아이템 효과 (各アイテム固有の効果 )
     protected abstract void ApplyEffect(GameObject player);
 }
