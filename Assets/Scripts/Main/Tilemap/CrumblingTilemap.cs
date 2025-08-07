@@ -23,7 +23,6 @@ public class CrumblingTilemap : MonoBehaviour
     [SerializeField] private float cooldown = 0.3f;
     private HashSet<Vector3Int> recentlyCrumbled = new();  // 연속 충돌 시 중복 부서짐 방지 (連続衝突時の重複破壊防止)
 
-
     
     void Awake()
     {

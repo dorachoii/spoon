@@ -39,24 +39,19 @@ public class ItemSpawner : MonoBehaviour
 
     public GameObject breakableTilemap;
     public GameObject grid;
-
-    void OnEnable()
-    {
-        LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
-    }
-
-    void OnDisable()
-    {
-        LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
-    }
-
-
+    
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        tilemap = FindObjectOfType<Tilemap>();
+        tilemap = TileGenerator.Instance.tilemap;
 
         lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
+        LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
+    }
+
+    void OnDestroy()
+    {
+        LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
     }
 
     void Update()
@@ -162,11 +157,6 @@ public class ItemSpawner : MonoBehaviour
         {
             Vector3Int spawnTile = validTiles[Random.Range(0, validTiles.Count)];
             SpawnItemAtTile(spawnTile, data);
-            Debug.Log($"[ItemSpawner] Spawned item at {spawnTile}");
-        }
-        else
-        {
-            Debug.Log("[ItemSpawner] No valid tile found to spawn item.");
         }
     }
 

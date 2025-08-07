@@ -16,7 +16,7 @@ public class EnemyParallelBullet : ItemBase
     void Start()
     {
         Destroy(gameObject, lifeTime);
-        targetTilemap = TileMaker.Instance.tilemap;
+        targetTilemap = TileGenerator.Instance.tilemap;
     }
 
     protected override void Update()

@@ -13,9 +13,9 @@ public abstract class ItemBase : MonoBehaviour
 
     protected virtual void Awake()
     {
-        if (TileMaker.Instance != null)
+        if (TileGenerator.Instance != null)
         {
-            tilemap = TileMaker.Instance.tilemap;
+            tilemap = TileGenerator.Instance.tilemap;
         }
 
         mainCamera = Camera.main;

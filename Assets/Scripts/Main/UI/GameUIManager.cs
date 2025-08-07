@@ -1,3 +1,5 @@
+using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +15,14 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject pause_resumeButton;
     [SerializeField] private GameObject pause_newGameButton;
     [SerializeField] private GameObject pause_backToTitleButton;
+
+    [Header("Layer Change UI")]
+    [SerializeField] private TextMeshProUGUI titleText;
+    [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private float showDuration = 2f;
+    [SerializeField] private float fadeTime = 0.2f;
+
+    private Coroutine centerTextCoroutine;
 
 
     private Button gameover_restartButtonComp;
@@ -47,6 +57,7 @@ public class GameUIManager : MonoBehaviour
     void Start()
     {
         PlayerStat.Instance.OnDied += HandlePlayerDied;
+        LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
 
         // Button Event 연결 (接続)
         if (gameover_restartButtonComp != null)
@@ -117,6 +128,7 @@ public class GameUIManager : MonoBehaviour
     void OnDestroy()
     {
         PlayerStat.Instance.OnDied -= HandlePlayerDied;
+        LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
     }
 
     private void HandlePlayerDied()
@@ -140,5 +152,70 @@ public class GameUIManager : MonoBehaviour
         pause_backToTitleButton.SetActive(!isPauseUIActive);
         
         Time.timeScale = isPauseUIActive ? 1f : 0f;
+    }
+
+    private void HandleLayerChanged(int layerIndex)
+    {
+        ShowLayerText(layerIndex);
+    }
+
+    public void ShowBossLayerText(int bossIndex)
+    {
+        string title = bossIndex switch
+        {
+            0 => "Boss Chamber I",
+            1 => "Boss Chamber II",
+            _ => $"Boss Chamber {bossIndex + 1}"
+        };
+        
+        titleText.text = title;
+        
+        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
+        centerTextCoroutine = StartCoroutine(IShowLayerText());
+    }
+
+    private void ShowLayerText(int layerIndex)
+    {
+        string title = GetLayerName(layerIndex);
+        titleText.text = title;
+        
+        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
+        centerTextCoroutine = StartCoroutine(IShowLayerText());
+    }
+
+    private string GetLayerName(int layerIndex)
+    {
+        return layerIndex switch
+        {
+            0 => "Mine Zone",
+            1 => "Crypt Zone 1",
+            2 => "Crypt Zone 2",
+            3 => "Lava Zone",
+            4 => "Ultimate Zone",
+            _ => $"Layer{layerIndex}"
+        };
+    }
+
+    private IEnumerator IShowLayerText()
+    {
+        float t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(0f, 1f, t / fadeTime);
+            yield return null;
+        }
+        canvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(showDuration - fadeTime * 2f);
+
+        t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(1f, 0f, t / fadeTime);
+            yield return null;
+        }
+        canvasGroup.alpha = 0f;
     }
 }
