@@ -505,9 +505,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680a3749196114c4aa8343a923280b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layerHeight: 50
-  levelHeight: 20
-  levelList: []
+  layerHeight: 20
+  transitionLayerHeight: 20
+  bossLayerHeight: 100
+  bossLayerIndices: 0200000005000000
 --- !u!4 &148671255
 Transform:
   m_ObjectHideFlags: 0
@@ -128293,6 +128294,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6f418d7e21cdab842aa72517d7a8d61b, type: 2}
   stampingInterval: 10
   maxStampingCount: 1
+  bossTilemapPrefabs:
+  - {fileID: 1617547016873511431, guid: cb487e7c00571b840855c58c2d6ca37b, type: 3}
+  - {fileID: 1617547016873511431, guid: cb487e7c00571b840855c58c2d6ca37b, type: 3}
 --- !u!1 &1500381472
 GameObject:
   m_ObjectHideFlags: 0
@@ -129961,9 +129965,9 @@ SceneRoots:
   - {fileID: 2030428307}
   - {fileID: 2021297650}
   - {fileID: 148671255}
+  - {fileID: 1011375577}
   - {fileID: 1746106680}
   - {fileID: 600226710}
-  - {fileID: 1011375577}
   - {fileID: 1806671224}
   - {fileID: 1500381476}
   - {fileID: 34924788}

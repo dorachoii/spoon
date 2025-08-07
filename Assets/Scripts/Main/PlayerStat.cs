@@ -1,8 +1,5 @@
-
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
 public class PlayerStat : MonoBehaviour, ISaveable
@@ -53,8 +50,8 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
         Instance = this;
        
-        //currentHP = maxHP;
-        currentHP = 10f;
+        currentHP = maxHP;
+        //currentHP = 10f;
         currentPower = basePower;
     }
 

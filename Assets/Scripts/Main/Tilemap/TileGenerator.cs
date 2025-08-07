@@ -2,15 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public enum TileType { Plain, Dotted, Gradient }
+public enum TileType { Plain, Dotted_V2, Gradient }
 
 public class TileGenerator : MonoBehaviour, ISaveable
 {
     public static TileGenerator Instance { get; private set; }
-
     private Camera mainCamera;
-
-
 
     [Header("Tilemap")]
     [SerializeField] public Tilemap tilemap;
@@ -33,16 +30,25 @@ public class TileGenerator : MonoBehaviour, ISaveable
     const int DOTTED_TILE_SIZE = 9;
     private TileBase[,] tile_dotted = new TileBase[DOTTED_TILE_SIZE, DOTTED_TILE_SIZE];
     private TileBase[,] tile_gradient = new TileBase[GRADIENT_TILE_SIZE, GRADIENT_TILE_SIZE];
-    private int lastGradientLineY = -1;
-    private int lastLevel = -1;
-
+    //Gradient
+    private int gradientTileIdx = -1; 
     private int lastGradientLevel = -1;
-    private int lastDottedLevel = 0;
 
-    // Stamping 관련 변수들
+    //Dotted
+    private int lastDottedLevel = -1;
     private int lastStampingY = 0;
-    [SerializeField] private int stampingInterval = 10; // 더 자주 찍히도록 줄임
-    [SerializeField] private int maxStampingCount = 1; // 한 번에 찍을 개수
+    [SerializeField] private int stampingInterval = 20; 
+    [SerializeField] private int maxStampingCount = 1; 
+    
+
+    [Header("Tile Generation Control")]
+    private bool isPaused = false;
+    private bool isLayerChanged = false; 
+    
+
+    [Header("Boss Tilemap")]
+    [SerializeField] private GameObject[] bossTilemapPrefabs; 
+    private GameObject currentBossTilemap; 
 
 
     void Awake()
@@ -58,42 +64,54 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
         if (tilemap == null) tilemap = GetComponentInChildren<Tilemap>();
 
-        // 타일맵 값 관련 초기화
+        // tilemap
         lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
         lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
         tilemapWidth = lastTopRightCell.x - lastBottomLeftCell.x + 1;
 
-        tile_dotted = LoadTileBlockFromResources(TileType.Dotted.ToString(), "0", 9);
-
-        // Stamping 초기화
+        // stamping
         lastStampingY = lastBottomLeftCell.y;
     }
 
     void OnEnable()
     {
-        if (LayerManager.Instance != null) LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
-        if (GameManager.Instance != null) GameManager.OnGameReady += LoadTile;
-
+        if (LayerManager.Instance != null) 
+        {
+            LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
+            LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
+            LayerManager.Instance.OnTransitionLayerExited += HandleTransitionLayerExited;
+            LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
+            LayerManager.Instance.OnBossLayerExited += HandleBossLayerExited;
+        }
     }
 
     void OnDisable()
     {
-        if (LayerManager.Instance != null) LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
-        if (GameManager.Instance != null) GameManager.OnGameReady -= LoadTile;
+        if (LayerManager.Instance != null) 
+        {
+            LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
+            LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
+            LayerManager.Instance.OnTransitionLayerExited -= HandleTransitionLayerExited;
+            LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
+            LayerManager.Instance.OnBossLayerExited -= HandleBossLayerExited;
+        }
     }
 
     void Update()
     {
+        if (isPaused) return;
+
         Vector3Int currentBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
         Vector3Int currentTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
 
-        // 현재 그려진 타일맵보다 내려가면면
+        // 카메라가 내려감에 따라 아래 타일은 채우고, 위 타일은 지움
+        // カメラが下がるにつれて下のタイルを埋め、上のタイルを削除
         if (currentBottomLeftCell.y <= lastBottomLeftCell.y)
         {
             FillBottomRows(currentBottomLeftCell.y - tileOffset, lastBottomLeftCell.y - 1, currentLayer);
 
-            // Stamping 체크 및 실행
-            CheckAndExecuteStamping(currentBottomLeftCell.y);
+            // 패턴 찍어주는 함수수
+            StampDottedPattern(currentBottomLeftCell.y);
 
             int clearStartY = Mathf.Min(lastTopRightCell.y + 1, currentTopRightCell.y + 1);
             int clearEndY = Mathf.Max(lastTopRightCell.y, currentTopRightCell.y);
@@ -107,41 +125,37 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     }
 
-    // TODO: 얘 역할 불분명
-    void LoadTile()
-    {
-        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
-        lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-    }
-
     void HandleLevelChanged(int newLevel)
     {
         currentLayer = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
-
-        Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-
-        // 경계선을 그어준다.
-        StampGradientLine(currentBottomLeft.y, currentLayer - 1);
-
-        lastGradientLineY = currentBottomLeft.y;
-        lastLevel = currentLayer;
+        gradientTileIdx = currentLayer - 1; 
+        isLayerChanged = true;
     }
-
 
     void FillBottomRows(int startY, int endY, int layer)
     {
+        // 레이어 변경되면, 경계선 그라디언트 그려준다.
+        if (isLayerChanged && gradientTileIdx >= 0)
+        {
+            StampGradientLine(startY, gradientTileIdx);
+            isLayerChanged = false; 
+            gradientTileIdx = -1; 
+        }
+        
         int height = endY - startY + 1;
         if (height <= 0) return;
 
         BoundsInt bounds = new BoundsInt(lastBottomLeftCell.x, startY, 0, tilemapWidth, height, 1);
-        TileBase[] tiles = new TileBase[tilemapWidth * height];
+        TileBase[] existingTiles = tilemap.GetTilesBlock(bounds);
+        TileBase[] newTiles = new TileBase[tilemapWidth * height];
 
-        for (int i = 0; i < tiles.Length; i++)
+        for (int i = 0; i < existingTiles.Length; i++)
         {
-            tiles[i] = tile_plain[layer];
+            newTiles[i] = existingTiles[i] ?? tile_plain[layer];
         }
 
-        tilemap.SetTilesBlock(bounds, tiles);
+        tilemap.SetTilesBlock(bounds, newTiles);
+
     }
 
     void ClearTopRows(int startY, int endY)
@@ -166,7 +180,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
         Vector3Int currentBottomLeft = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
 
-        // 반올림
+        // 반올림 (四捨五入)
         int chunkCount = Mathf.RoundToInt((float)tilemapWidth / GRADIENT_TILE_SIZE);
 
         int startX = currentBottomLeft.x;
@@ -182,7 +196,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             {
                 for (int dy = 0; dy < GRADIENT_TILE_SIZE; dy++)
                 {
-                    // 파일 저장이 반대로 되어있음.
+                    // 파일 저장이 반대로 되어있음. (ファイルindexが逆になっている)
                     int index = dy * GRADIENT_TILE_SIZE + dx;
                     int reverseIndex = GRADIENT_TILE_SIZE * GRADIENT_TILE_SIZE - 1 - index;
                     tiles[reverseIndex] = tile_gradient[dx, dy];
@@ -193,46 +207,35 @@ public class TileGenerator : MonoBehaviour, ISaveable
         }
     }
 
-    void CheckAndExecuteStamping(int currentY)
+    void StampDottedPattern(int currentY)
     {
-        // stampingInterval만큼 내려갔는지 체크
+        var validStampPos = new List<Vector3Int>();
+
+        // 높이 체크: stampingInterval 간격으로 스탬프 찍기 (stampingInterval間隔でスタンプ)
         if (currentY <= lastStampingY - stampingInterval)
         {
-            // ItemSpawner처럼 화면 기준으로 계산
-            Camera cam = Camera.main;
-            float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
-            float xPadding = 0.15f; // 좌우 여백 15%
+            Vector3 belowViewportBottomLeft = mainCamera.ViewportToWorldPoint(new Vector3(0f, -0.2f, 0));
+            Vector3 viewportTopRight = mainCamera.ViewportToWorldPoint(new Vector3(1f, 0f, 0));
 
-            // 화면 밖 아래쪽 영역 (Viewport 좌표)
-            Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
-            Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));
+            Vector3Int min = tilemap.WorldToCell(belowViewportBottomLeft);
+            Vector3Int max = tilemap.WorldToCell(viewportTopRight);
 
-            Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
-            Vector3Int max = tilemap.WorldToCell(topRightWorld);
-
-            // 유효한 타일 위치 찾기 (9x9 크기 고려)
-            List<Vector3Int> validTiles = new List<Vector3Int>();
-            for (int x = min.x; x <= max.x - DOTTED_TILE_SIZE + 1; x++)
+           // 가로: 화면 너비, 세로: 화면 아래쪽 영역 + 타일 높이 (横: 画面幅、縦: 画面下側エリア + タイル高さ)
+           // 범위 내에서 스탬프 후보 위치 저장 (範囲内でスタンプ候補位置を保存) 
+            for (int x = min.x; x <= max.x - DOTTED_TILE_SIZE + 1; x+=DOTTED_TILE_SIZE)
             {
-                for (int y = min.y; y <= max.y - DOTTED_TILE_SIZE + 1; y++)
+                for (int y = min.y; y <= max.y - DOTTED_TILE_SIZE + 1; y+=DOTTED_TILE_SIZE)
                 {
                     Vector3Int tilePos = new Vector3Int(x, y, 0);
-                    if (tilemap.HasTile(tilePos)) // 실제 타일이 있는 위치만
-                    {
-                        validTiles.Add(tilePos);
-                    }
+                    validStampPos.Add(tilePos);
                 }
             }
 
-            if (validTiles.Count > 0)
+            // 랜덤으로 스탬프 찍기 (スタンプ候補位置からランダムに1つ選択してスタンプ)
+            if (validStampPos.Count > 0)
             {
-                Vector3Int stampOrigin = validTiles[Random.Range(0, validTiles.Count)];
-                Debug.Log($"[TileGenerator] Stamping at {stampOrigin} (valid tiles: {validTiles.Count})");
-                StampSingleDottedTile(stampOrigin, currentLayer);
-            }
-            else
-            {
-                Debug.LogWarning("[TileGenerator] No valid tile found for stamping");
+                Vector3Int randomStampPos = validStampPos[Random.Range(0, validStampPos.Count)];
+                StampSingleDottedTile(randomStampPos, currentLayer);
             }
 
             lastStampingY = currentY;
@@ -241,18 +244,18 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     void StampSingleDottedTile(Vector3Int origin, int level)
     {
-        int dottedLevelToLoad = 0;
+        int dottedLevelToLoad;
 
         switch (level)
         {
             case 0:
-                dottedLevelToLoad = 0;
-                break;
-            case 2:
                 dottedLevelToLoad = 1;
                 break;
-            case 3:
+            case 2:
                 dottedLevelToLoad = 2;
+                break;
+            case 3:
+                dottedLevelToLoad = 3;
                 break;
             default:
                 return;
@@ -260,7 +263,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
         if (lastDottedLevel != dottedLevelToLoad)
         {
-            tile_dotted = LoadTileBlockFromResources(TileType.Dotted.ToString() + "_V2", "0" + dottedLevelToLoad.ToString(), 9);
+            tile_dotted = LoadTileBlockFromResources(TileType.Dotted_V2.ToString(), dottedLevelToLoad.ToString("D2"), 9);
             lastDottedLevel = dottedLevelToLoad;
         }
 
@@ -273,6 +276,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
                 selectedTiles[dy * 9 + dx] = tile_dotted[dx, dy];
             }
         }
+
         BoundsInt dotBounds = new BoundsInt(origin.x, origin.y, 0, 9, 9, 1);
         tilemap.SetTilesBlock(dotBounds, selectedTiles);
     }
@@ -297,6 +301,95 @@ public class TileGenerator : MonoBehaviour, ISaveable
         }
         return tileBlock;
     }
+
+    // 타일 생성 일시정지
+    public void PauseTileGeneration()
+    {
+        isPaused = true;
+    }
+
+    // 타일 생성 재개
+    public void ResumeTileGeneration()
+    {
+        isPaused = false;
+    }
+
+    // 타일 생성 상태 확인
+    public bool IsTileGenerationPaused()
+    {
+        return isPaused;
+    }
+    
+    // 전환 층 진입 시 호출
+    private void HandleTransitionLayerEntered(int bossIndex)
+    {
+        Debug.Log($"[TileGenerator] 전환 층 {bossIndex} 진입 - 타일 생성 중단");
+        
+        // 타일 생성 중단 (전환 층에서는 타일 생성하지 않음)
+        PauseTileGeneration();
+    }
+    
+    // 전환 층 퇴장 시 호출
+    private void HandleTransitionLayerExited(int bossIndex)
+    {
+        Debug.Log($"[TileGenerator] 전환 층 {bossIndex} 퇴장");
+        
+        // 전환 층을 나가면 보스 타일맵 생성 준비
+        // (보스 층 진입 시점에 실제로 생성됨)
+    }
+    
+    // 보스 층 진입 시 호출
+    private void HandleBossLayerEntered(int bossIndex)
+    {
+        Debug.Log($"[TileGenerator] 보스 층 {bossIndex} 진입 - 보스 타일맵 생성");
+        
+        // 보스 타일맵 생성
+        SpawnBossTilemap(bossIndex);
+    }
+    
+    // 보스 층 퇴장 시 호출
+    private void HandleBossLayerExited(int bossIndex)
+    {
+        Debug.Log($"[TileGenerator] 보스 층 {bossIndex} 퇴장 - 보스 타일맵 제거");
+        
+        // 보스 타일맵 제거
+        RemoveBossTilemap();
+        
+        // 일반 타일 생성 재개
+        ResumeTileGeneration();
+    }
+    
+    // 보스 타일맵 생성
+    public void SpawnBossTilemap(int bossIndex)
+    {
+        // 기존 보스 타일맵이 있다면 제거
+        RemoveBossTilemap();
+        
+        // 보스 인덱스가 유효한지 확인
+        if (bossIndex >= 0 && bossIndex < bossTilemapPrefabs.Length && bossTilemapPrefabs[bossIndex] != null)
+        {
+            // 보스 타일맵 프리팹 인스턴스화
+            currentBossTilemap = Instantiate(bossTilemapPrefabs[bossIndex], transform);
+            Debug.Log($"[TileGenerator] 보스 타일맵 {bossIndex} 생성됨");
+        }
+        else
+        {
+            Debug.LogWarning($"[TileGenerator] 보스 타일맵 프리팹 {bossIndex}가 없습니다!");
+        }
+    }
+    
+    // 보스 타일맵 제거
+    private void RemoveBossTilemap()
+    {
+        if (currentBossTilemap != null)
+        {
+            Destroy(currentBossTilemap);
+            currentBossTilemap = null;
+            Debug.Log("[TileGenerator] 보스 타일맵 제거됨");
+        }
+    }
+    
+
 
     #region Save&Load
     public void WriteData(GameData data)

@@ -58,6 +58,8 @@ public class GameUIManager : MonoBehaviour
     {
         PlayerStat.Instance.OnDied += HandlePlayerDied;
         LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
+        LayerManager.Instance.OnLayerStateChanged += HandleLayerStateChanged;
+        LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
 
         // Button Event 연결 (接続)
         if (gameover_restartButtonComp != null)
@@ -129,6 +131,8 @@ public class GameUIManager : MonoBehaviour
     {
         PlayerStat.Instance.OnDied -= HandlePlayerDied;
         LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
+        LayerManager.Instance.OnLayerStateChanged -= HandleLayerStateChanged;
+        LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
     }
 
     private void HandlePlayerDied()
@@ -156,7 +160,29 @@ public class GameUIManager : MonoBehaviour
 
     private void HandleLayerChanged(int layerIndex)
     {
+        Debug.Log($"**layerchanged: {layerIndex}");
         ShowLayerText(layerIndex);
+    }
+
+    private void HandleLayerStateChanged(LayerState state)
+    {
+        Debug.Log($"**layerstatechanged: {state}");
+        
+        switch (state)
+        {
+            case LayerState.Normal:
+                // 일반 층 UI 표시
+                break;
+            case LayerState.Boss:
+                // 보스 층 UI 표시
+                break;
+        }
+    }
+
+    private void HandleBossLayerEntered(int bossIndex)
+    {
+        Debug.Log($"**bosslayerentered: {bossIndex}");
+        ShowBossLayerText(bossIndex);
     }
 
     public void ShowBossLayerText(int bossIndex)

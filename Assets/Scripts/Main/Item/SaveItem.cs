@@ -9,6 +9,7 @@ public class SaveItem : ItemBase
         {
             gameManager.SaveGame();
             Debug.Log("Game saved successfully!");
+            ShowStatusText("Game Saved!", PlayerColor.Green.ToColor());
         }
         else
         {
