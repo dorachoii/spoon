@@ -85,9 +85,9 @@ public class LayerManager : MonoBehaviour
         layerDataList.Clear();
 
         // 0층: Normal, 높이 50
-        LayerData layer1 = new LayerData(0, LayerState.Normal, 10f, -1);
-        // 1층: Transition, 높이 20  
-        LayerData layer2 = new LayerData(1, LayerState.Transition, 20f, 0);
+        LayerData layer1 = new LayerData(0, LayerState.Normal, 30f, -1);
+        // 1층: Transition, 높이 20  tilemap offset만큼
+        LayerData layer2 = new LayerData(1, LayerState.Transition, 10f, 0);
         // 2층: Boss, 높이 100
         LayerData layer3 = new LayerData(2, LayerState.Boss, 100f, 0);
 

@@ -51,7 +51,7 @@ public class BossBodyPart : MonoBehaviour
     
       public void TriggerBounceY()
     {
-        StartCoroutine(BounceY(1.5f, 0.3f));
+        StartCoroutine(BounceY(1f, 0.3f));
     }
 
     private IEnumerator BounceY(float height, float duration)

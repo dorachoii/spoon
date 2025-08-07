@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Data.Common;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -72,24 +71,6 @@ public class ItemSpawner : MonoBehaviour
         currentLayer = Mathf.Clamp(newLayer, 0, layerSpawnDatas.Length - 1);
         SpawnSavePoints();
     }
-
-    private bool bossSpawned = false;
-
-   
-
-    Vector3 GetBossSpawnPosition()
-    {
-        Camera cam = Camera.main;
-        float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
-
-        Vector3 midWorld = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.2f, z)); // 화면 아래쪽 중앙
-
-        Vector3Int tilePos = tilemap.WorldToCell(midWorld);
-        Vector3 spawnPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
-
-        return spawnPos;
-    }
-
 
     void SpawnItemBelowScreen()
     {

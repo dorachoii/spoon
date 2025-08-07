@@ -374,6 +374,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             Vector3 bottomCenterWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCamera.nearClipPlane));
             currentBossTilemap.transform.position = new Vector3(bottomCenterWorldPos.x, bottomCenterWorldPos.y, 0f);
             
+            
             Debug.Log($"[TileGenerator] 보스 타일맵 {bossIndex} 생성됨 - 위치: {currentBossTilemap.transform.position}");
         }
     }
