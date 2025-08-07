@@ -461,7 +461,6 @@ public class PlayerContoller : MonoBehaviour
 
     public void ShowStatusText(string text, Color color)
     {
-        Debug.Log($"***{text}를 {color}로 띄우자!");
         floatingText.SetActive(true);
         floatingText.GetComponent<StatusTextAnimator>().Initialize(text, color);
     }

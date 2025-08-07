@@ -31,24 +31,24 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private TileBase[,] tile_dotted = new TileBase[DOTTED_TILE_SIZE, DOTTED_TILE_SIZE];
     private TileBase[,] tile_gradient = new TileBase[GRADIENT_TILE_SIZE, GRADIENT_TILE_SIZE];
     //Gradient
-    private int gradientTileIdx = -1; 
+    private int gradientTileIdx = -1;
     private int lastGradientLevel = -1;
 
     //Dotted
     private int lastDottedLevel = -1;
     private int lastStampingY = 0;
-    [SerializeField] private int stampingInterval = 20; 
-    [SerializeField] private int maxStampingCount = 1; 
-    
+    [SerializeField] private int stampingInterval = 20;
+    [SerializeField] private int maxStampingCount = 1;
+
 
     [Header("Tile Generation Control")]
     private bool isPaused = false;
-    private bool isLayerChanged = false; 
-    
+    private bool isLayerChanged = false;
+
 
     [Header("Boss Tilemap")]
-    [SerializeField] private GameObject[] bossTilemapPrefabs; 
-    private GameObject currentBossTilemap; 
+    [SerializeField] private GameObject[] bossTilemapPrefabs;
+    private GameObject currentBossTilemap;
 
 
     void Awake()
@@ -75,7 +75,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     void OnEnable()
     {
-        if (LayerManager.Instance != null) 
+        if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
@@ -87,7 +87,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     void OnDisable()
     {
-        if (LayerManager.Instance != null) 
+        if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
@@ -97,6 +97,14 @@ public class TileGenerator : MonoBehaviour, ISaveable
         }
     }
 
+    void HandleLevelChanged(int newLevel)
+    {
+        currentLayer = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
+        gradientTileIdx = currentLayer - 1;
+        isLayerChanged = true;
+    }
+
+    #region Basic Tilemap
     void Update()
     {
         if (isPaused) return;
@@ -125,23 +133,16 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     }
 
-    void HandleLevelChanged(int newLevel)
-    {
-        currentLayer = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
-        gradientTileIdx = currentLayer - 1; 
-        isLayerChanged = true;
-    }
-
     void FillBottomRows(int startY, int endY, int layer)
     {
         // 레이어 변경되면, 경계선 그라디언트 그려준다.
         if (isLayerChanged && gradientTileIdx >= 0)
         {
             StampGradientLine(startY, gradientTileIdx);
-            isLayerChanged = false; 
-            gradientTileIdx = -1; 
+            isLayerChanged = false;
+            gradientTileIdx = -1;
         }
-        
+
         int height = endY - startY + 1;
         if (height <= 0) return;
 
@@ -220,11 +221,11 @@ public class TileGenerator : MonoBehaviour, ISaveable
             Vector3Int min = tilemap.WorldToCell(belowViewportBottomLeft);
             Vector3Int max = tilemap.WorldToCell(viewportTopRight);
 
-           // 가로: 화면 너비, 세로: 화면 아래쪽 영역 + 타일 높이 (横: 画面幅、縦: 画面下側エリア + タイル高さ)
-           // 범위 내에서 스탬프 후보 위치 저장 (範囲内でスタンプ候補位置を保存) 
-            for (int x = min.x; x <= max.x - DOTTED_TILE_SIZE + 1; x+=DOTTED_TILE_SIZE)
+            // 가로: 화면 너비, 세로: 화면 아래쪽 영역 + 타일 높이 (横: 画面幅、縦: 画面下側エリア + タイル高さ)
+            // 범위 내에서 스탬프 후보 위치 저장 (範囲内でスタンプ候補位置を保存) 
+            for (int x = min.x; x <= max.x - DOTTED_TILE_SIZE + 1; x += DOTTED_TILE_SIZE)
             {
-                for (int y = min.y; y <= max.y - DOTTED_TILE_SIZE + 1; y+=DOTTED_TILE_SIZE)
+                for (int y = min.y; y <= max.y - DOTTED_TILE_SIZE + 1; y += DOTTED_TILE_SIZE)
                 {
                     Vector3Int tilePos = new Vector3Int(x, y, 0);
                     validStampPos.Add(tilePos);
@@ -301,83 +302,82 @@ public class TileGenerator : MonoBehaviour, ISaveable
         }
         return tileBlock;
     }
+    #endregion
 
-    // 타일 생성 일시정지
+    #region Tile Generation Control
     public void PauseTileGeneration()
     {
         isPaused = true;
     }
 
-    // 타일 생성 재개
     public void ResumeTileGeneration()
     {
         isPaused = false;
     }
 
-    // 타일 생성 상태 확인
-    public bool IsTileGenerationPaused()
-    {
-        return isPaused;
-    }
-    
+
     // 전환 층 진입 시 호출
     private void HandleTransitionLayerEntered(int bossIndex)
     {
         Debug.Log($"[TileGenerator] 전환 층 {bossIndex} 진입 - 타일 생성 중단");
-        
+
         // 타일 생성 중단 (전환 층에서는 타일 생성하지 않음)
         PauseTileGeneration();
     }
-    
+
     // 전환 층 퇴장 시 호출
     private void HandleTransitionLayerExited(int bossIndex)
     {
         Debug.Log($"[TileGenerator] 전환 층 {bossIndex} 퇴장");
-        
+
         // 전환 층을 나가면 보스 타일맵 생성 준비
         // (보스 층 진입 시점에 실제로 생성됨)
     }
-    
+
     // 보스 층 진입 시 호출
     private void HandleBossLayerEntered(int bossIndex)
     {
         Debug.Log($"[TileGenerator] 보스 층 {bossIndex} 진입 - 보스 타일맵 생성");
-        
+
         // 보스 타일맵 생성
         SpawnBossTilemap(bossIndex);
     }
-    
+
     // 보스 층 퇴장 시 호출
     private void HandleBossLayerExited(int bossIndex)
     {
         Debug.Log($"[TileGenerator] 보스 층 {bossIndex} 퇴장 - 보스 타일맵 제거");
-        
+
         // 보스 타일맵 제거
         RemoveBossTilemap();
-        
+
         // 일반 타일 생성 재개
         ResumeTileGeneration();
     }
-    
+    #endregion
+
+    #region Boss Tilemap
     // 보스 타일맵 생성
     public void SpawnBossTilemap(int bossIndex)
     {
         // 기존 보스 타일맵이 있다면 제거
         RemoveBossTilemap();
-        
+
         // 보스 인덱스가 유효한지 확인
         if (bossIndex >= 0 && bossIndex < bossTilemapPrefabs.Length && bossTilemapPrefabs[bossIndex] != null)
         {
             // 보스 타일맵 프리팹 인스턴스화
-            currentBossTilemap = Instantiate(bossTilemapPrefabs[bossIndex], transform);
-            Debug.Log($"[TileGenerator] 보스 타일맵 {bossIndex} 생성됨");
-        }
-        else
-        {
-            Debug.LogWarning($"[TileGenerator] 보스 타일맵 프리팹 {bossIndex}가 없습니다!");
+            currentBossTilemap = Instantiate(bossTilemapPrefabs[bossIndex]);
+            currentBossTilemap.transform.SetParent(transform);
+            
+            // 카메라 뷰포트의 맨 아래쪽에 위치시키기
+            Vector3 bottomCenterWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCamera.nearClipPlane));
+            currentBossTilemap.transform.position = new Vector3(bottomCenterWorldPos.x, bottomCenterWorldPos.y, 0f);
+            
+            Debug.Log($"[TileGenerator] 보스 타일맵 {bossIndex} 생성됨 - 위치: {currentBossTilemap.transform.position}");
         }
     }
-    
+
     // 보스 타일맵 제거
     private void RemoveBossTilemap()
     {
@@ -388,7 +388,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             Debug.Log("[TileGenerator] 보스 타일맵 제거됨");
         }
     }
-    
+    #endregion
 
 
     #region Save&Load

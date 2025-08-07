@@ -5,9 +5,9 @@ using UnityEngine.Tilemaps;
 
 public enum LayerState
 {
-    Normal,     
-    Transition, 
-    Boss,       
+    Normal,
+    Transition,
+    Boss,
 }
 
 [System.Serializable]
@@ -15,38 +15,33 @@ public class LayerData
 {
     public int layerIndex;
     public LayerState state;
-    public float startY;
-    public float endY;
-    public int bossIndex; // 보스 종류 구분 (-1이면 일반 층, 전환 층층)
-    
-    public LayerData(int index, LayerState layerState, float start, float end, int boss = -1)
+    public float layerHeight;
+    public int bossIndex; // 보스 종류 구분 (-1이면 일반 층, 전환 층)
+
+    public LayerData(int index, LayerState layerState, float height, int boss = -1)
     {
         layerIndex = index;
         state = layerState;
-        startY = start;
-        endY = end;
+        layerHeight = height;
         bossIndex = boss;
     }
 }
-
+//보스 전환!
 public class LayerManager : MonoBehaviour
 {
     public static LayerManager Instance { get; private set; }
     private Camera mainCam;
+    private float startY = 0f;
 
-    [Header("Layer Settings")]
-    [SerializeField] private float layerHeight = 50f; // 한 층 당 높이 (1層あたりの高さ)
-    [SerializeField] private float transitionLayerHeight = 20f; // 전환 층 높이 (遷移層の高さ)
-    [SerializeField] private float bossLayerHeight = 100f; // 보스 층 높이 (ボス層の高さ)
-    
+
     private int lastLayer = -1;
     public int CurrentLayer { get; private set; } = 0;
     public float CurrentLayerHardness { get; private set; } = 1f;
     public LayerState CurrentLayerState { get; private set; } = LayerState.Normal;
-    
+
     // 층 데이터 관리
     private List<LayerData> layerDataList = new List<LayerData>();
-    private LayerData currentLayerData;
+    private float currentLayerEndHeight = 0f; // 현재 층의 끝 높이 (캐시)
 
     // 이벤트
     public event Action<int> OnLayerChanged;
@@ -60,9 +55,6 @@ public class LayerManager : MonoBehaviour
     private Tilemap tilemap;
     private int maxTilesPerFrame = 40;  // 한 프레임에 처리할 최대 타일 수 (1Frameに処理する最大タイル数)
 
-    // 보스 층 설정
-    [Header("Boss Layer Configuration")]
-    [SerializeField] private int[] bossLayerIndices = { 2, 5 }; // 보스가 등장할 일반 층 인덱스들
 
     private void Awake()
     {
@@ -89,143 +81,73 @@ public class LayerManager : MonoBehaviour
 
     private void InitializeLayerData()
     {
+        startY = mainCam.transform.position.y;
         layerDataList.Clear();
-        float currentY = 0f;
+
+        // 0층: Normal, 높이 50
+        LayerData layer1 = new LayerData(0, LayerState.Normal, 10f, -1);
+        // 1층: Transition, 높이 20  
+        LayerData layer2 = new LayerData(1, LayerState.Transition, 20f, 0);
+        // 2층: Boss, 높이 100
+        LayerData layer3 = new LayerData(2, LayerState.Boss, 100f, 0);
+
+        layerDataList.Add(layer1);
+        layerDataList.Add(layer2);
+        layerDataList.Add(layer3);
         
-        for (int i = 0; i < 6; i++) 
-        {
-            bool isBossLayer = Array.Exists(bossLayerIndices, x => x == i);
-            
-            if (isBossLayer)
-            {
-                // 일반 층 추가
-                LayerData normalLayer = new LayerData(i, LayerState.Normal, currentY, currentY + layerHeight);
-                layerDataList.Add(normalLayer);
-                currentY += layerHeight;
-                
-                // 전환 층 추가
-                LayerData transitionLayer = new LayerData(i, LayerState.Transition, currentY, currentY + transitionLayerHeight, i);
-                layerDataList.Add(transitionLayer);
-                currentY += transitionLayerHeight;
-                
-                // 보스 층 추가
-                LayerData bossLayer = new LayerData(i, LayerState.Boss, currentY, currentY + bossLayerHeight, i);
-                layerDataList.Add(bossLayer);
-                currentY += bossLayerHeight;
-            }
-            else
-            {
-                // 일반 층만 추가
-                LayerData normalLayer = new LayerData(i, LayerState.Normal, currentY, currentY + layerHeight);
-                layerDataList.Add(normalLayer);
-                currentY += layerHeight;
-            }
-        }
+        // 초기 층의 끝 높이 계산
+        UpdateCurrentLayerEndHeight();
     }
 
     private void UpdateLayer()
     {
-        int newLayer = CalculateCurrentLayer();
-        LayerData newLayerData = GetLayerDataAtPosition(GetCameraBottomY());
-        
-        bool layerChanged = false;
-        bool stateChanged = false;
+        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
+        float viewportY = bottomCenterWorldPos.y;
 
-        // 레이어 변경 체크
-        
-        if (newLayer != lastLayer)
+        // 카메라가 현재 층을 넘어갔는지 체크 (캐시된 값 사용)
+        if (viewportY <= startY - currentLayerEndHeight)
         {
-            CurrentLayer = newLayer;
-            lastLayer = newLayer;
-            OnLayerChanged?.Invoke(CurrentLayer);
-            layerChanged = true;
-        }
-
-        // 레이어 상태 변경 체크
-        if (newLayerData != null && (currentLayerData == null || newLayerData.layerIndex != currentLayerData.layerIndex))
-        {
-            LayerState previousState = CurrentLayerState;
-            CurrentLayerState = newLayerData.state;
-            currentLayerData = newLayerData;
-            
-            if (previousState != CurrentLayerState)
+            // 다음 층으로 이동
+            if (CurrentLayer < layerDataList.Count - 1)
             {
+                CurrentLayer++;
+                LayerData newLayerData = layerDataList[CurrentLayer];
+                CurrentLayerState = newLayerData.state;
+
+                // 새로운 층의 끝 높이 계산 (한 번만)
+                UpdateCurrentLayerEndHeight();
+
+                // 이벤트 발생
+                OnLayerChanged?.Invoke(CurrentLayer);
                 OnLayerStateChanged?.Invoke(CurrentLayerState);
-                stateChanged = true;
-                
-                                 // 전환 층 진입/퇴장 이벤트
-                 if (CurrentLayerState == LayerState.Transition)
-                 {
-                    Debug.Log($"전환 층 진입: {currentLayerData.bossIndex}");
-                     OnTransitionLayerEntered?.Invoke(currentLayerData.bossIndex);
-                     HandleTransitionLayerEntered(currentLayerData.bossIndex);
-                 }
-                 else if (previousState == LayerState.Transition)
-                 {
-                     OnTransitionLayerExited?.Invoke(currentLayerData.bossIndex);
-                 }
-                 
-                 // 보스 층 진입/퇴장 이벤트
-                 if (CurrentLayerState == LayerState.Boss)
-                 {
-                     OnBossLayerEntered?.Invoke(currentLayerData.bossIndex);
-                     HandleBossLayerEntered(currentLayerData.bossIndex);
-                 }
-                 else if (previousState == LayerState.Boss)
-                 {
-                     OnBossLayerExited?.Invoke(currentLayerData.bossIndex);
-                 }
+
+                // 전환 층 진입/퇴장 이벤트
+                if (CurrentLayerState == LayerState.Transition)
+                {
+                    Debug.Log($"전환 층 진입: {newLayerData.bossIndex}");
+                    OnTransitionLayerEntered?.Invoke(newLayerData.bossIndex);
+                    HandleTransitionLayerEntered(newLayerData.bossIndex);
+                }
+
+                // 보스 층 진입/퇴장 이벤트
+                if (CurrentLayerState == LayerState.Boss)
+                {
+                    OnBossLayerEntered?.Invoke(newLayerData.bossIndex);
+                    HandleBossLayerEntered(newLayerData.bossIndex);
+                }
+
+                Debug.Log($"Layer: {CurrentLayer}, State: {CurrentLayerState}");
             }
         }
-
-        if (layerChanged || stateChanged)
-        {
-            Debug.Log($"Layer: {CurrentLayer}, State: {CurrentLayerState}");
-        }
     }
 
-    private int CalculateCurrentLayer()
+    // 현재 층의 끝 높이를 계산하여 캐시 (층 변경 시에만 호출)
+    private void UpdateCurrentLayerEndHeight()
     {
-        if (tilemap == null) return Mathf.Max(0, lastLayer);
-        if (mainCam == null) return Mathf.Max(0, lastLayer);
-
-        Vector3Int bottomLeftCell = tilemap.WorldToCell(mainCam.ViewportToWorldPoint(new Vector3(0, 0, mainCam.nearClipPlane)));
-        Vector3 cellWorldPos = tilemap.CellToWorld(bottomLeftCell);
-
-        float originY = 0f;
-        int layer = Mathf.FloorToInt((originY - cellWorldPos.y) / layerHeight);
-        return Mathf.Max(0, layer);
-    }
-
-    private LayerData GetLayerDataAtPosition(float yPosition)
-    {
-        foreach (var layerData in layerDataList)
+        currentLayerEndHeight = 0f;
+        for (int i = 0; i <= CurrentLayer; i++)
         {
-            if (yPosition >= layerData.startY && yPosition <= layerData.endY)
-            {
-                return layerData;
-            }
-        }
-        return null;
-    }
-
-    // 보스가 죽었을 때 호출 (BossManager에서 호출)
-    public void OnBossDefeated(int bossIndex)
-    {
-        Debug.Log($"보스 {bossIndex} 처치됨!");
-        
-        // 보스 층을 일반 층으로 변경
-        var bossLayer = layerDataList.Find(l => l.bossIndex == bossIndex && l.state == LayerState.Boss);
-        if (bossLayer != null)
-        {
-            bossLayer.state = LayerState.Normal;
-            bossLayer.bossIndex = -1;
-        }
-        
-        // 타일 생성 재개
-        if (TileGenerator.Instance != null)
-        {
-            TileGenerator.Instance.ResumeTileGeneration();
+            currentLayerEndHeight += layerDataList[i].layerHeight;
         }
     }
 
@@ -233,36 +155,24 @@ public class LayerManager : MonoBehaviour
     public void HandleTransitionLayerEntered(int bossIndex)
     {
         Debug.Log($"전환 층 {bossIndex} 진입 - 타일 생성 중단");
-        
+
         // 타일 생성 중단
         if (TileGenerator.Instance != null)
         {
             TileGenerator.Instance.PauseTileGeneration();
         }
-        
-        // 전환 효과 (예: 화면 페이드, 사운드 등)
-        // if (TransitionManager.Instance != null)
-        // {
-        //     TransitionManager.Instance.PlayTransitionEffect(bossIndex);
-        // }
     }
-    
+
     // 보스 층 진입 시 호출 (보스 타일맵 생성)
     public void HandleBossLayerEntered(int bossIndex)
     {
         Debug.Log($"보스 층 {bossIndex} 진입 - 보스 타일맵 생성");
-        
+
         // 보스 타일맵 생성
         if (TileGenerator.Instance != null)
         {
             TileGenerator.Instance.SpawnBossTilemap(bossIndex);
         }
-        
-        // 보스 생성 (BossManager가 있다면)
-        // if (BossManager.Instance != null)
-        // {
-        //     BossManager.Instance.SpawnBoss(bossIndex);
-        // }
     }
 
     // 현재 층이 보스 층인지 확인
@@ -281,7 +191,12 @@ public class LayerManager : MonoBehaviour
     // 타일맵 총 높이
     public float GetTilemapTotalHeight()
     {
-        return layerHeight * 5f + bossLayerHeight * bossLayerIndices.Length + 10f;
+        float totalHeight = 0;
+        foreach (var layerData in layerDataList)
+        {
+            totalHeight += layerData.layerHeight;
+        }
+        return totalHeight;
     }
 
     public int GetMaxTile()
@@ -289,15 +204,4 @@ public class LayerManager : MonoBehaviour
         return maxTilesPerFrame;
     }
 
-    private float GetCameraBottomY()
-    {
-        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
-        return bottomCenterWorldPos.y;
-    }
-    
-    // 보스 층 데이터 가져오기
-    public LayerData GetBossLayerData(int bossIndex)
-    {
-        return layerDataList.Find(l => l.bossIndex == bossIndex && l.state == LayerState.Boss);
-    }
 }
