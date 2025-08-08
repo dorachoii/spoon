@@ -167,14 +167,13 @@ public class LayerManager : MonoBehaviour
                 {
                     Debug.Log($"전환 층 진입: {newLayerData.bossIndex}");
                     OnTransitionLayerEntered?.Invoke(newLayerData.bossIndex);
-                    HandleTransitionLayerEntered(newLayerData.bossIndex);
+                    
                 }
 
                 // 보스 층 진입/퇴장 이벤트
                 if (CurrentLayerState == LayerState.Boss)
                 {
                     OnBossLayerEntered?.Invoke(newLayerData.bossIndex);
-                    HandleBossLayerEntered(newLayerData.bossIndex);
                 }
 
                 Debug.Log($"Tilemap Layer: {CurrentLayer}, State: {CurrentLayerState}");
@@ -235,55 +234,16 @@ public class LayerManager : MonoBehaviour
         }
     }
 
-    // 전환 층 진입 시 호출 (타일 생성 중단)
-    public void HandleTransitionLayerEntered(int bossIndex)
-    {
-        Debug.Log($"전환 층 {bossIndex} 진입 - 타일 생성 중단");
-
-        // 타일 생성 중단
-        if (TileGenerator.Instance != null)
-        {
-            TileGenerator.Instance.PauseTileGeneration();
-        }
-    }
-
-    // 보스 층 진입 시 호출 (보스 타일맵 생성)
-    public void HandleBossLayerEntered(int bossIndex)
-    {
-        Debug.Log($"보스 층 {bossIndex} 진입 - 보스 타일맵 생성");
-
-        // 보스 타일맵 생성
-        if (TileGenerator.Instance != null)
-        {
-            TileGenerator.Instance.SpawnBossTilemap(bossIndex);
-        }
-    }
-
-    // 현재 층이 보스 층인지 확인 (타일맵 기준)
-    public bool IsCurrentLayerBoss()
-    {
-        return CurrentLayerState == LayerState.Boss;
-    }
     
-    // 플레이어 위치 기준으로 현재 층이 보스 층인지 확인
-    public bool IsCurrentPlayerLayerBoss()
-    {
-        return CurrentPlayerLayerState == LayerState.Boss;
-    }
 
     // 현재 층의 하드니스 계산 (타일맵 기준)
     public float GetCurrentHardness()
     {
-        int layer = Mathf.Max(0, CurrentLayer);
+        int layer = Mathf.Max(0, CurrentPlayerLayer);
         return CurrentLayerHardness = 40f + layer * Mathf.Sqrt(layer) * 20f;
     }
     
-    // 플레이어 위치 기준 하드니스 계산
-    public float GetCurrentPlayerHardness()
-    {
-        int layer = Mathf.Max(0, CurrentPlayerLayer);
-        return 40f + layer * Mathf.Sqrt(layer) * 20f;
-    }
+   
     
     // 현재 레이어 이름 반환 (타일맵 기준)
     public string GetCurrentLayerName()
@@ -295,15 +255,7 @@ public class LayerManager : MonoBehaviour
         return "Unknown Layer";
     }
     
-    // 플레이어 위치 기준 레이어 이름 반환
-    public string GetCurrentPlayerLayerName()
-    {
-        if (CurrentPlayerLayer >= 0 && CurrentPlayerLayer < layerDataList.Count)
-        {
-            return layerDataList[CurrentPlayerLayer].layerName;
-        }
-        return "Unknown Layer";
-    }
+ 
 
     // 타일맵 총 높이
     public float GetTilemapTotalHeight()
@@ -321,4 +273,52 @@ public class LayerManager : MonoBehaviour
         return maxTilesPerFrame;
     }
 
+    // 보스 층 진입 시 호출 (보스 타일맵 생성)
+    public void HandleBossLayerEntered(int bossIndex)
+    {
+        Debug.Log($"보스 층 {bossIndex} 진입 - 보스 타일맵 생성");
+
+        // 보스 타일맵 생성
+        if (TileGenerator.Instance != null)
+        {
+            TileGenerator.Instance.SpawnBossTilemap(bossIndex);
+        }
+    }
+    
+    // 보스가 죽어서 보스 층이 완료될 때 호출
+    public void HandleBossLayerCompleted(int bossIndex)
+    {
+        Debug.Log($"보스 층 {bossIndex} 완료 - 현재 높이 확정 및 다음 층으로 진행");
+        
+        // 현재 층의 끝 높이를 현재 카메라 위치로 확정
+        Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
+        float currentViewportY = bottomCenterWorldPos.y;
+        
+        // 현재 층의 높이를 현재 카메라 위치까지로 확정
+        float currentLayerHeight = mainCamStartY - currentViewportY;
+        if (CurrentLayer >= 0 && CurrentLayer < layerDataList.Count)
+        {
+            layerDataList[CurrentLayer].layerHeight = currentLayerHeight;
+        }
+        
+        // 현재 층의 끝 높이 재계산
+        UpdateCurrentLayerEndHeight();
+        
+        // 다음 층으로 진행
+        if (CurrentLayer < layerDataList.Count - 1)
+        {
+            CurrentLayer++;
+            LayerData newLayerData = layerDataList[CurrentLayer];
+            CurrentLayerState = newLayerData.state;
+
+            // 새로운 층의 끝 높이 계산
+            UpdateCurrentLayerEndHeight();
+
+            // 이벤트 발생
+            OnLayerChangedForTilemapGeneration?.Invoke(CurrentLayer);
+            OnLayerStateChanged?.Invoke(CurrentLayerState);
+
+            Debug.Log($"보스 층 완료 후 다음 층으로 진행: Layer {CurrentLayer}, State: {CurrentLayerState}");
+        }
+    }
 }

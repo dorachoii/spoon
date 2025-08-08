@@ -54,8 +54,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private GameObject currentCrumbleTilemap;
     private GameObject currentBossGroundTilemap;
     private GameObject currentBoss; // 현재 보스 객체
-    
-    // 보스 생성 최적화를 위한 변수들
     private bool isSpawningBoss = false;
 
 
@@ -331,45 +329,42 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     public void ResumeTileGeneration()
     {
+        tilemap.ClearAllTiles();
+        tilemap.CompressBounds();
+        lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+        
+        // 스탬핑 관련 변수들 초기화
+        lastStampingY = lastBottomLeftCell.y;
+        
+        // PlayerController의 removedTiles 캐시 초기화
+        PlayerContoller playerController = FindObjectOfType<PlayerContoller>();
+        if (playerController != null)
+        {
+            playerController.ClearRemovedTilesCache();
+        }
+
         isPaused = false;
+        
+        Debug.Log("[TileGenerator] 타일맵 재시작 - 모든 캐시 초기화 완료");
     }
 
 
-    // 전환 층 진입 시 호출
+    // transition
     private void HandleTransitionLayerEntered(int bossIndex)
     {
-        Debug.Log($"[TileGenerator] 전환 층 {bossIndex} 진입 - 타일 생성 중단");
-
-        // 타일 생성 중단 (전환 층에서는 타일 생성하지 않음)
         PauseTileGeneration();
     }
 
-    // 전환 층 퇴장 시 호출
-    private void HandleTransitionLayerExited(int bossIndex)
-    {
-        Debug.Log($"[TileGenerator] 전환 층 {bossIndex} 퇴장");
-
-        // 전환 층을 나가면 보스 타일맵 생성 준비
-        // (보스 층 진입 시점에 실제로 생성됨)
-    }
-
-    // 보스 층 진입 시 호출
+    // boss 
     private void HandleBossLayerEntered(int bossIndex)
     {
-        Debug.Log($"[TileGenerator] 보스 층 {bossIndex} 진입 - 보스 타일맵 생성");
-
-        // 보스 타일맵 생성
         SpawnBossTilemap(bossIndex);
     }
 
     // 보스 층 퇴장 시 호출
     private void HandleBossLayerExited(int bossIndex)
     {
-        Debug.Log($"[TileGenerator] 보스 층 {bossIndex} 퇴장 - 보스 타일맵 제거");
-
-        // 보스 타일맵 제거
-        RemoveBossTilemap();
-
         // 일반 타일 생성 재개
         ResumeTileGeneration();
     }
@@ -387,9 +382,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private IEnumerator SpawnBossTilemapCoroutine(int bossIndex)
     {
         isSpawningBoss = true;
-        
-        // 기존 보스 타일맵이 있다면 제거
-        RemoveBossTilemap();
+
         
         // 한 프레임 대기하여 제거 완료
         yield return null;
@@ -431,9 +424,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
     // 보스 스폰
     private void SpawnBoss(int bossIndex, Vector3 position)
     {
-        // 기존 보스가 있다면 제거
-        RemoveBoss();
-
         // 보스 인덱스가 유효한지 확인
         if (bossIndex >= 0 && bossIndex < bossPrefabs.Length && bossPrefabs[bossIndex] != null)
         {
@@ -444,6 +434,14 @@ public class TileGenerator : MonoBehaviour, ISaveable
             if (currentBoss != null)
             {
                 currentBoss.SetActive(true);
+                
+                // 보스의 OnDeath 이벤트 구독
+                BossHP bossHP = currentBoss.GetComponent<BossHP>();
+                if (bossHP != null)
+                {
+                    bossHP.OnDeath += HandleBossDeath;
+                    Debug.Log("[TileGenerator] 보스 OnDeath 이벤트 구독 완료");
+                }
             }
         }
         else
@@ -451,37 +449,23 @@ public class TileGenerator : MonoBehaviour, ISaveable
             Debug.LogWarning($"[TileGenerator] 보스 {bossIndex}에 대한 프리팹을 찾을 수 없습니다.");
         }
     }
-
-    // 보스 제거
-    private void RemoveBoss()
+    
+    // 보스가 죽었을 때 호출되는 메서드
+    private void HandleBossDeath()
     {
-        if (currentBoss != null)
-        {
-            Destroy(currentBoss);
-            currentBoss = null;
-        }
-    }
-
-    // 보스 타일맵 제거
-    private void RemoveBossTilemap()
-    {
-        if (currentCrumbleTilemap != null)
-        {
-            Destroy(currentCrumbleTilemap);
-            currentCrumbleTilemap = null;
-        }
+        Debug.Log("[TileGenerator] 보스가 죽었습니다 - 타일 생성 재개 및 다음 층으로 진행");
         
-        if (currentBossGroundTilemap != null)
+        // 타일 생성 재개
+        ResumeTileGeneration();
+        
+        // LayerManager에 보스 층 완료 알림 (현재 높이 확정 및 다음 층으로 진행)
+        if (LayerManager.Instance != null)
         {
-            Destroy(currentBossGroundTilemap);
-            currentBossGroundTilemap = null;
+            LayerManager.Instance.HandleBossLayerCompleted(-1); // -1은 보스 인덱스 (필요시 수정)
         }
-
-        // 보스도 제거
-        RemoveBoss();
-
-        Debug.Log("[TileGenerator] 보스 타일맵 및 보스 제거됨");
     }
+    
+
     #endregion
 
 

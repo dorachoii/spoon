@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
-using UnityEngine.Rendering;
-using UnityEngine.Lumin;
-using TMPro;
 
 public enum DigDirection
 {
@@ -147,8 +144,6 @@ public class PlayerContoller : MonoBehaviour
                 subscribedBosses.Add(bossHP);
             }
         }
-        
-        Debug.Log($"[PlayerController] {allBosses.Length}개의 보스에 이벤트 구독 완료");
     }
     
     // Update에서 주기적으로 새로운 보스 확인
@@ -170,7 +165,7 @@ public class PlayerContoller : MonoBehaviour
         {
             if (!subscribedBosses.Contains(bossHP))
             {
-                SubscribeToBossHP(bossHP);
+
                 subscribedBosses.Add(bossHP);
                 Debug.Log("[PlayerController] 새로운 보스 발견 및 구독 완료");
             }
@@ -181,33 +176,7 @@ public class PlayerContoller : MonoBehaviour
     }
     
     // 새로운 보스가 생성될 때 호출할 수 있는 메서드
-    public void SubscribeToBossHP(BossHP bossHP)
-    {
-        if (bossHP != null)
-        {
-            bossHP.OnDeath += HandleBossDeath;
-            Debug.Log("[PlayerController] BossHP 이벤트 구독 완료");
-        }
-    }
-    
-    // 보스가 제거될 때 호출할 수 있는 메서드
-    public void UnsubscribeFromBossHP(BossHP bossHP)
-    {
-        if (bossHP != null)
-        {
-            bossHP.OnDeath -= HandleBossDeath;
-            Debug.Log("[PlayerController] BossHP 이벤트 구독 해제 완료");
-        }
-    }
-    
-    // 보스가 죽었을 때 호출
-    private void HandleBossDeath()
-    {
-        Debug.Log("[PlayerController] 보스가 죽었습니다 - 자동으로 땅을 파기 시작");
-        
-        // 보스가 죽었을 때 자동으로 아래쪽으로 땅을 파기 시작
-        isDigging = true;
-    }
+  
 
     private void LateUpdate()
     {
@@ -382,10 +351,7 @@ public class PlayerContoller : MonoBehaviour
             rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
             StartDig();
         }
-
     }
-
-
 
     private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
     private List<Vector3Int> positionsToDig = new List<Vector3Int>();
@@ -399,6 +365,7 @@ public class PlayerContoller : MonoBehaviour
     private bool isDigging = false;
     public void StartDig()
     {
+        Debug.Log("[PlayerController] StartDig {currentState: " + currentState + ", isDigging: " + isDigging + "}");
         if (currentState != PlayerState.Dig || isDigging) return;
 
         if (digCoroutine != null)
@@ -443,9 +410,18 @@ public class PlayerContoller : MonoBehaviour
 
                 Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
 
-                if (!tilemap.cellBounds.Contains(cellPos)) continue;
-                if (removedTiles.Contains(cellPos)) continue;
-                if (!tilemap.HasTile(cellPos)) continue;
+                if (!tilemap.cellBounds.Contains(cellPos)) {
+                    Debug.Log($"[PlayerController] 타일맵 범위 밖: {cellPos}");
+                    continue;
+                }
+                if (removedTiles.Contains(cellPos))   {
+                    Debug.Log($"[PlayerController] 이미 제거된 타일: {cellPos}");
+                    continue;
+                }
+                if (!tilemap.HasTile(cellPos)) {
+                    Debug.Log($"[PlayerController] 타일맵에 타일이 없음: {cellPos}");
+                    continue;
+                }
 
                 positionsToDig.Add(cellPos);
             }
@@ -508,6 +484,13 @@ public class PlayerContoller : MonoBehaviour
         {
             removedTiles.Add(pos.ToVector3Int());
         }
+    }
+    
+    // 타일맵이 재시작될 때 호출되어 removedTiles 캐시를 초기화
+    public void ClearRemovedTilesCache()
+    {
+        removedTiles.Clear();
+        Debug.Log("[PlayerController] removedTiles 캐시 초기화 완료");
     }
 
     private IEnumerator IDamageFlicker()

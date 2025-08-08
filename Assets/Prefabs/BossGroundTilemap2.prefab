@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 5661944205835794328}
   - component: {fileID: 3034768868347088591}
   - component: {fileID: 2439804641268866673}
+  - component: {fileID: -3899411055067281411}
   m_Layer: 0
   m_Name: BossGroundTilemap2
-  m_TagString: Untagged
+  m_TagString: Tilemap
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -75165,3 +75166,15 @@ TilemapCollider2D:
   m_MaximumTileChangeCount: 1000
   m_ExtrusionFactor: 0
   m_UseDelaunayMesh: 0
+--- !u!114 &-3899411055067281411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1049509540789087574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f6947b16217606479d56abff718528a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
