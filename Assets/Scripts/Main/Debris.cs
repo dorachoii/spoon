@@ -1,11 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Debris : MonoBehaviour
 {
     private Camera mainCam;
     private float offscreenMargin = 1f;
+    private bool isBossDead = false;
 
     // Start is called before the first frame update
     void Start()
@@ -26,9 +25,14 @@ public class Debris : MonoBehaviour
         if (viewportPos.x < -offscreenMargin || viewportPos.x > 1 + offscreenMargin || viewportPos.y < -offscreenMargin || viewportPos.y > 1 + offscreenMargin) Destroy(gameObject);
     }
 
+    // 보스가 죽었을 때 호출되는 메서드
+    public void SetBossDead(bool bossDead)
+    {
+        isBossDead = bossDead;
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log($"부딪 - {collision.name}");
         if (collision.CompareTag("Boss"))
         {
             var part = collision.GetComponent<BossBodyPart>();
@@ -38,13 +42,14 @@ public class Debris : MonoBehaviour
                 part.Damage(1);
                 Destroy(gameObject);
             }
-
         }
-
         else if (collision.CompareTag("Player"))
         {
-            Debug.Log("부딪 - 플레에어");
-            PlayerStat.Instance.DamageHP(3);
+            // 보스가 죽었을 때는 플레이어에게 데미지를 주지 않음
+            if (!isBossDead)
+            {
+                PlayerStat.Instance.DamageHP(3);
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -47,8 +48,15 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
 
     [Header("Boss Tilemap")]
-    [SerializeField] private GameObject[] bossTilemapPrefabs;
-    private GameObject currentBossTilemap;
+    [SerializeField] private GameObject[] crumbleTilemapPrefabs;
+    [SerializeField] private GameObject[] bossGroundTilemapPrefabs;
+    [SerializeField] private GameObject[] bossPrefabs; // 보스 프리팹 배열 추가
+    private GameObject currentCrumbleTilemap;
+    private GameObject currentBossGroundTilemap;
+    private GameObject currentBoss; // 현재 보스 객체
+    
+    // 보스 생성 최적화를 위한 변수들
+    private bool isSpawningBoss = false;
 
 
     void Awake()
@@ -268,17 +276,30 @@ public class TileGenerator : MonoBehaviour, ISaveable
             lastDottedLevel = dottedLevelToLoad;
         }
 
+        // 해당 범위에 이미 타일이 있는지 체크
+        BoundsInt dotBounds = new BoundsInt(origin.x, origin.y, 0, 9, 9, 1);
+        TileBase[] existingTiles = tilemap.GetTilesBlock(dotBounds);
+        
+        // 기존 타일이 있는 위치에만 dotted 패턴을 찍기
         TileBase[] selectedTiles = new TileBase[9 * 9];
 
         for (int dx = 0; dx < 9; dx++)
         {
             for (int dy = 0; dy < 9; dy++)
             {
-                selectedTiles[dy * 9 + dx] = tile_dotted[dx, dy];
+                int index = dy * 9 + dx;
+                // 기존 타일이 있는 위치에만 dotted 타일을 찍고, 없으면 null 유지
+                if (existingTiles[index] != null)
+                {
+                    selectedTiles[index] = tile_dotted[dx, dy];
+                }
+                else
+                {
+                    selectedTiles[index] = null;
+                }
             }
         }
 
-        BoundsInt dotBounds = new BoundsInt(origin.x, origin.y, 0, 9, 9, 1);
         tilemap.SetTilesBlock(dotBounds, selectedTiles);
     }
 
@@ -360,34 +381,108 @@ public class TileGenerator : MonoBehaviour, ISaveable
     // 보스 타일맵 생성
     public void SpawnBossTilemap(int bossIndex)
     {
+        if (isSpawningBoss) return; // 이미 생성 중이면 중복 실행 방지
+        
+        StartCoroutine(SpawnBossTilemapCoroutine(bossIndex));
+    }
+
+    private IEnumerator SpawnBossTilemapCoroutine(int bossIndex)
+    {
+        isSpawningBoss = true;
+        
         // 기존 보스 타일맵이 있다면 제거
         RemoveBossTilemap();
+        
+        // 한 프레임 대기하여 제거 완료
+        yield return null;
 
         // 보스 인덱스가 유효한지 확인
-        if (bossIndex >= 0 && bossIndex < bossTilemapPrefabs.Length && bossTilemapPrefabs[bossIndex] != null)
+        if (bossIndex >= 0 && bossIndex < crumbleTilemapPrefabs.Length && crumbleTilemapPrefabs[bossIndex] != null)
         {
             // 보스 타일맵 프리팹 인스턴스화
-            currentBossTilemap = Instantiate(bossTilemapPrefabs[bossIndex]);
-            currentBossTilemap.transform.SetParent(transform);
+            currentCrumbleTilemap = Instantiate(crumbleTilemapPrefabs[bossIndex]);
+            currentCrumbleTilemap.transform.SetParent(transform);
             
             // 카메라 뷰포트의 맨 아래쪽에 위치시키기
-            Vector3 bottomCenterWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCamera.nearClipPlane));
-            currentBossTilemap.transform.position = new Vector3(bottomCenterWorldPos.x, bottomCenterWorldPos.y, 0f);
+            Vector3 bottomCenterWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, -0.2f, mainCamera.nearClipPlane));
+            currentCrumbleTilemap.transform.position = new Vector3(bottomCenterWorldPos.x, bottomCenterWorldPos.y, 0f);
             
+            // 한 프레임 대기
+            yield return null;
             
-            Debug.Log($"[TileGenerator] 보스 타일맵 {bossIndex} 생성됨 - 위치: {currentBossTilemap.transform.position}");
+            currentBossGroundTilemap = Instantiate(bossGroundTilemapPrefabs[bossIndex]);
+            currentBossGroundTilemap.transform.SetParent(transform);
+
+            Vector3 belowBossWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, -0.5f, mainCamera.nearClipPlane));
+            currentBossGroundTilemap.transform.position = new Vector3(belowBossWorldPos.x, belowBossWorldPos.y, 0f);
+
+            // 한 프레임 대기
+            yield return null;
+
+            // 보스 스폰 위치 계산 (crumble tile과 boss ground tile 사이)
+            Vector3 bossSpawnPosition = mainCamera.ViewportToWorldPoint(new Vector3(0.8f, -0.3f, mainCamera.nearClipPlane));
+            bossSpawnPosition.z = 0f;
+            
+            // 보스 스폰
+            SpawnBoss(bossIndex, bossSpawnPosition);
+        }
+        
+        isSpawningBoss = false;
+    }
+
+    // 보스 스폰
+    private void SpawnBoss(int bossIndex, Vector3 position)
+    {
+        // 기존 보스가 있다면 제거
+        RemoveBoss();
+
+        // 보스 인덱스가 유효한지 확인
+        if (bossIndex >= 0 && bossIndex < bossPrefabs.Length && bossPrefabs[bossIndex] != null)
+        {
+            // 보스 스폰
+            currentBoss = Instantiate(bossPrefabs[bossIndex], position, Quaternion.identity);
+            
+            // 성능 최적화: 보스가 생성되면 즉시 활성화
+            if (currentBoss != null)
+            {
+                currentBoss.SetActive(true);
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[TileGenerator] 보스 {bossIndex}에 대한 프리팹을 찾을 수 없습니다.");
+        }
+    }
+
+    // 보스 제거
+    private void RemoveBoss()
+    {
+        if (currentBoss != null)
+        {
+            Destroy(currentBoss);
+            currentBoss = null;
         }
     }
 
     // 보스 타일맵 제거
     private void RemoveBossTilemap()
     {
-        if (currentBossTilemap != null)
+        if (currentCrumbleTilemap != null)
         {
-            Destroy(currentBossTilemap);
-            currentBossTilemap = null;
-            Debug.Log("[TileGenerator] 보스 타일맵 제거됨");
+            Destroy(currentCrumbleTilemap);
+            currentCrumbleTilemap = null;
         }
+        
+        if (currentBossGroundTilemap != null)
+        {
+            Destroy(currentBossGroundTilemap);
+            currentBossGroundTilemap = null;
+        }
+
+        // 보스도 제거
+        RemoveBoss();
+
+        Debug.Log("[TileGenerator] 보스 타일맵 및 보스 제거됨");
     }
     #endregion
 
@@ -455,8 +550,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
             if (tileData.x > maxX) maxX = tileData.x;
             if (tileData.y > maxY) maxY = tileData.y;
         }
-
-
 
         // 3. 타일 데이터 배열 준비 및 세팅
         int width = maxX - minX + 1;

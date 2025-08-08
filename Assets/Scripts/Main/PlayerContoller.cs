@@ -124,6 +124,89 @@ public class PlayerContoller : MonoBehaviour
 
         if (floatingJoystick == null) floatingJoystick = FindAnyObjectByType<FloatingJoystick>();
         if (tilemap == null) tilemap = FindObjectOfType<Tilemap>();
+        
+        // 보스 이벤트 구독
+        SubscribeToAllBosses();
+    }
+    
+    private HashSet<BossHP> subscribedBosses = new HashSet<BossHP>();
+    private float bossCheckInterval = 1f; // 1초마다 새로운 보스 확인
+    private float lastBossCheckTime = 0f;
+    
+    // 모든 BossHP 컴포넌트를 찾아서 이벤트 구독
+    private void SubscribeToAllBosses()
+    {
+        // 현재 씬의 모든 BossHP 컴포넌트 찾기
+        BossHP[] allBosses = FindObjectsOfType<BossHP>();
+        
+        foreach (BossHP bossHP in allBosses)
+        {
+            if (!subscribedBosses.Contains(bossHP))
+            {
+                SubscribeToBossHP(bossHP);
+                subscribedBosses.Add(bossHP);
+            }
+        }
+        
+        Debug.Log($"[PlayerController] {allBosses.Length}개의 보스에 이벤트 구독 완료");
+    }
+    
+    // Update에서 주기적으로 새로운 보스 확인
+    private void Update()
+    {
+        // 주기적으로 새로운 보스 확인
+        if (Time.time - lastBossCheckTime > bossCheckInterval)
+        {
+            CheckForNewBosses();
+            lastBossCheckTime = Time.time;
+        }
+    }
+    
+    private void CheckForNewBosses()
+    {
+        BossHP[] allBosses = FindObjectsOfType<BossHP>();
+        
+        foreach (BossHP bossHP in allBosses)
+        {
+            if (!subscribedBosses.Contains(bossHP))
+            {
+                SubscribeToBossHP(bossHP);
+                subscribedBosses.Add(bossHP);
+                Debug.Log("[PlayerController] 새로운 보스 발견 및 구독 완료");
+            }
+        }
+        
+        // 제거된 보스 정리
+        subscribedBosses.RemoveWhere(boss => boss == null);
+    }
+    
+    // 새로운 보스가 생성될 때 호출할 수 있는 메서드
+    public void SubscribeToBossHP(BossHP bossHP)
+    {
+        if (bossHP != null)
+        {
+            bossHP.OnDeath += HandleBossDeath;
+            Debug.Log("[PlayerController] BossHP 이벤트 구독 완료");
+        }
+    }
+    
+    // 보스가 제거될 때 호출할 수 있는 메서드
+    public void UnsubscribeFromBossHP(BossHP bossHP)
+    {
+        if (bossHP != null)
+        {
+            bossHP.OnDeath -= HandleBossDeath;
+            Debug.Log("[PlayerController] BossHP 이벤트 구독 해제 완료");
+        }
+    }
+    
+    // 보스가 죽었을 때 호출
+    private void HandleBossDeath()
+    {
+        Debug.Log("[PlayerController] 보스가 죽었습니다 - 자동으로 땅을 파기 시작");
+        
+        // 보스가 죽었을 때 자동으로 아래쪽으로 땅을 파기 시작
+        isDigging = true;
     }
 
     private void LateUpdate()

@@ -505,10 +505,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680a3749196114c4aa8343a923280b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layerHeight: 20
-  transitionLayerHeight: 20
-  bossLayerHeight: 100
-  bossLayerIndices: 0200000005000000
 --- !u!4 &148671255
 Transform:
   m_ObjectHideFlags: 0
@@ -128294,9 +128290,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6f418d7e21cdab842aa72517d7a8d61b, type: 2}
   stampingInterval: 10
   maxStampingCount: 1
-  bossTilemapPrefabs:
-  - {fileID: 1617547016873511431, guid: cb487e7c00571b840855c58c2d6ca37b, type: 3}
-  - {fileID: 1617547016873511431, guid: cb487e7c00571b840855c58c2d6ca37b, type: 3}
+  crumbleTilemapPrefabs:
+  - {fileID: 8591400217125788132, guid: a2ebbc2881eea3f4a9393b38ba6b30e8, type: 3}
+  - {fileID: 4554856814178636481, guid: b52ad89e09efa564fb7c42e98bf71490, type: 3}
+  bossGroundTilemapPrefabs:
+  - {fileID: 1221720935207006277, guid: eb5a20d9e76c74242a7d5a3499aa8702, type: 3}
+  - {fileID: 1049509540789087574, guid: 14364e4bc89ee7141a2b4def26cf99d8, type: 3}
+  bossPrefabs:
+  - {fileID: 1002754955227701704, guid: 1d184234ed5582a4e9548830d31b55fd, type: 3}
+  - {fileID: 1778768498416080139, guid: 7a263722f649b3b4c8186635ac0f284e, type: 3}
 --- !u!1 &1500381472
 GameObject:
   m_ObjectHideFlags: 0
@@ -129006,15 +129008,8 @@ MonoBehaviour:
     - {fileID: 1496157776698782910, guid: 923d1d2706aee484ca46927339377a11, type: 3}
     enemyPrefabs: []
     savePointCount: 1
-  bossLayerDatas:
-  - layerIndex: 1
-    bossPrefab: {fileID: 1002754955227701704, guid: 1d184234ed5582a4e9548830d31b55fd, type: 3}
-    offset: {x: -3.5, y: 0, z: 0}
-  - layerIndex: 2
-    bossPrefab: {fileID: 1778768498416080139, guid: 7a263722f649b3b4c8186635ac0f284e, type: 3}
-    offset: {x: -3.5, y: 0, z: 0}
   savePointPrefab: {fileID: 5248746426986545982, guid: 2675e1ca317af724e8dafb8f1c67ae2b, type: 3}
-  breakableTilemap: {fileID: 1617547016873511431, guid: cb487e7c00571b840855c58c2d6ca37b, type: 3}
+  breakableTilemap: {fileID: 8591400217125788132, guid: a2ebbc2881eea3f4a9393b38ba6b30e8, type: 3}
   grid: {fileID: 1463149005}
 --- !u!1 &1806671223
 GameObject:

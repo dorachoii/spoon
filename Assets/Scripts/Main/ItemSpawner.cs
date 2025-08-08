@@ -10,14 +10,6 @@ public class LayerSpawnData
     public int savePointCount;
 }
 
-[System.Serializable]
-public class BossLayerData
-{
-    public int layerIndex;
-    public GameObject bossPrefab;
-    public Vector3 offset;
-}
-
 public class ItemSpawner : MonoBehaviour
 {
     private Tilemap tilemap;
@@ -29,9 +21,6 @@ public class ItemSpawner : MonoBehaviour
 
     [Header("Spawn Data")]
     public LayerSpawnData[] layerSpawnDatas;
-
-    [Header("Boss Spawn Data")]
-    public List<BossLayerData> bossLayerDatas;
 
     private int currentLayer = 0;
     public GameObject savePointPrefab;
@@ -166,6 +155,4 @@ public class ItemSpawner : MonoBehaviour
             Instantiate(savePointPrefab, spawnPos, Quaternion.identity);
         }
     }
-
-
 }
