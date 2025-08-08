@@ -34,12 +34,12 @@ public class ItemSpawner : MonoBehaviour
         tilemap = TileGenerator.Instance.tilemap;
 
         lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
-        LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
+        LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLayerChanged;
     }
 
     void OnDestroy()
     {
-        LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
+        LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLayerChanged;
     }
 
     void Update()

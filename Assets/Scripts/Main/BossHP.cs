@@ -36,16 +36,18 @@ public class BossHP : MonoBehaviour
     
     private void SetCrumblingTilemapsBossDead()
     {
-        // CrumblingTilemap 컴포넌트를 가진 모든 게임오브젝트 찾기
-        CrumblingTilemap[] crumblingTilemaps = FindObjectsOfType<CrumblingTilemap>();
+        // CrumbleTilemap 태그를 가진 모든 게임오브젝트 찾기
+        GameObject[] crumbleTilemaps = GameObject.FindGameObjectsWithTag("CrumbleTilemap");
         
-        foreach (CrumblingTilemap crumblingTilemap in crumblingTilemaps)
+        foreach (GameObject crumbleTilemap in crumbleTilemaps)
         {
-            if (crumblingTilemap != null)
+            // CrumblingTilemap 컴포넌트 찾기
+            CrumblingTilemap crumblingTilemapComponent = crumbleTilemap.GetComponent<CrumblingTilemap>();
+            if (crumblingTilemapComponent != null)
             {
                 // isBossDead를 true로 설정
-                crumblingTilemap.SetBossDead(true);
-                Debug.Log($"[BossHP] {crumblingTilemap.name}의 isBossDead를 true로 설정했습니다.");
+                crumblingTilemapComponent.SetBossDead(true);
+                Debug.Log($"[BossHP] {crumbleTilemap.name}의 isBossDead를 true로 설정했습니다.");
             }
         }
     }

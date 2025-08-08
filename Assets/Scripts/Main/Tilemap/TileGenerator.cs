@@ -85,9 +85,8 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         if (LayerManager.Instance != null)
         {
-            LayerManager.Instance.OnLayerChanged += HandleLevelChanged;
+            LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
-            LayerManager.Instance.OnTransitionLayerExited += HandleTransitionLayerExited;
             LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
             LayerManager.Instance.OnBossLayerExited += HandleBossLayerExited;
         }
@@ -97,9 +96,8 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         if (LayerManager.Instance != null)
         {
-            LayerManager.Instance.OnLayerChanged -= HandleLevelChanged;
+            LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
-            LayerManager.Instance.OnTransitionLayerExited -= HandleTransitionLayerExited;
             LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
             LayerManager.Instance.OnBossLayerExited -= HandleBossLayerExited;
         }

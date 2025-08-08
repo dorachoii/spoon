@@ -17,6 +17,7 @@ public class LayerData
     public LayerState state;
     public float layerHeight;
     public int bossIndex; // 보스 종류 구분 (-1이면 일반 층, 전환 층)
+    public string layerName; // 레이어 이름
 
     public LayerData(int index, LayerState layerState, float height, int boss = -1)
     {
@@ -24,32 +25,58 @@ public class LayerData
         state = layerState;
         layerHeight = height;
         bossIndex = boss;
+        layerName = GetLayerName(index);
+    }
+    
+    // 레이어 인덱스에 따른 이름 반환
+    private string GetLayerName(int layerIndex)
+    {
+        return layerIndex switch
+        {
+            0 => "Mine Zone",
+            1 => "Crypt Zone 1",
+            2 => "Boss Chamber I",
+            3 => "",
+            4 => "Crypt Zone 2",
+            5 => "Lava Zone",
+            6 => "Ultimate Zone",
+            7 => "Boss Chamber II",
+            8 => "",
+            _ => $"Layer{layerIndex}"
+        };
     }
 }
 //보스 전환!
 public class LayerManager : MonoBehaviour
 {
     public static LayerManager Instance { get; private set; }
+
+    [Header("Camera")]
     private Camera mainCam;
-    private float startY = 0f;
+    private float mainCamStartY = 0f;
 
 
-    private int lastLayer = -1;
-    public int CurrentLayer { get; private set; } = 0;
+    // layer
+    public int CurrentLayer { get; private set; } = -1;
+    public int CurrentPlayerLayer { get; private set; } = -1; // 플레이어 위치 기준 레이어
     public float CurrentLayerHardness { get; private set; } = 1f;
     public LayerState CurrentLayerState { get; private set; } = LayerState.Normal;
+    public LayerState CurrentPlayerLayerState { get; private set; } = LayerState.Normal; // 플레이어 위치 기준 레이어 상태
+
 
     // 층 데이터 관리
     private List<LayerData> layerDataList = new List<LayerData>();
-    private float currentLayerEndHeight = 0f; // 현재 층의 끝 높이 (캐시)
+    private float currentLayerEndY = 0f; // 현재 층의 끝 높이 (캐시)
+
 
     // 이벤트
-    public event Action<int> OnLayerChanged;
+    public event Action<int> OnLayerChangedForTilemapGeneration;
+    public event Action<int> OnLayerChangedForPlayer;
     public event Action<LayerState> OnLayerStateChanged;
     public event Action<int> OnTransitionLayerEntered; // 전환 층 진입
-    public event Action<int> OnTransitionLayerExited;  // 전환 층 퇴장
     public event Action<int> OnBossLayerEntered; // 보스 층 진입
     public event Action<int> OnBossLayerExited;  // 보스 층 퇴장
+
 
     [Header("Tilemap")]
     private Tilemap tilemap;
@@ -76,36 +103,50 @@ public class LayerManager : MonoBehaviour
 
     private void Update()
     {
-        UpdateLayer();
-    }
+        UpdateTilemapLayer();
+        UpdatePlayerLayer();
+    }   
 
     private void InitializeLayerData()
     {
-        startY = mainCam.transform.position.y;
+        mainCamStartY =  mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane)).y;
         layerDataList.Clear();
 
-        // 0층: Normal, 높이 50
         LayerData layer1 = new LayerData(0, LayerState.Normal, 20f, -1);
-        // 1층: Transition, 높이 20  tilemap offset만큼
-        LayerData layer2 = new LayerData(1, LayerState.Transition, 12f, 0);
-        // 2층: Boss, 높이 100
-        LayerData layer3 = new LayerData(2, LayerState.Boss, 100f, 0);
+        LayerData layer2 = new LayerData(1, LayerState.Normal, 20f, -1);
+
+        LayerData boss1_transition = new LayerData(2, LayerState.Transition, 12f, -1);
+        LayerData boss1 = new LayerData(3, LayerState.Boss, 80f, 0);
+
+        LayerData layer3 = new LayerData(4, LayerState.Normal, 20f, -1);
+        LayerData layer4 = new LayerData(5, LayerState.Normal, 20f, -1);
+        LayerData layer5 = new LayerData(6, LayerState.Normal, 20f, -1);
+
+        LayerData boss2_transition = new LayerData(7, LayerState.Transition, 12f, -1);
+        LayerData boss2 = new LayerData(8, LayerState.Boss, 80f, 1);
+
 
         layerDataList.Add(layer1);
         layerDataList.Add(layer2);
+        layerDataList.Add(boss1_transition);
+        layerDataList.Add(boss1);
         layerDataList.Add(layer3);
+        layerDataList.Add(layer4);
+        layerDataList.Add(layer5);
+        layerDataList.Add(boss2_transition);
+        layerDataList.Add(boss2);
         
         // 초기 층의 끝 높이 계산
         UpdateCurrentLayerEndHeight();
     }
 
-    private void UpdateLayer()
+    private void UpdateTilemapLayer()
     {
         Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
-        float viewportY = bottomCenterWorldPos.y;
+        float currentViewportY = bottomCenterWorldPos.y;
 
         // 카메라가 현재 층을 넘어갔는지 체크 (캐시된 값 사용)
-        if (viewportY <= startY - currentLayerEndHeight)
+        if (currentViewportY <= mainCamStartY - currentLayerEndY)
         {
             // 다음 층으로 이동
             if (CurrentLayer < layerDataList.Count - 1)
@@ -118,7 +159,7 @@ public class LayerManager : MonoBehaviour
                 UpdateCurrentLayerEndHeight();
 
                 // 이벤트 발생
-                OnLayerChanged?.Invoke(CurrentLayer);
+                OnLayerChangedForTilemapGeneration?.Invoke(CurrentLayer);
                 OnLayerStateChanged?.Invoke(CurrentLayerState);
 
                 // 전환 층 진입/퇴장 이벤트
@@ -136,18 +177,61 @@ public class LayerManager : MonoBehaviour
                     HandleBossLayerEntered(newLayerData.bossIndex);
                 }
 
-                Debug.Log($"Layer: {CurrentLayer}, State: {CurrentLayerState}");
+                Debug.Log($"Tilemap Layer: {CurrentLayer}, State: {CurrentLayerState}");
             }
         }
+    }
+
+    private void UpdatePlayerLayer()
+    {
+        Vector3 playerPos = GameObject.FindWithTag("Player").transform.position;
+        float playerY = playerPos.y;
+        
+        // 플레이어의 현재 레이어 계산
+        int newPlayerLayer = CalculatePlayerLayer(playerY);
+        
+        // 플레이어 레이어가 변경되었는지 확인
+        if (newPlayerLayer != CurrentPlayerLayer)
+        {
+            CurrentPlayerLayer = newPlayerLayer;
+            
+            if (CurrentPlayerLayer >= 0 && CurrentPlayerLayer < layerDataList.Count)
+            {
+                LayerData playerLayerData = layerDataList[CurrentPlayerLayer];
+                CurrentPlayerLayerState = playerLayerData.state;
+                
+                // 플레이어 레이어 변경 이벤트 발생
+                OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
+                
+                Debug.Log($"Player Layer: {CurrentPlayerLayer}, State: {CurrentPlayerLayerState}, Name: {playerLayerData.layerName}");
+            }
+        }
+    }
+    
+    // 플레이어 Y 위치를 기반으로 현재 레이어 계산
+    private int CalculatePlayerLayer(float playerY)
+    {
+        float accumulatedHeight = 0f;
+        
+        for (int i = 0; i < layerDataList.Count; i++)
+        {
+            accumulatedHeight += layerDataList[i].layerHeight;
+            if (playerY >= mainCamStartY - accumulatedHeight)
+            {
+                return i;
+            }
+        }
+        
+        return layerDataList.Count - 1; // 가장 아래 레이어
     }
 
     // 현재 층의 끝 높이를 계산하여 캐시 (층 변경 시에만 호출)
     private void UpdateCurrentLayerEndHeight()
     {
-        currentLayerEndHeight = 0f;
+        currentLayerEndY = 0f;
         for (int i = 0; i <= CurrentLayer; i++)
         {
-            currentLayerEndHeight += layerDataList[i].layerHeight;
+            currentLayerEndY += layerDataList[i].layerHeight;
         }
     }
 
@@ -175,17 +259,50 @@ public class LayerManager : MonoBehaviour
         }
     }
 
-    // 현재 층이 보스 층인지 확인
+    // 현재 층이 보스 층인지 확인 (타일맵 기준)
     public bool IsCurrentLayerBoss()
     {
         return CurrentLayerState == LayerState.Boss;
     }
+    
+    // 플레이어 위치 기준으로 현재 층이 보스 층인지 확인
+    public bool IsCurrentPlayerLayerBoss()
+    {
+        return CurrentPlayerLayerState == LayerState.Boss;
+    }
 
-    // 현재 층의 하드니스 계산
+    // 현재 층의 하드니스 계산 (타일맵 기준)
     public float GetCurrentHardness()
     {
         int layer = Mathf.Max(0, CurrentLayer);
         return CurrentLayerHardness = 40f + layer * Mathf.Sqrt(layer) * 20f;
+    }
+    
+    // 플레이어 위치 기준 하드니스 계산
+    public float GetCurrentPlayerHardness()
+    {
+        int layer = Mathf.Max(0, CurrentPlayerLayer);
+        return 40f + layer * Mathf.Sqrt(layer) * 20f;
+    }
+    
+    // 현재 레이어 이름 반환 (타일맵 기준)
+    public string GetCurrentLayerName()
+    {
+        if (CurrentLayer >= 0 && CurrentLayer < layerDataList.Count)
+        {
+            return layerDataList[CurrentLayer].layerName;
+        }
+        return "Unknown Layer";
+    }
+    
+    // 플레이어 위치 기준 레이어 이름 반환
+    public string GetCurrentPlayerLayerName()
+    {
+        if (CurrentPlayerLayer >= 0 && CurrentPlayerLayer < layerDataList.Count)
+        {
+            return layerDataList[CurrentPlayerLayer].layerName;
+        }
+        return "Unknown Layer";
     }
 
     // 타일맵 총 높이

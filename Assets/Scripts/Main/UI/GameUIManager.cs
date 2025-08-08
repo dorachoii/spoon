@@ -57,7 +57,7 @@ public class GameUIManager : MonoBehaviour
     void Start()
     {
         PlayerStat.Instance.OnDied += HandlePlayerDied;
-        LayerManager.Instance.OnLayerChanged += HandleLayerChanged;
+        LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
         LayerManager.Instance.OnLayerStateChanged += HandleLayerStateChanged;
         LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
 
@@ -130,7 +130,7 @@ public class GameUIManager : MonoBehaviour
     void OnDestroy()
     {
         PlayerStat.Instance.OnDied -= HandlePlayerDied;
-        LayerManager.Instance.OnLayerChanged -= HandleLayerChanged;
+        LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
         LayerManager.Instance.OnLayerStateChanged -= HandleLayerStateChanged;
         LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
     }
@@ -160,7 +160,6 @@ public class GameUIManager : MonoBehaviour
 
     private void HandleLayerChanged(int layerIndex)
     {
-        Debug.Log($"**layerchanged: {layerIndex}");
         ShowLayerText(layerIndex);
     }
 
@@ -202,24 +201,12 @@ public class GameUIManager : MonoBehaviour
 
     private void ShowLayerText(int layerIndex)
     {
-        string title = GetLayerName(layerIndex);
+        // LayerManager에서 현재 레이어 이름을 가져옴
+        string title = LayerManager.Instance.GetCurrentLayerName();
         titleText.text = title;
         
         if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
         centerTextCoroutine = StartCoroutine(IShowLayerText());
-    }
-
-    private string GetLayerName(int layerIndex)
-    {
-        return layerIndex switch
-        {
-            0 => "Mine Zone",
-            1 => "Crypt Zone 1",
-            2 => "Crypt Zone 2",
-            3 => "Lava Zone",
-            4 => "Ultimate Zone",
-            _ => $"Layer{layerIndex}"
-        };
     }
 
     private IEnumerator IShowLayerText()
