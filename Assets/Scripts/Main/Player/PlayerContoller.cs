@@ -121,62 +121,13 @@ public class PlayerContoller : MonoBehaviour
 
         if (floatingJoystick == null) floatingJoystick = FindAnyObjectByType<FloatingJoystick>();
         if (tilemap == null) tilemap = FindObjectOfType<Tilemap>();
-        
-        // 보스 이벤트 구독
-        SubscribeToAllBosses();
-    }
-    
-    private HashSet<BossHP> subscribedBosses = new HashSet<BossHP>();
-    private float bossCheckInterval = 1f; // 1초마다 새로운 보스 확인
-    private float lastBossCheckTime = 0f;
-    
-    // 모든 BossHP 컴포넌트를 찾아서 이벤트 구독
-    private void SubscribeToAllBosses()
-    {
-        // 현재 씬의 모든 BossHP 컴포넌트 찾기
-        BossHP[] allBosses = FindObjectsOfType<BossHP>();
-        
-        foreach (BossHP bossHP in allBosses)
-        {
-            if (!subscribedBosses.Contains(bossHP))
-            {
-                SubscribeToBossHP(bossHP);
-                subscribedBosses.Add(bossHP);
-            }
-        }
-    }
-    
-    // Update에서 주기적으로 새로운 보스 확인
-    private void Update()
-    {
-        // 주기적으로 새로운 보스 확인
-        if (Time.time - lastBossCheckTime > bossCheckInterval)
-        {
-            CheckForNewBosses();
-            lastBossCheckTime = Time.time;
-        }
-    }
-    
-    private void CheckForNewBosses()
-    {
-        BossHP[] allBosses = FindObjectsOfType<BossHP>();
-        
-        foreach (BossHP bossHP in allBosses)
-        {
-            if (!subscribedBosses.Contains(bossHP))
-            {
-
-                subscribedBosses.Add(bossHP);
-                Debug.Log("[PlayerController] 새로운 보스 발견 및 구독 완료");
-            }
-        }
-        
-        // 제거된 보스 정리
-        subscribedBosses.RemoveWhere(boss => boss == null);
-    }
-    
-    // 새로운 보스가 생성될 때 호출할 수 있는 메서드
   
+    }
+    
+  
+  
+    
+   
 
     private void LateUpdate()
     {
@@ -235,9 +186,6 @@ public class PlayerContoller : MonoBehaviour
             
             poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffector>().IFlicker(GetComponent<SpriteRenderer>(), PlayerColor.Green, loop: true));
         }
-
-
-
     }
 
     private void HandlePoisonEnd()

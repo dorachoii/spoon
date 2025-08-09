@@ -120,7 +120,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbac690bdf5db9142b9b73e4b437082f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHeight: 30
+  effectPrefab: {fileID: 0}
+  soundEffect: {fileID: 8300000, guid: 35fbad8cdde724f11ba6481f1e64af71, type: 3}
   lifeTime: 4
   speed: 5
   homingResponsiveness: 0.1

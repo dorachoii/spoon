@@ -7,6 +7,7 @@ public abstract class ItemBase : MonoBehaviour
 
     [Header("Effect Settings")]
     [SerializeField] protected GameObject effectPrefab;
+    [SerializeField] protected AudioClip soundEffect; 
 
     protected Tilemap tilemap;
     protected Camera mainCamera;
@@ -38,9 +39,19 @@ public abstract class ItemBase : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
+            PlaySoundEffect();
             InstantiateFX();
             ApplyEffect(collision.gameObject);
             Destroy(gameObject);
+        }
+    }
+
+    // 사운드 효과 재생
+    protected virtual void PlaySoundEffect()
+    {
+        if (soundEffect != null && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayOneShot(soundEffect);
         }
     }
 

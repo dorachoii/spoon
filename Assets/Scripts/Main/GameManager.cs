@@ -22,16 +22,20 @@ public class GameManager : MonoBehaviour
     {
         PersistenceManager.Instance?.ClearSave();
         SceneManager.LoadScene(SceneNames.GAME_SCENE_NAME);
+        AudioManager.Instance.ChangeBGM(BGMType.Game);
     }
 
     public void StartFromSavedGame()
     {
         PersistenceManager.Instance?.LoadGame();
         SceneManager.LoadScene(SceneNames.GAME_SCENE_NAME);
+        AudioManager.Instance.ChangeBGM(BGMType.Game);
     }
+
 
     public void BackToTitle()
     {
         SceneManager.LoadScene(SceneNames.INTRO_SCENE_NAME);
+        AudioManager.Instance.ChangeBGM(BGMType.Intro);
     }
 }
