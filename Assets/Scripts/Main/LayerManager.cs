@@ -46,7 +46,7 @@ public class LayerData
         };
     }
 }
-//보스 전환!
+
 public class LayerManager : MonoBehaviour
 {
     public static LayerManager Instance { get; private set; }
@@ -175,8 +175,6 @@ public class LayerManager : MonoBehaviour
                 {
                     OnBossLayerEntered?.Invoke(newLayerData.bossIndex);
                 }
-
-                Debug.Log($"Tilemap Layer: {CurrentLayer}, State: {CurrentLayerState}");
             }
         }
     }
@@ -254,8 +252,7 @@ public class LayerManager : MonoBehaviour
         }
         return "Unknown Layer";
     }
-    
- 
+
 
     // 타일맵 총 높이
     public float GetTilemapTotalHeight()
@@ -318,7 +315,6 @@ public class LayerManager : MonoBehaviour
             OnLayerChangedForTilemapGeneration?.Invoke(CurrentLayer);
             OnLayerStateChanged?.Invoke(CurrentLayerState);
 
-            Debug.Log($"보스 층 완료 후 다음 층으로 진행: Layer {CurrentLayer}, State: {CurrentLayerState}");
         }
     }
 }

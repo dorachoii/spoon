@@ -58,8 +58,6 @@ public class GameUIManager : MonoBehaviour
     {
         PlayerStat.Instance.OnDied += HandlePlayerDied;
         LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
-        LayerManager.Instance.OnLayerStateChanged += HandleLayerStateChanged;
-        LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
 
         // Button Event 연결 (接続)
         if (gameover_restartButtonComp != null)
@@ -131,8 +129,6 @@ public class GameUIManager : MonoBehaviour
     {
         PlayerStat.Instance.OnDied -= HandlePlayerDied;
         LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
-        LayerManager.Instance.OnLayerStateChanged -= HandleLayerStateChanged;
-        LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
     }
 
     private void HandlePlayerDied()
@@ -160,50 +156,30 @@ public class GameUIManager : MonoBehaviour
 
     private void HandleLayerChanged(int layerIndex)
     {
-        ShowLayerText(layerIndex);
+        ShowLayerText();
     }
 
-    private void HandleLayerStateChanged(LayerState state)
-    {
-        Debug.Log($"**layerstatechanged: {state}");
-        
-        switch (state)
-        {
-            case LayerState.Normal:
-                // 일반 층 UI 표시
-                break;
-            case LayerState.Boss:
-                // 보스 층 UI 표시
-                break;
-        }
-    }
 
-    private void HandleBossLayerEntered(int bossIndex)
-    {
-        Debug.Log($"**bosslayerentered: {bossIndex}");
-        ShowBossLayerText(bossIndex);
-    }
+  
 
-    public void ShowBossLayerText(int bossIndex)
+    private void ShowLayerText(Color textColor = default)
     {
-        string title = bossIndex switch
-        {
-            0 => "Boss Chamber I",
-            1 => "Boss Chamber II",
-            _ => $"Boss Chamber {bossIndex + 1}"
-        };
-        
-        titleText.text = title;
-        
-        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
-        centerTextCoroutine = StartCoroutine(IShowLayerText());
-    }
-
-    private void ShowLayerText(int layerIndex)
-    {
-        // LayerManager에서 현재 레이어 이름을 가져옴
         string title = LayerManager.Instance.GetCurrentLayerName();
         titleText.text = title;
+        
+        // 현재 일반 층이면 검정, 보스 층이면 보라 이렇게 표시
+        if (textColor == default)
+        {
+            if (true)
+            {
+                textColor = new Color(0.5f, 0f, 1f); // 보라색
+            }
+            else
+            {
+                textColor = Color.black; // 검정색
+            }
+        }
+        titleText.color = textColor;
         
         if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
         centerTextCoroutine = StartCoroutine(IShowLayerText());
