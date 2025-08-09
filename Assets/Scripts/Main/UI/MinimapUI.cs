@@ -8,7 +8,6 @@ public class MinimapUI : MonoBehaviour
 
     private Camera mainCamera;
     private float startY;
-    private float endY;
     private float miniBarHeight;
 
     private void Start()
@@ -24,23 +23,28 @@ public class MinimapUI : MonoBehaviour
     private void InitializeMinimap()
     {
         if (minimapBar == null || character == null || LayerManager.Instance == null) return;
-
         mainCamera = Camera.main;
 
-        float totalHeight = LayerManager.Instance.GetTilemapTotalHeight();
         startY = mainCamera.transform.position.y;
-        endY = startY - totalHeight;
 
         miniBarHeight = minimapBar.rect.height + minimapBar.rect.y;
     }
 
     private void UpdateCharacterPosition()
     {
+        if (mainCamera == null || character == null || LayerManager.Instance == null) return;
+
+        float currentTotalHeight = LayerManager.Instance.GetTilemapTotalHeight();
         float cameraY = mainCamera.transform.position.y;
-        float normalizedProgress = Mathf.InverseLerp(startY, endY, cameraY);
-        float characterY = -miniBarHeight * normalizedProgress;
+        
+        float currentEndY = mainCamera.transform.position.y - currentTotalHeight;
+        
+        float normalizedProgress = Mathf.InverseLerp(startY, currentEndY, cameraY);
+        float progressY = -miniBarHeight * normalizedProgress;
 
         Vector2 currentPosition = character.anchoredPosition;
-        character.anchoredPosition = new Vector2(currentPosition.x, characterY);
+        Vector2 newPosition = new Vector2(currentPosition.x, progressY);
+   
+        character.anchoredPosition = newPosition;
     }
 }
