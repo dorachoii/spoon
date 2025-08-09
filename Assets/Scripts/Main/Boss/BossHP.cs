@@ -1,19 +1,25 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
+// bodypart여러가지가 bossHP하나를 구독하고 있는 형식
+// 각각 animator를 관리하기 위하여 그렇게 구성성
 public class BossHP : MonoBehaviour
 {
-    [SerializeField] private int maxHP = 100;
+
+    private int maxHP = 100;
 
     public int CurrentHP { get; private set; }
     public bool IsDead { get; private set; }
 
     public event Action OnDeath;
+    private Animator animator;
 
     void Awake()
     {
         CurrentHP = maxHP;
         IsDead = false;
+        animator = GetComponentInChildren<Animator>();
     }
     
     public void TakeDamage(int amount)
@@ -26,29 +32,16 @@ public class BossHP : MonoBehaviour
         {
             IsDead = true;
             OnDeath?.Invoke();
-            
-            // CrumbleTilemap 태그를 가진 타일맵 컴포넌트들을 찾아서 isBossDead를 true로 설정
-            SetCrumblingTilemapsBossDead();
-            
-            Destroy(gameObject, 2.5f);
+            StartCoroutine(DestroyAfterAnimation());
         }
     }
-    
-    private void SetCrumblingTilemapsBossDead()
+    IEnumerator DestroyAfterAnimation()
     {
-        // CrumbleTilemap 태그를 가진 모든 게임오브젝트 찾기
-        GameObject[] crumbleTilemaps = GameObject.FindGameObjectsWithTag("CrumbleTilemap");
-        
-        foreach (GameObject crumbleTilemap in crumbleTilemaps)
-        {
-            // CrumblingTilemap 컴포넌트 찾기
-            CrumblingTilemap crumblingTilemapComponent = crumbleTilemap.GetComponent<CrumblingTilemap>();
-            if (crumblingTilemapComponent != null)
-            {
-                // isBossDead를 true로 설정
-                crumblingTilemapComponent.SetBossDead(true);
-                Debug.Log($"[BossHP] {crumbleTilemap.name}의 isBossDead를 true로 설정했습니다.");
-            }
-        }
+        // 현재 재생중인 애니메이션(Death)의 길이를 가져옴
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        float animationLength = stateInfo.length;
+        yield return new WaitForSeconds(animationLength );
+        Destroy(gameObject);
     }
+
 }

@@ -16,7 +16,8 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
     // Player Power
     private float maxPower = 300f;
-    private float basePower = 100f;
+    //private float basePower = 100f;
+    private float basePower = 150f;
     private float powerBonus = 0f;
     
 

@@ -238,7 +238,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42335e48074acdd4db6df93d53a677c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 100
+  deathAnimation: {fileID: 7400000, guid: f0d63077a996d7a4ca0e45edea6035fe, type: 2}
 --- !u!1 &2898929009123442741
 GameObject:
   m_ObjectHideFlags: 0
@@ -470,7 +470,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!50 &7249968459432157323
 Rigidbody2D:
   serializedVersion: 4
@@ -650,7 +649,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!50 &955994970614940380
 Rigidbody2D:
   serializedVersion: 4
@@ -830,7 +828,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!50 &8600336958609217718
 Rigidbody2D:
   serializedVersion: 4
@@ -1014,7 +1011,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!50 &4494739360835994137
 Rigidbody2D:
   serializedVersion: 4
@@ -1204,7 +1200,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!50 &5038688488170499139
 Rigidbody2D:
   serializedVersion: 4

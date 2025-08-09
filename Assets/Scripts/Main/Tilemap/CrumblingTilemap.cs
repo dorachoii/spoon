@@ -27,30 +27,71 @@ public class CrumblingTilemap : MonoBehaviour
     [SerializeField] private float fadeOutDuration = 1.5f; // 페이드아웃 시간
     [SerializeField] private int maxDebrisPerBatch = 5; // 배치당 최대 데브리 수 (성능 최적화)
 
+    // 보스 관련 변수들
+    private BossHP bossHP = null;
     private bool isBossDead = false;
+    private bool isSubscribed = false;
 
     void Awake()
     {
         if(crumblingTilemap == null) crumblingTilemap = GetComponent<Tilemap>();
     }
 
-    // 보스가 죽었을 때 호출되는 메서드
-    public void SetBossDead(bool bossDead)
+     #region Boss Evnet Subscribe
+    // 보스 이벤트 구독 시도
+    private void FindBoss()
     {
-        isBossDead = bossDead;
-        if (bossDead)
+        if (isSubscribed) return;
+        
+        bossHP = FindObjectOfType<BossHP>();
+        if (bossHP != null)
         {
-            Debug.Log("[CrumblingTilemap] 보스가 죽었습니다 - 대규모 부서짐 준비 완료!");
+            bossHP.OnDeath += HandleBossDeath;
+            isSubscribed = true;  // 즉시 구독 완료로 설정
+            Debug.Log("[CrumblingTilemap] 보스 이벤트 구독 완료!");
+        }
+        else
+        {
+            // 보스를 찾지 못했을 때는 나중에 다시 시도
+            StartCoroutine(RetryFindBoss());
         }
     }
+
+    // 보스를 찾지 못했을 때 재시도
+    private IEnumerator RetryFindBoss()
+    {
+        yield return new WaitForSeconds(1f);  // 1초 후 재시도
+        if (!isSubscribed)
+        {
+            FindBoss();
+        }
+    }
+
+    private void HandleBossDeath()
+    {
+        isBossDead = true;
+        
+        // 안전하게 이벤트 해제
+        if (bossHP != null)
+        {
+            bossHP.OnDeath -= HandleBossDeath;
+        }
+        
+        Debug.Log("[CrumblingTilemap] 보스가 죽었습니다!");
+    }
+    #endregion
 
     private void OnCollisionEnter2D(Collision2D collision) => CrumbleCollision(collision);
 
     private void CrumbleCollision(Collision2D collision)
     {
+        // 보스가 아직 구독되지 않았다면 구독 시도
+        if (!isSubscribed)
+        {
+            FindBoss();
+        }
+        
         if(isBossDead) {
-            // 보스가 죽고 난 다음 충돌이 발생하면!
-            // 전체 타일 맵의 베이스들이 와르르 사라지고, debris가 와르르 쏟아지는 느낌.
             Destroy(gameObject);
             return;
         }
@@ -99,28 +140,23 @@ public class CrumblingTilemap : MonoBehaviour
         foreach (var cell in toCrumble)
         {
             bool upwards = debrisDir[cell];
-            StartCoroutine(ICrumble(cell, upwards, isBossDead));
-        }
-    }
-
-    // 보스가 죽었을 때 전체 타일맵을 효율적으로 무너뜨리는 코루틴
- 
-
-    private IEnumerator ICrumble(Vector3Int cell, bool upwards, bool isBossDead)
-    {
-        // 보스가 죽었을 때는 recentlyCrumbled 체크를 건너뛰기
-        if (!isBossDead)
-        {
+            MakeDebris(cell, upwards, false);
             recentlyCrumbled.Add(cell);
         }
         
-        MakeDebris(cell, upwards, isBossDead);
+        // 쿨다운 후 recentlyCrumbled에서 제거
+        StartCoroutine(RemoveFromRecentlyCrumbled(toCrumble));
+    }
+
+   
+
+    // 쿨다운 후 recentlyCrumbled에서 제거
+    private IEnumerator RemoveFromRecentlyCrumbled(HashSet<Vector3Int> tiles)
+    {
         yield return new WaitForSeconds(cooldown);
-        
-        // 보스가 죽었을 때는 recentlyCrumbled에서 제거하지 않기
-        if (!isBossDead)
+        foreach (var tile in tiles)
         {
-            recentlyCrumbled.Remove(cell);
+            recentlyCrumbled.Remove(tile);
         }
     }
 

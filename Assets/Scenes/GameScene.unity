@@ -129008,6 +129008,7 @@ MonoBehaviour:
   - itemPrefabs:
     - {fileID: 2528253473108633248, guid: 814a17c8f997eae49b28458174ea1be3, type: 3}
     - {fileID: 1496157776698782910, guid: 923d1d2706aee484ca46927339377a11, type: 3}
+    - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
     enemyPrefabs: []
     savePointCount: 1
   savePointPrefab: {fileID: 5248746426986545982, guid: 2675e1ca317af724e8dafb8f1c67ae2b, type: 3}

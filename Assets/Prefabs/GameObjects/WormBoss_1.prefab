@@ -121,7 +121,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42335e48074acdd4db6df93d53a677c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 100
+  deathAnimation: {fileID: 7400000, guid: f0d63077a996d7a4ca0e45edea6035fe, type: 2}
 --- !u!1 &1100510082546685522
 GameObject:
   m_ObjectHideFlags: 0
@@ -1628,7 +1628,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!95 &9029715304422550800 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 8048524908834707887, guid: 6dab528ea53eeba489429a176c686bf4, type: 3}
@@ -1795,7 +1794,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!4 &4684438373776381337 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8048524908834707885, guid: 6dab528ea53eeba489429a176c686bf4, type: 3}
@@ -1945,7 +1943,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!95 &6725952845536519288 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 8048524908834707887, guid: 6dab528ea53eeba489429a176c686bf4, type: 3}
@@ -2095,7 +2092,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!4 &6194233920703911473 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8048524908834707885, guid: 6dab528ea53eeba489429a176c686bf4, type: 3}
@@ -2245,7 +2241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a63d2de91ada4914885a5bb1fc4588a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossHP: {fileID: 0}
 --- !u!95 &1841665124204578544 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 8048524908834707887, guid: 6dab528ea53eeba489429a176c686bf4, type: 3}

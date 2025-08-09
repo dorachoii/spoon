@@ -8,8 +8,11 @@ public class AntidoteItem : ItemBase
         PlayerStat playerStat = player.GetComponent<PlayerStat>();
         if (playerStat != null)
         {
-            playerStat.CurePoision();
+            if(playerStat.isPoisoned){
+                 playerStat.CurePoision();
             ShowStatusText("Poison Cure", Color.cyan);
+            }
+           
         }
     }
 }

@@ -435,7 +435,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             {
                 currentBoss.SetActive(true);
                 
-                // 보스의 OnDeath 이벤트 구독
+                // TODO: 보스의 OnDeath 이벤트 구독
                 BossHP bossHP = currentBoss.GetComponent<BossHP>();
                 if (bossHP != null)
                 {

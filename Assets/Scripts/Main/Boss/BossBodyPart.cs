@@ -1,10 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class BossBodyPart : MonoBehaviour
 {
-    [SerializeField]
     private BossHP bossHP;
 
     private Animator animator;
