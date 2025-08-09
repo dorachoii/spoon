@@ -382,6 +382,7 @@ public class PlayerContoller : MonoBehaviour
         if (coRainbow != null)
         {
             StopCoroutine(coRainbow);
+            sr.color = Color.white;
             coRainbow = null;
         }
 
@@ -429,7 +430,6 @@ public class PlayerContoller : MonoBehaviour
     }
     #endregion
 
-
     #region Save & Load
     // 타일맵이 재시작될 때 호출되어 removedTiles 캐시를 초기화
     public void ClearDiggedTiles()
@@ -438,8 +438,6 @@ public class PlayerContoller : MonoBehaviour
     }
 
     #endregion
-   
-
     
     #region Digging Range Gizmos
     private void OnDrawGizmosSelected()

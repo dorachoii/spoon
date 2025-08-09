@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PoisonItem : ItemBase
 {
-    [SerializeField] private float poisonDuration = 20f;
+    private float poisonDuration = 5f;
     
     protected override void ApplyEffect(GameObject player)
     {

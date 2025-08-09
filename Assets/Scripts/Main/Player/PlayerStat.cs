@@ -5,40 +5,55 @@ using UnityEngine;
 public class PlayerStat : MonoBehaviour, ISaveable
 {
     public static PlayerStat Instance { get; private set; }
-    private float maxPower = 300f;
-    private float basePower = 100f;
-    private float powerBonus = 0f;
-    private float currentPower;
-private float speed = 0.1f;
+
+    // Player Move
+    private float speed = 0.1f;
     private float jumpForce = 0.0005f;
 
+    // Player HP
     private float maxHP = 100f;
     private float currentHP;
 
+    // Player Power
+    private float maxPower = 300f;
+    private float basePower = 100f;
+    private float powerBonus = 0f;
+    
 
-    public event Action<float> OnDigPowerChanged;
+    // Encapsulation
+    public float Speed => speed;
+    public float JumpForce => jumpForce;
+    public float MaxHP => maxHP;
+    public float MaxPower => maxPower;   
+    public float CurrentHP => currentHP;
+    public float CurrentPower => basePower + powerBonus;
+
+
+    // Events
+    // HP Events
     public event Action<float> OnHPChanged;
     public event Action OnDamaged;
-    public event Action<float> OnStaminaChanged;
     public event Action OnDied;
+
+    // Dig Power Events
+    public event Action<float> OnDigPowerChanged;
+    public event Action<float> OnPowerUp;
+
+    // Invincible Events
     public event Action OnInvincibleStarted;
     public event Action OnInvincibleEnded;
+    private Coroutine activeRecoverInvincible;
+
+    // Poison Events
     public event Action OnPoisonedStarted;
     public event Action OnPoisonedEnded;
-    public event Action<float> OnPowerUp;
+
+   
 
     private bool isDead = false;
     private bool isInvincible = false;
     public bool isPoisoned = false;
 
-    public void WriteData(GameData data)
-    {
-        data.playerPosition = gameObject.transform.position;
-    }
-    public void ReadData(GameData data)
-    {
-        gameObject.transform.position = data.playerPosition;
-    }
 
     private void Awake()
     {
@@ -51,38 +66,9 @@ private float speed = 0.1f;
         Instance = this;
        
         currentHP = maxHP;
-        //currentHP = 10f;
-        currentPower = basePower;
     }
 
-    public float CurrentPower => basePower + powerBonus;
-
-    public float Speed => speed;
-    public float JumpForce => jumpForce;
-    public float MaxHP => maxHP;
-    public float MaxPower => maxPower;   
-    public float CurrentHP => currentHP;
-
-    public float CalculateDigSpeed()
-    {
-        float hardness = LayerManager.Instance.GetCurrentHardness();
-        return (CurrentPower / Mathf.Max(1f, hardness)) * 5f;
-    }
-
-    public float GetDigDelay()
-    {
-        return 1f / CalculateDigSpeed(); // 더 이상 10f 안 곱함
-    }
-
-
-    public void AddDigPowerBonus(float bonus)
-    {
-        powerBonus += bonus;
-        OnDigPowerChanged?.Invoke(CurrentPower);
-        OnPowerUp?.Invoke(bonus);
-
-    }
-
+    #region HP
     public void DamageHP(float damage)
     {
         if (isDead || isInvincible) return;
@@ -108,22 +94,52 @@ private float speed = 0.1f;
             OnDied?.Invoke();
         }
     }
+    #endregion
 
-    private Coroutine activeRecoverInvincible;
+    #region Dig Power
+    public float CalculateDigSpeed()
+    {
+        float hardness = LayerManager.Instance.GetCurrentHardness();
+        return CurrentPower / Mathf.Max(1f, hardness) * 5f;
+    }
 
-    public IEnumerator RecoverHPAndInvincible(float invincibleDuration)
+    public float GetDigDelay()
+    {
+        return 1f / CalculateDigSpeed();
+    }
+    
+    public void AddDigPowerBonus(float bonus)
+    {
+        powerBonus += bonus;
+        OnDigPowerChanged?.Invoke(CurrentPower);
+        OnPowerUp?.Invoke(bonus);
+
+    }
+    #endregion
+
+    #region Invincible Effect
+
+    public void StartInvincible(float duration)
+    {
+        if(!isInvincible)
+        {
+            StartCoroutine(IInvincible(duration));
+        }
+    }
+
+    public IEnumerator IInvincible(float duration)
     {
         if (activeRecoverInvincible != null)
         {
             StopCoroutine(activeRecoverInvincible);
         }
 
-        activeRecoverInvincible = StartCoroutine(RecoverHPAndInvincibleImpl(invincibleDuration));
+        activeRecoverInvincible = StartCoroutine(IRecoverHPAndInvincible(duration));
         yield return activeRecoverInvincible;
         activeRecoverInvincible = null;
     }
 
-    private IEnumerator RecoverHPAndInvincibleImpl(float invincibleDuration)
+    private IEnumerator IRecoverHPAndInvincible(float duration)
     {
         float startHP = currentHP;
         float elapsed = 0f;
@@ -149,23 +165,24 @@ private float speed = 0.1f;
         }
 
         // 무적 시작
-        yield return new WaitForSeconds(invincibleDuration);
+        yield return new WaitForSeconds(duration);
 
         // 무적 종료
         isInvincible = false;
         OnInvincibleEnded?.Invoke();
     }
+    #endregion
 
+    #region Poison Effect
     public void StartPoisonEffect(float duration)
     {
         if (!isPoisoned)
         {
-            StartCoroutine(ApplyPoisionEffect(duration));
+            StartCoroutine(IPoison(duration));
         }
     }
 
-
-    public IEnumerator ApplyPoisionEffect(float duration)
+    public IEnumerator IPoison(float duration)
     {
         Debug.Log("poison start  playerStat");
         if (isPoisoned) yield break;
@@ -188,7 +205,19 @@ private float speed = 0.1f;
         isPoisoned = false;
         OnPoisonedEnded?.Invoke();
     }
+    #endregion
 
+
+    #region Save & Load
+    public void WriteData(GameData data)
+    {
+        data.playerPosition = gameObject.transform.position;
+    }
+    public void ReadData(GameData data)
+    {
+        gameObject.transform.position = data.playerPosition;
+    }
+    #endregion
 }
 
 

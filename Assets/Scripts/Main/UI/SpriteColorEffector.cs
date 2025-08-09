@@ -14,7 +14,7 @@ public static class PlayerColorExtensions
         return effectColor switch
         {
             PlayerColor.Red => new Color(1f, 0.4f, 0.4f),
-            PlayerColor.Green => new Color(31f/255f, 230f/255f, 178f/255f),
+            PlayerColor.Green => new Color(31f / 255f, 230f / 255f, 178f / 255f),
             _ => Color.white,
         };
     }
@@ -58,7 +58,6 @@ public class SpriteColorEffector : MonoBehaviour
     // rainbow: 무적 상태 등 (無敵状態など)
     public IEnumerator IRainbow(SpriteRenderer spriteRenderer, float duration = 0f, float hueSpeed = 2f, Color? tint = null, bool loop = false)
     {
-        Color origin = spriteRenderer.color;
         float currentHue = 0f;
         float elapsed = 0f;
         Color actualTint = tint ?? Color.white;
@@ -83,18 +82,18 @@ public class SpriteColorEffector : MonoBehaviour
                 currentHue += hueSpeed * Time.deltaTime;
                 if (currentHue > 1f) currentHue -= 1f;
 
-            Color rainbowColor = Color.HSVToRGB(currentHue, 1f, 1f);
-            spriteRenderer.color = MultiplyColors(rainbowColor, actualTint);
+                Color rainbowColor = Color.HSVToRGB(currentHue, 1f, 1f);
+                spriteRenderer.color = MultiplyColors(rainbowColor, actualTint);
 
-            elapsed += Time.deltaTime;
-            yield return null;
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
         }
-
-            spriteRenderer.color = origin;
-        }
+        spriteRenderer.color = Color.white;
     }
 
-    private Color MultiplyColors(Color a, Color b) {
+    private Color MultiplyColors(Color a, Color b)
+    {
         return new Color(a.r * b.r, a.g * b.g, a.b * b.b, 1f);
     }
 }
