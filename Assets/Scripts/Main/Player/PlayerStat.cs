@@ -9,7 +9,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
     private float basePower = 100f;
     private float powerBonus = 0f;
     private float currentPower;
-
+private float speed = 0.1f;
     private float jumpForce = 0.0005f;
 
     private float maxHP = 100f;
@@ -57,6 +57,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
     public float CurrentPower => basePower + powerBonus;
 
+    public float Speed => speed;
     public float JumpForce => jumpForce;
     public float MaxHP => maxHP;
     public float MaxPower => maxPower;   

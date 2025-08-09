@@ -1,8 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System;
 
 public enum DigDirection
 {
@@ -22,37 +22,98 @@ public enum PlayerState
 
 public class PlayerContoller : MonoBehaviour
 {
-    public FloatingJoystick floatingJoystick;
-    private Rigidbody2D rb;
-    public Tilemap tilemap;
-
-    [SerializeField]
-    private float speed;
-    private float jumpForce;
-
-    [SerializeField]
-    private float verticalThreshold = 0.2f;
-
-    private Animator animator;
-
+    // Constants
+    private const float DIG_OFFSET_DISTANCE = 0.5f;
+    private const float SCREEN_PADDING = 1f;
+    
+    // Player State
     public PlayerState currentState { get; private set; }
-
-    public int brushRadius = 10;
-
-    SpriteRenderer spriteRenderer;
-
     private bool isStateLocked = false;
 
-    private float screenPadding = 1f;
-
-    private DigDirection dir;
+    // Player Movement
+    public FloatingJoystick floatingJoystick;
+    private Rigidbody2D rb;
+    private float speed;
+    private float jumpForce;
+  
+    // Player Visual Effect
+    private Animator animator;
+    private SpriteRenderer sr;
     private SpriteColorEffector effector;
-    private Coroutine digCoroutine;
-    private Coroutine rainbowCoroutine;
-    private Coroutine poisonFlickerCoroutine;
-
     public GameObject floatingText;
+    private Coroutine coRainbow;
+    private Coroutine coFlicker;
 
+    // Digging & Tilemap
+    public Tilemap tilemap;
+    private int radius = 14;
+    private HashSet<Vector3Int> TilesAlreadyDigged = new HashSet<Vector3Int>();
+    private List<Vector3Int> TilesToDig = new List<Vector3Int>();
+    private bool isDigging = false;
+    private DigDirection digDir;
+    private Coroutine coDig;
+
+    private Vector3Int[] TilesNowDigged;
+    private TileBase[] nullTiles;
+
+
+    #region Initialize
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        sr = GetComponent<SpriteRenderer>();
+        effector = GetComponent<SpriteColorEffector>();
+
+        TilesNowDigged = new Vector3Int[LayerManager.Instance.GetMaxTile()];
+        nullTiles = new TileBase[LayerManager.Instance.GetMaxTile()];
+
+        for (int i = 0; i < nullTiles.Length; i++)
+        {
+            nullTiles[i] = null;
+        }
+
+        if (floatingText != null)
+        {
+            floatingText.SetActive(false);
+        }
+    }
+
+    private void Start()
+    {
+        PlayerStat.Instance.OnDamaged += HandleDamaged;
+        PlayerStat.Instance.OnDied += HandleDied;
+        PlayerStat.Instance.OnInvincibleStarted += StartInvincibleVisualEffect;
+        PlayerStat.Instance.OnInvincibleEnded += StopInvincibleVisualEffect;
+        PlayerStat.Instance.OnPoisonedStarted += StartPoisonVisualEffect;
+        PlayerStat.Instance.OnPoisonedEnded += StopPoisonVisualEffect;
+
+        speed = PlayerStat.Instance.Speed;
+        jumpForce = PlayerStat.Instance.JumpForce;
+    }
+
+    private void OnDestroy()
+    {
+        if (PlayerStat.Instance != null)
+        {
+            PlayerStat.Instance.OnDamaged -= HandleDamaged;
+            PlayerStat.Instance.OnDied -= HandleDied;
+            PlayerStat.Instance.OnInvincibleStarted -= StartInvincibleVisualEffect;
+            PlayerStat.Instance.OnInvincibleEnded -= StopInvincibleVisualEffect;
+            PlayerStat.Instance.OnPoisonedStarted -= StartPoisonVisualEffect;
+            PlayerStat.Instance.OnPoisonedEnded -= StopPoisonVisualEffect;
+        }
+    }
+
+    #endregion
+
+    private void LateUpdate()
+    {
+        ClampPlayerPosToScreenBounds();
+    }
+
+
+    #region Player State
     public void ChangeState(PlayerState newState)
     {
         if (currentState == newState || isStateLocked) return;
@@ -81,179 +142,22 @@ public class PlayerContoller : MonoBehaviour
                 break;
         }
     }
-
-
-    void Awake()
-    {
-        rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        effector = GetComponent<SpriteColorEffector>();
-
-        tilePositions = new Vector3Int[LayerManager.Instance.GetMaxTile()];
-        nullTiles = new TileBase[LayerManager.Instance.GetMaxTile()];
-
-        for (int i = 0; i < nullTiles.Length; i++)
-        {
-            nullTiles[i] = null;
-        }
-
-        if (floatingText != null)
-        {
-            floatingText.SetActive(false);
-        }
-    }
-
-    private void Start()
-    {
-        if (PlayerStat.Instance != null)
-        {
-            PlayerStat.Instance.OnDamaged += HandleDamaged;
-            PlayerStat.Instance.OnDied += HandleDied;
-            PlayerStat.Instance.OnInvincibleStarted += HandleInvincibleStart;
-            PlayerStat.Instance.OnInvincibleEnded += HandleInvincibleEnd;
-            PlayerStat.Instance.OnPoisonedStarted += HandlePoisonStart;
-            PlayerStat.Instance.OnPoisonedEnded += HandlePoisonEnd;
-
-            //PlayerStat.Instance.OnPowerUp += HandlePowerUp;
-        }
-        jumpForce = PlayerStat.Instance.JumpForce;
-
-        if (floatingJoystick == null) floatingJoystick = FindAnyObjectByType<FloatingJoystick>();
-        if (tilemap == null) tilemap = FindObjectOfType<Tilemap>();
-  
-    }
-    
-  
-  
-    
-   
-
-    private void LateUpdate()
-    {
-        ClampPositionToCameraView();
-    }
-
-
-    private void OnDestroy()
-    {
-        if (PlayerStat.Instance != null)
-        {
-            PlayerStat.Instance.OnDamaged -= HandleDamaged;
-            PlayerStat.Instance.OnDied -= HandleDied;
-            PlayerStat.Instance.OnInvincibleStarted -= HandleInvincibleStart;
-            PlayerStat.Instance.OnInvincibleEnded -= HandleInvincibleEnd;
-            PlayerStat.Instance.OnPoisonedStarted -= HandlePoisonStart;
-            PlayerStat.Instance.OnPoisonedEnded -= HandlePoisonEnd;
-
-            //PlayerStat.Instance.OnPowerUp -= HandlePowerUp;
-        }
-    }
-
-    private void OnEnable()
-    {
-        if (PlayerStat.Instance != null)
-        {
-            PlayerStat.Instance.OnDamaged += HandleDamaged;
-            PlayerStat.Instance.OnDied += HandleDied;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (PlayerStat.Instance != null)
-        {
-            PlayerStat.Instance.OnDamaged -= HandleDamaged;
-            PlayerStat.Instance.OnDied -= HandleDied;
-        }
-    }
-
-
-
-    private void HandlePoisonStart()
-    {
-        if (poisonFlickerCoroutine != null) return;
-
-        if (rainbowCoroutine != null)
-        {
-       
-            StopCoroutine(rainbowCoroutine);
-            Color tint = Color.green * 0.6f + Color.white * 0.4f;
-            rainbowCoroutine = StartCoroutine(effector.IRainbow(spriteRenderer, loop: true, hueSpeed: 2f, tint: tint));
-        }
-        else
-        {
-            
-            poisonFlickerCoroutine = StartCoroutine(GetComponent<SpriteColorEffector>().IFlicker(GetComponent<SpriteRenderer>(), PlayerColor.Green, loop: true));
-        }
-    }
-
-    private void HandlePoisonEnd()
-    {
-        Debug.Log("poison end");
-        if (poisonFlickerCoroutine != null)
-        {
-            StopCoroutine(poisonFlickerCoroutine);
-            poisonFlickerCoroutine = null;
-        }
-
-        if (rainbowCoroutine == null)
-        {
-            spriteRenderer.color = Color.white;
-        }
-        else
-        {
-            StopCoroutine(rainbowCoroutine);
-            rainbowCoroutine = StartCoroutine(effector.IRainbow(spriteRenderer, loop: true, hueSpeed: 2f, tint: Color.white));
-        }
-    }
-
-
     private void HandleDamaged()
     {
-        
         ChangeState(PlayerState.Damaged);
     }
 
     private void HandleDied()
     {
         ChangeState(PlayerState.Die);
+        isStateLocked = true;
     }
 
-    private void HandleInvincibleStart()
-    {
-        if (rainbowCoroutine != null) StopCoroutine(rainbowCoroutine);
-      
+    #endregion
 
-        Color tint = Color.white;
+    #region Player Movement & Digging
 
-        if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
-        {
-            tint = Color.green * 0.6f + Color.white * 0.4f;
-        }
-        rainbowCoroutine = StartCoroutine(effector.IRainbow(GetComponent<SpriteRenderer>(), loop: true, hueSpeed: 2f, tint: tint));
-    }
-
-    private void HandleInvincibleEnd()
-    {
-        if (rainbowCoroutine != null)
-        {
-            StopCoroutine(rainbowCoroutine);
-            rainbowCoroutine = null;
-        }
-
-        if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
-        {
-            poisonFlickerCoroutine = StartCoroutine(effector.IFlicker(spriteRenderer, PlayerColor.Green, loop: true));
-        }
-        else
-        {
-            GetComponent<SpriteRenderer>().color = Color.white;
-        }
-    }
-
-
-    public void FixedUpdate()
+     public void FixedUpdate()
     {
         Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
 
@@ -268,91 +172,96 @@ public class PlayerContoller : MonoBehaviour
             return;
         }
 
+        // 시계방향으로 0~360도 각도 계산
+        // 時計回りの0~360度の角度を計算
         float angle = Vector2.Angle(Vector2.up, inputDirection);
         bool isLeft = inputDirection.x < 0;
         float signedAngle = isLeft ? 360f - angle : angle;
 
-        bool isDigging = false;
+        bool shouldJump = true;
 
+        // up → Jump
         if (signedAngle < 45f || signedAngle > 315f)
         {
-            // 위 방향 → Jump
             ChangeState(PlayerState.Jump);
-            isDigging = false;
+            shouldJump = true;
         }
+        // down → Dig
         else if (signedAngle >= 135f && signedAngle <= 225f)
         {
-            dir = DigDirection.Down;
-            isDigging = true;
+            digDir = DigDirection.Down;
+            shouldJump = false;
         }
+        // left, right → Dig
         else if (signedAngle >= 45f || signedAngle <= 315f)
         {
-            dir = isLeft ? DigDirection.Left : DigDirection.Right;
-            isDigging = true;
+            digDir = isLeft ? DigDirection.Left : DigDirection.Right;
+            shouldJump = false;
         }
 
-
-        if (isDigging)
+        if (!shouldJump)
         {
-            animator.SetInteger("DigDirection", (int)dir);
+            animator.SetInteger("DigDirection", (int)digDir);
             ChangeState(PlayerState.Dig);
+            // player move
             rb.AddForce(inputDirection.normalized * speed * Time.fixedDeltaTime, ForceMode2D.Force);
             StartDig();
         }
     }
 
-    private HashSet<Vector3Int> removedTiles = new HashSet<Vector3Int>();
-    private List<Vector3Int> positionsToDig = new List<Vector3Int>();
-
-
-    private Vector3Int[] tilePositions;
-    private TileBase[] nullTiles;
-
-
-
-    private bool isDigging = false;
     public void StartDig()
     {
-        Debug.Log("[PlayerController] StartDig {currentState: " + currentState + ", isDigging: " + isDigging + "}");
         if (currentState != PlayerState.Dig || isDigging) return;
 
-        if (digCoroutine != null)
+        if (coDig != null)
         {
-            StopCoroutine(digCoroutine);
+            StopCoroutine(coDig);
         }
-        digCoroutine = StartCoroutine(DigCoroutine());
+        coDig = StartCoroutine(DigCoroutine());
     }
 
     private IEnumerator DigCoroutine()
     {
         isDigging = true;
-        positionsToDig.Clear();
+        TilesToDig.Clear();
 
-        Vector2 centerOffset = Vector2.zero;
+        CalculateDiggingArea();
+        yield return StartCoroutine(DigTiles());
+        
+        isDigging = false;
+    }
+
+    // 파는 유효범위를 측정하고 파야 할 타일들을 찾아서 담는 함수 
+    // 掘削有効範囲を測定 + 掘るべきタイルを見つけて格納する関数
+    private void CalculateDiggingArea()
+    {
+        // 방향에 따른 파는 중앙점, 파는 범위 설정 (方向に応じた掘削中心点、掘削範囲設定)
+        Vector2 diggingCenter = Vector2.zero;
         Func<int, int, bool> isWithinDigArea = (x, y) => false;
 
-        switch (dir)
+        switch (digDir)
         {
             case DigDirection.Down:
-                centerOffset = Vector2.down * 0.5f;
-                isWithinDigArea = (x, y) => (x * x + y * y) <= brushRadius * brushRadius;
+                diggingCenter = Vector2.down * 0.5f;
+                isWithinDigArea = (x, y) => (x * x + y * y) <= radius * radius;
                 break;
             case DigDirection.Left:
-                centerOffset = Vector2.left * 0.5f;
-                isWithinDigArea = (x, y) => (x <= 0) && (x * x + y * y) <= brushRadius * brushRadius;
+                diggingCenter = Vector2.left * 0.5f;
+                isWithinDigArea = (x, y) => (x <= 0) && (x * x + y * y) <= radius * radius;
                 break;
             case DigDirection.Right:
-                centerOffset = Vector2.right * 0.5f;
-                isWithinDigArea = (x, y) => (x >= 0) && (x * x + y * y) <= brushRadius * brushRadius;
+                diggingCenter = Vector2.right * 0.5f;
+                isWithinDigArea = (x, y) => (x >= 0) && (x * x + y * y) <= radius * radius;
                 break;
         }
 
-        Vector2 playerPos = (Vector2)transform.position + centerOffset;
-        Vector3Int centerCell = tilemap.WorldToCell(playerPos);
+        // 파야하는 타일 저장 (掘るべきタイル格納庫)
+        Vector2 centerPos = (Vector2)transform.position + diggingCenter;
+        Vector3Int centerCell = tilemap.WorldToCell(centerPos);
 
-        for (int y = brushRadius; y >= -brushRadius; y--)
+        for (int y = radius; y >= -radius; y--)
         {
-            for (int x = -brushRadius; x <= brushRadius; x++)
+            for (int x = -radius; x <= radius; x++)
             {
                 if (!isWithinDigArea(x, y)) continue;
 
@@ -362,7 +271,7 @@ public class PlayerContoller : MonoBehaviour
                     Debug.Log($"[PlayerController] 타일맵 범위 밖: {cellPos}");
                     continue;
                 }
-                if (removedTiles.Contains(cellPos))   {
+                if (TilesAlreadyDigged.Contains(cellPos))   {
                     Debug.Log($"[PlayerController] 이미 제거된 타일: {cellPos}");
                     continue;
                 }
@@ -371,15 +280,18 @@ public class PlayerContoller : MonoBehaviour
                     continue;
                 }
 
-                positionsToDig.Add(cellPos);
+                TilesToDig.Add(cellPos);
             }
         }
-
-        int total = positionsToDig.Count;
+    }
+    private IEnumerator DigTiles()
+    {
+        int total = TilesToDig.Count;
         int current = 0;
 
         if (total > 0)
         {
+            //현재 층이 팔 수 있는 힘보다 강하면 튕겨 나간다. (現在の層が掘れる力より強い場合は跳ね飛ばす)
             float hardness = LayerManager.Instance.GetCurrentHardness();
             float digPower = PlayerStat.Instance.CurrentPower;
 
@@ -397,48 +309,48 @@ public class PlayerContoller : MonoBehaviour
 
             for (int i = 0; i < count; i++)
             {
-                tilePositions[i] = positionsToDig[current + i];
+                TilesNowDigged[i] = TilesToDig[current + i];
             }
 
-            tilemap.SetTiles(tilePositions, nullTiles);
+            tilemap.SetTiles(TilesNowDigged, nullTiles);
 
             for (int i = 0; i < count; i++)
             {
-                removedTiles.Add(tilePositions[i]);
+                TilesAlreadyDigged.Add(TilesNowDigged[i]);
             }
 
             current += count;
 
             yield return new WaitForSeconds(PlayerStat.Instance.GetDigDelay());
         }
-        isDigging = false;
     }
 
 
-    private void OnDrawGizmosSelected()
+    private void ClampPlayerPosToScreenBounds()
     {
-        Gizmos.color = Color.red;
-        Vector2 playerPos = transform.position + Vector3.down * 0.5f;
-        float worldRadius = brushRadius * (tilemap != null ? tilemap.cellSize.x : 1f);
+        Camera cam = Camera.main;
+        if (cam == null) return;
 
-        Gizmos.DrawWireSphere(playerPos, worldRadius);
-    }
+        Vector3 min = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
+        Vector3 max = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
 
-    public IEnumerable<Vector3Int> GetRemovedTiles() => removedTiles;
-    public void LoadRemovedTiles(IEnumerable<Vector3IntSerializable> savedPositions)
-    {
-        removedTiles.Clear();
-        foreach (var pos in savedPositions)
-        {
-            removedTiles.Add(pos.ToVector3Int());
-        }
+        float minX = min.x + SCREEN_PADDING;
+        float maxX = max.x - SCREEN_PADDING;
+        float minY = min.y + SCREEN_PADDING;
+        float maxY = max.y - SCREEN_PADDING;
+
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        transform.position = pos;
     }
-    
-    // 타일맵이 재시작될 때 호출되어 removedTiles 캐시를 초기화
-    public void ClearRemovedTilesCache()
+    #endregion
+
+    #region Player Visual Effect
+    public void ShowStatusText(string text, Color color)
     {
-        removedTiles.Clear();
-        Debug.Log("[PlayerController] removedTiles 캐시 초기화 완료");
+        floatingText.SetActive(true);
+        floatingText.GetComponent<StatusTextAnimator>().Initialize(text, color);
     }
 
     private IEnumerator IDamageFlicker()
@@ -451,31 +363,93 @@ public class PlayerContoller : MonoBehaviour
         ChangeState(PlayerState.Idle);
     }
 
-
-
-    private void ClampPositionToCameraView()
+    private void StartInvincibleVisualEffect()
     {
-        Camera cam = Camera.main;
-        if (cam == null) return;
+        if (coRainbow != null) StopCoroutine(coRainbow);
 
-        // Viewport (0,0) ~ (1,1) 은 카메라의 좌하단 ~ 우상단
-        Vector3 min = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
-        Vector3 max = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
+        Color tint = Color.white;
 
-        float minX = min.x + screenPadding;
-        float maxX = max.x - screenPadding;
-        float minY = min.y + screenPadding;
-        float maxY = max.y - screenPadding;
-
-        Vector3 pos = transform.position;
-        pos.x = Mathf.Clamp(pos.x, minX, maxX);
-        pos.y = Mathf.Clamp(pos.y, minY, maxY);
-        transform.position = pos;
+        // poision + invincible
+        if (PlayerStat.Instance.isPoisoned)
+        {
+            tint = Color.green * 0.6f + Color.white * 0.4f;
+        }
+        coRainbow = StartCoroutine(effector.IRainbow(GetComponent<SpriteRenderer>(), loop: true, hueSpeed: 2f, tint: tint));
     }
 
-    public void ShowStatusText(string text, Color color)
+    private void StopInvincibleVisualEffect()
     {
-        floatingText.SetActive(true);
-        floatingText.GetComponent<StatusTextAnimator>().Initialize(text, color);
+        if (coRainbow != null)
+        {
+            StopCoroutine(coRainbow);
+            coRainbow = null;
+        }
+
+        // poision + invincible
+        if (PlayerStat.Instance.isPoisoned)
+        {
+            coFlicker = StartCoroutine(effector.IFlicker(sr, PlayerColor.Green, loop: true));
+        }
     }
+
+    private void StartPoisonVisualEffect()
+    {
+        if (coFlicker != null) return;
+
+        if (coRainbow != null)
+        {
+             // invincible + poision
+            StopCoroutine(coRainbow);
+            Color tint = Color.green * 0.6f + Color.white * 0.4f;
+            coRainbow = StartCoroutine(effector.IRainbow(sr, loop: true, hueSpeed: 2f, tint: tint));
+        }
+        else
+        {
+            coFlicker = StartCoroutine(GetComponent<SpriteColorEffector>().IFlicker(GetComponent<SpriteRenderer>(), PlayerColor.Green, loop: true));
+        }
+    }
+
+    private void StopPoisonVisualEffect()
+    {
+        if (coFlicker != null)
+        {
+            StopCoroutine(coFlicker);
+            coFlicker = null;
+        }
+
+        if (coRainbow == null)
+        {
+            sr.color = Color.white;
+        }
+        else
+        {
+            StopCoroutine(coRainbow);
+            coRainbow = StartCoroutine(effector.IRainbow(sr, loop: true, hueSpeed: 2f, tint: Color.white));
+        }
+    }
+    #endregion
+
+
+    #region Save & Load
+    // 타일맵이 재시작될 때 호출되어 removedTiles 캐시를 초기화
+    public void ClearDiggedTiles()
+    {
+        TilesAlreadyDigged.Clear();
+    }
+
+    #endregion
+   
+
+    
+    #region Digging Range Gizmos
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Vector2 playerPos = transform.position + Vector3.down * DIG_OFFSET_DISTANCE;
+        float worldRadius = radius * (tilemap != null ? tilemap.cellSize.x : 1f);
+
+        Gizmos.DrawWireSphere(playerPos, worldRadius);
+    }
+    #endregion
+ 
 }

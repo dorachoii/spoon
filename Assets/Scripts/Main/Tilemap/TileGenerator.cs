@@ -341,7 +341,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
         PlayerContoller playerController = FindObjectOfType<PlayerContoller>();
         if (playerController != null)
         {
-            playerController.ClearRemovedTilesCache();
+            playerController.ClearDiggedTiles();
         }
 
         isPaused = false;
