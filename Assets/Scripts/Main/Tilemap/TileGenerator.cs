@@ -44,7 +44,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     [Header("Tile Generation Control")]
     private bool isPaused = false;
-    private bool isLayerChanged = false;
+    private bool isNormalLayerChanged = false;
 
 
     [Header("Boss Tilemap")]
@@ -56,8 +56,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private GameObject currentBoss; // 현재 보스 객체
     private bool isSpawningBoss = false;
 
-    // 보스 죽음 이벤트
-    public event System.Action OnBossDeath;
 
 
     void Awake()
@@ -89,7 +87,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
-            LayerManager.Instance.OnBossLayerExited += HandleBossLayerExited;
+            LayerManager.Instance.OnBossLayerCompleted += HandleBossLayerCompleted;
         }
     }
 
@@ -100,15 +98,19 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
-            LayerManager.Instance.OnBossLayerExited -= HandleBossLayerExited;
+            LayerManager.Instance.OnBossLayerCompleted -= HandleBossLayerCompleted;
         }
     }
 
     void HandleLevelChanged(int newLevel)
     {
         currentLayer = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
-        gradientTileIdx = currentLayer - 1;
-        isLayerChanged = true;
+        gradientTileIdx = currentLayer;
+
+        if (LayerManager.Instance != null && LayerManager.Instance.CurrentLayerState == LayerState.Normal)
+        {
+            isNormalLayerChanged = true;
+        }
     }
 
     #region Basic Tilemap
@@ -123,7 +125,8 @@ public class TileGenerator : MonoBehaviour, ISaveable
         // カメラが下がるにつれて下のタイルを埋め、上のタイルを削除
         if (currentBottomLeftCell.y <= lastBottomLeftCell.y)
         {
-            FillBottomRows(currentBottomLeftCell.y - tileOffset, lastBottomLeftCell.y - 1, currentLayer);
+            int currentLayerTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
+            FillBottomRows(currentBottomLeftCell.y - tileOffset, lastBottomLeftCell.y - 1, currentLayerTileIndex);
 
             // 패턴 찍어주는 함수수
             StampDottedPattern(currentBottomLeftCell.y);
@@ -143,10 +146,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
     void FillBottomRows(int startY, int endY, int layer)
     {
         // 레이어 변경되면, 경계선 그라디언트 그려준다.
-        if (isLayerChanged && gradientTileIdx >= 0)
+        if (isNormalLayerChanged && gradientTileIdx >= 0)
         {
             StampGradientLine(startY, gradientTileIdx);
-            isLayerChanged = false;
+            isNormalLayerChanged = false;
             gradientTileIdx = -1;
         }
 
@@ -185,7 +188,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         if (lastGradientLevel != level && level >= 0)
         {
-            tile_gradient = LoadTileBlockFromResources(TileType.Gradient.ToString(), level.ToString(), GRADIENT_TILE_SIZE);
+            tile_gradient = LoadTileBlockFromResources(TileType.Gradient.ToString(), level.ToString("D2"), GRADIENT_TILE_SIZE);
             lastGradientLevel = level;
         }
 
@@ -246,7 +249,8 @@ public class TileGenerator : MonoBehaviour, ISaveable
             if (validStampPos.Count > 0)
             {
                 Vector3Int randomStampPos = validStampPos[Random.Range(0, validStampPos.Count)];
-                StampSingleDottedTile(randomStampPos, currentLayer);
+                int currentLayerTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
+                StampSingleDottedTile(randomStampPos, currentLayerTileIndex);
             }
 
             lastStampingY = currentY;
@@ -351,8 +355,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
         }
 
         isPaused = false;
-        
-        Debug.Log("[TileGenerator] 타일맵 재시작 - 모든 캐시 초기화 완료");
     }
 
 
@@ -368,12 +370,13 @@ public class TileGenerator : MonoBehaviour, ISaveable
         SpawnBossTilemap(bossIndex);
     }
 
-    // 보스 층 퇴장 시 호출
-    private void HandleBossLayerExited(int bossIndex)
+    // boss layer completed
+    private void HandleBossLayerCompleted()
     {
-        // 일반 타일 생성 재개
         ResumeTileGeneration();
     }
+
+
     #endregion
 
     #region Boss Tilemap
@@ -389,22 +392,16 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         isSpawningBoss = true;
 
-        
-        // 한 프레임 대기하여 제거 완료
         yield return null;
 
-        // 보스 인덱스가 유효한지 확인
         if (bossIndex >= 0 && bossIndex < crumbleTilemapPrefabs.Length && crumbleTilemapPrefabs[bossIndex] != null)
         {
-            // 보스 타일맵 프리팹 인스턴스화
             currentCrumbleTilemap = Instantiate(crumbleTilemapPrefabs[bossIndex]);
             currentCrumbleTilemap.transform.SetParent(transform);
             
-            // 카메라 뷰포트의 맨 아래쪽에 위치시키기
             Vector3 bottomCenterWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, -0.2f, mainCamera.nearClipPlane));
             currentCrumbleTilemap.transform.position = new Vector3(bottomCenterWorldPos.x, bottomCenterWorldPos.y, 0f);
             
-            // 한 프레임 대기
             yield return null;
             
             currentBossGroundTilemap = Instantiate(bossGroundTilemapPrefabs[bossIndex]);
@@ -412,15 +409,11 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
             Vector3 belowBossWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, -0.5f, mainCamera.nearClipPlane));
             currentBossGroundTilemap.transform.position = new Vector3(belowBossWorldPos.x, belowBossWorldPos.y, 0f);
-
-            // 한 프레임 대기
             yield return null;
 
-            // 보스 스폰 위치 계산 (crumble tile과 boss ground tile 사이)
             Vector3 bossSpawnPosition = mainCamera.ViewportToWorldPoint(new Vector3(0.8f, -0.3f, mainCamera.nearClipPlane));
             bossSpawnPosition.z = 0f;
-            
-            // 보스 스폰
+
             SpawnBoss(bossIndex, bossSpawnPosition);
         }
         
@@ -430,52 +423,17 @@ public class TileGenerator : MonoBehaviour, ISaveable
     // 보스 스폰
     private void SpawnBoss(int bossIndex, Vector3 position)
     {
-        // 보스 인덱스가 유효한지 확인
         if (bossIndex >= 0 && bossIndex < bossPrefabs.Length && bossPrefabs[bossIndex] != null)
         {
-            // 보스 스폰
             currentBoss = Instantiate(bossPrefabs[bossIndex], position, Quaternion.identity);
             
-            // 성능 최적화: 보스가 생성되면 즉시 활성화
             if (currentBoss != null)
             {
                 currentBoss.SetActive(true);
-                
-                // 보스의 OnDeath 이벤트 구독 (TileGenerator용)
-                BossHP bossHP = currentBoss.GetComponent<BossHP>();
-                if (bossHP != null)
-                {
-                    bossHP.OnDeath += HandleBossDeath;
-                    Debug.Log("[TileGenerator] 보스 OnDeath 이벤트 구독 완료");
-                }
             }
         }
-        else
-        {
-            Debug.LogWarning($"[TileGenerator] 보스 {bossIndex}에 대한 프리팹을 찾을 수 없습니다.");
-        }
     }
 
-
-    
-    // 보스가 죽었을 때 호출되는 메서드
-    private void HandleBossDeath()
-    {
-        Debug.Log("[TileGenerator] 보스가 죽었습니다 - 타일 생성 재개 및 다음 층으로 진행");
-        
-        // 보스 죽음 이벤트 발생
-        OnBossDeath?.Invoke();
-        
-        // 타일 생성 재개
-        ResumeTileGeneration();
-        
-        // LayerManager에 보스 층 완료 알림 (현재 높이 확정 및 다음 층으로 진행)
-        if (LayerManager.Instance != null)
-        {
-            LayerManager.Instance.HandleBossLayerCompleted(-1); // -1은 보스 인덱스 (필요시 수정)
-        }
-    }
-    
 
     #endregion
 
@@ -497,8 +455,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         List<TileData> tileList = new List<TileData>();
         BoundsInt bounds = tilemap.cellBounds;
-
-        Debug.Log($"[Save&Load] 저장 시, Tilemap.cellBounds Y Range: {bounds.yMin} ~ {bounds.yMax - 1}");
 
         for (int y = bounds.yMin; y < bounds.yMax; y++)
         {
@@ -523,8 +479,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
     // 불러오기용: 타일맵에 타일 데이터 리스트로 복원
     public void LoadTilemapData(List<TileData> tileDataList)
     {
-        Debug.Log($"[Save&Load] 로드 시작: ClearAllTiles할 tilemap.cellBounds Y Range: {tilemap.cellBounds.yMin} ~ {tilemap.cellBounds.yMax - 1}");
-
         tilemap.ClearAllTiles();
 
         if (tileDataList == null || tileDataList.Count == 0) return;

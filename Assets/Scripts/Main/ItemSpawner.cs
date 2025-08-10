@@ -57,7 +57,7 @@ public class ItemSpawner : MonoBehaviour
 
     private void HandleLayerChanged(int newLayer)
     {
-        currentLayer = Mathf.Clamp(newLayer, 0, layerSpawnDatas.Length - 1);
+        currentLayer = LayerManager.Instance.GetCurrentLayerTileIndex();
         SpawnSavePoints();
     }
 

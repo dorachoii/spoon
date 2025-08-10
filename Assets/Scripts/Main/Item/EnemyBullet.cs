@@ -11,7 +11,6 @@ public class EnemyBullet : ItemBase
         Destroy(gameObject, lifeTime);
     }
 
-
     protected override void Update()
     {
         base.Update();
@@ -20,8 +19,10 @@ public class EnemyBullet : ItemBase
 
     protected override void ApplyEffect(GameObject player)
     {
-         PlayerStat.Instance.DamageHP(5);
-         ShowStatusText("Damaged!", Color.red);
+        bool damageApplied = PlayerStat.Instance.DamageHP(5);
+        if (damageApplied)
+        {
+            ShowStatusText("Damaged!", Color.red);
+        }
     }
-
 }

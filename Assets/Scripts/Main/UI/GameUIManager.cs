@@ -10,16 +10,18 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject gameover_resumeButton;
     [SerializeField] private IrisEffector irisEffector;
 
+
     [Header("Game UI - Pause")]
     [SerializeField] private GameObject pauseButton;
     [SerializeField] private GameObject pause_resumeButton;
     [SerializeField] private GameObject pause_newGameButton;
     [SerializeField] private GameObject pause_backToTitleButton;
 
+
     [Header("Layer Change UI")]
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private CanvasGroup canvasGroup;
-    [SerializeField] private float showDuration = 2f;
+    [SerializeField] private float showDuration = 1.5f;
     [SerializeField] private float fadeTime = 0.2f;
 
     [Header("Boss Death UI")]
@@ -34,6 +36,7 @@ public class GameUIManager : MonoBehaviour
     private Button pause_newGameButtonComp;
     private Button pause_backToTitleButtonComp;
 
+    #region Initialize
     private void Awake()
     {
         gameover_restartButton.SetActive(false);
@@ -59,7 +62,7 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
-        PlayerStat.Instance.OnDied += HandlePlayerDied;
+        PlayerStat.Instance.OnDied += HandlePlayerDeath;
         LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
         
         // 정적 보스 죽음 이벤트 구독
@@ -130,17 +133,29 @@ public class GameUIManager : MonoBehaviour
             }
         }
     }
-
     void OnDestroy()
     {
-        PlayerStat.Instance.OnDied -= HandlePlayerDied;
+        PlayerStat.Instance.OnDied -= HandlePlayerDeath;
         LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
         
         // 정적 보스 죽음 이벤트 구독 해제
         BossHP.OnAnyBossDeath -= HandleBossDeath;
     }
+    #endregion
 
-    private void HandlePlayerDied()
+    #region Event Handler
+    private void HandleLayerChanged(int layerIndex)
+    {
+        ShowLayerText();
+    }
+
+    public void HandleBossDeath()
+    {
+        ShowBossClearText();
+        TurnOnFireworksFX();
+    }
+
+    private void HandlePlayerDeath()
     {
         // iris in
         if (irisEffector != null) irisEffector.IrisIn();
@@ -148,9 +163,9 @@ public class GameUIManager : MonoBehaviour
         // button 갱신 (更新)
         bool hasSavedData = PersistenceManager.Instance != null && PersistenceManager.Instance.HasSavedData();
         if (gameover_resumeButton != null) gameover_resumeButton.SetActive(hasSavedData);
-
         if (gameover_restartButton != null) gameover_restartButton.SetActive(true);
     }
+    #endregion
 
     private void TogglePauseUI()
     {
@@ -163,26 +178,15 @@ public class GameUIManager : MonoBehaviour
         Time.timeScale = isPauseUIActive ? 1f : 0f;
     }
 
-    private void HandleLayerChanged(int layerIndex)
-    {
-        ShowLayerText();
-    }
-
-    // 보스 죽음 처리
-    public void HandleBossDeath()
-    {
-        ShowBossDeathUI();
-        SpawnFireworksEffect();
-    }
-
+    #region UI Methods
     // 보스 죽음 UI 표시 (centerText 사용)
-    private void ShowBossDeathUI()
+    private void ShowBossClearText()
     {
         ShowBossClearedText();
     }
 
     // 폭죽 효과 생성
-    private void SpawnFireworksEffect()
+    private void TurnOnFireworksFX()
     {
         // 모든 폭죽 효과 켜기
         for (int i = 0; i < fireworksEffects.Length; i++)
@@ -194,14 +198,13 @@ public class GameUIManager : MonoBehaviour
         }
         
         // 3초 후 자동으로 끄기
-        StartCoroutine(HideFireworksAfterDelay());
+        StartCoroutine(IOffFireworksFX());
     }
 
-    private IEnumerator HideFireworksAfterDelay()
+    private IEnumerator IOffFireworksFX()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(showDuration - fadeTime * 2f);
         
-        // 모든 폭죽 효과 끄기
         for (int i = 0; i < fireworksEffects.Length; i++)
         {
             if (fireworksEffects[i] != null)
@@ -211,44 +214,19 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
+  
     // 보스 클리어 텍스트 표시
     private void ShowBossClearedText()
     {
-        string title = "BOSS CLEARED!";
-        titleText.text = title;
-        titleText.color = new Color(1f, 0.8f, 0f); // 골드 색상
-        
-        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
-        centerTextCoroutine = StartCoroutine(IShowBossClearedText());
-    }
-
-    private IEnumerator IShowBossClearedText()
-    {
-        float t = 0f;
-        while (t < fadeTime)
-        {
-            t += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(0f, 1f, t / fadeTime);
-            yield return null;
-        }
-        canvasGroup.alpha = 1f;
-
-        yield return new WaitForSeconds(3f); // 3초 동안 표시
-
-        t = 0f;
-        while (t < fadeTime)
-        {
-            t += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(1f, 0f, t / fadeTime);
-            yield return null;
-        }
-        canvasGroup.alpha = 0f;
+        ShowCenterText("BOSS CLEARED!", new Color(1f, 0.8f, 0f),  showDuration - fadeTime * 2f); 
     }
 
     private void ShowLayerText(Color textColor = default)
     {
         string title = LayerManager.Instance.GetCurrentLayerName();
-        titleText.text = title;
+        
+        // 디버깅을 위한 로그 추가
+        Debug.Log($"[GameUIManager] 현재 레이어: {LayerManager.Instance.CurrentPlayerLayer}, 이름: {title}");
         
         // 현재 일반 층이면 검정, 보스 층이면 보라 이렇게 표시
         if (textColor == default)
@@ -262,13 +240,21 @@ public class GameUIManager : MonoBehaviour
                 textColor = Color.black; // 검정색
             }
         }
-        titleText.color = textColor;
         
-        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
-        centerTextCoroutine = StartCoroutine(IShowLayerText());
+        ShowCenterText(title, textColor, showDuration - fadeTime * 2f);
     }
 
-    private IEnumerator IShowLayerText()
+    // 통합된 중앙 텍스트 표시 메서드
+    private void ShowCenterText(string text, Color color, float displayDuration)
+    {
+        titleText.text = text;
+        titleText.color = color;
+        
+        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
+        centerTextCoroutine = StartCoroutine(IShowCenterText(displayDuration));
+    }
+
+    private IEnumerator IShowCenterText(float displayDuration)
     {
         float t = 0f;
         while (t < fadeTime)
@@ -279,7 +265,7 @@ public class GameUIManager : MonoBehaviour
         }
         canvasGroup.alpha = 1f;
 
-        yield return new WaitForSeconds(showDuration - fadeTime * 2f);
+        yield return new WaitForSeconds(displayDuration);
 
         t = 0f;
         while (t < fadeTime)
@@ -290,4 +276,5 @@ public class GameUIManager : MonoBehaviour
         }
         canvasGroup.alpha = 0f;
     }
+    #endregion
 }

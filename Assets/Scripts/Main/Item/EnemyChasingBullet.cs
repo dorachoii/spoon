@@ -62,8 +62,11 @@ public class EnemyChasingBullet : ItemBase
     {
         if (PlayerStat.Instance != null)
         {
-            PlayerStat.Instance.DamageHP(15);
-            ShowStatusText("Damaged!", Color.red);
+            bool damageApplied = PlayerStat.Instance.DamageHP(15);
+            if (damageApplied)
+            {
+                ShowStatusText("Damaged!", Color.red);
+            }
         }
     }
 

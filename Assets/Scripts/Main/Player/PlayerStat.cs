@@ -70,12 +70,13 @@ public class PlayerStat : MonoBehaviour, ISaveable
     }
 
     #region HP
-    public void DamageHP(float damage)
+    public bool DamageHP(float damage)
     {
-        if (isDead || isInvincible) return;
+        if (isDead || isInvincible) return false;
 
         ChangeHP(-damage);
         OnDamaged?.Invoke();
+        return true;
     }
 
     public void HealHP(float amount)
