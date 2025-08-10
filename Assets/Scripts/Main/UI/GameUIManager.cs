@@ -170,11 +170,11 @@ public class GameUIManager : MonoBehaviour
     private void TogglePauseUI()
     {
         bool isPauseUIActive = pause_resumeButton.activeSelf;
-        
+
         pause_resumeButton.SetActive(!isPauseUIActive);
         pause_newGameButton.SetActive(!isPauseUIActive);
         pause_backToTitleButton.SetActive(!isPauseUIActive);
-        
+
         Time.timeScale = isPauseUIActive ? 1f : 0f;
     }
 

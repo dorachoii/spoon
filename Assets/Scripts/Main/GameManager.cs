@@ -37,6 +37,7 @@ public class GameManager : MonoBehaviour
     {
         PersistenceManager.Instance?.ClearSave();
         SceneManager.LoadScene(SceneNames.GAME_SCENE_NAME);
+        Time.timeScale = 1;
         AudioManager.Instance.ChangeBGM(BGMType.Game);
     }
 
@@ -44,6 +45,7 @@ public class GameManager : MonoBehaviour
     {
         // 먼저 씬을 로드하고, 씬 로드 완료 후 데이터를 로드
         SceneManager.LoadScene(SceneNames.GAME_SCENE_NAME);
+        Time.timeScale = 1;
         AudioManager.Instance.ChangeBGM(BGMType.Game);
         
         // 씬 로드 완료 후 데이터 로드 (SceneManager.sceneLoaded 이벤트 사용)
