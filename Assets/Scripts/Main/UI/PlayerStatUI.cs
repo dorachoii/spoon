@@ -7,6 +7,7 @@ public class PlayerStatUI : MonoBehaviour
     [Header("Player Stat UI")]
     public Slider powerSlider;
     public Slider hpSlider;
+    public Slider heatSlider;
     public TextMeshProUGUI layerHardnessText;
 
     int currentLayerHardness;
@@ -18,20 +19,30 @@ public class PlayerStatUI : MonoBehaviour
         currentLayerHardness = 0;
         hpSlider.maxValue = PlayerStat.Instance.MaxHP;
         powerSlider.maxValue = PlayerStat.Instance.MaxPower;
+        heatSlider.maxValue = PlayerStat.Instance.MaxHeat;
 
         UpdateHPValue(PlayerStat.Instance.CurrentHP);
         UpdatePowerValue(PlayerStat.Instance.CurrentPower);
+        UpdateHeatValue(PlayerStat.Instance.CurrentHeat);
 
         PlayerStat.Instance.OnHPChanged += UpdateHPValue;
         PlayerStat.Instance.OnDigPowerChanged += UpdatePowerValue;
+        PlayerStat.Instance.OnHeatChanged += UpdateHeatValue;
         LayerManager.Instance.OnLayerChangedForPlayer += UpdateLayerHardnessText;
+        ToggleHeatSlider(false);
     }
 
     void OnDestroy()
     {
         PlayerStat.Instance.OnHPChanged -= UpdateHPValue;
         PlayerStat.Instance.OnDigPowerChanged -= UpdatePowerValue;
+        PlayerStat.Instance.OnHeatChanged -= UpdateHeatValue;
         LayerManager.Instance.OnLayerChangedForPlayer -= UpdateLayerHardnessText;
+    }
+
+    private void UpdateHeatValue(float heat)
+    {
+        heatSlider.value = heat;
     }
 
     private void UpdatePowerValue(float digPower)
@@ -51,5 +62,9 @@ public class PlayerStatUI : MonoBehaviour
             currentLayerHardness++;
             layerHardnessText.text = $"Hardness: {currentLayerHardness}";
         }
+    }
+
+    public void ToggleHeatSlider(bool isOn){
+        heatSlider.gameObject.SetActive(isOn);
     }
 }

@@ -19,6 +19,10 @@ public class PlayerStat : MonoBehaviour, ISaveable
     //private float basePower = 100f;
     private float basePower = 150f;
     private float powerBonus = 0f;
+
+    // Player Heat
+    private float maxHeat = 100f;
+    private float currentHeat;
     
 
     // Encapsulation
@@ -26,9 +30,10 @@ public class PlayerStat : MonoBehaviour, ISaveable
     public float JumpForce => jumpForce;
     public float MaxHP => maxHP;
     public float MaxPower => maxPower;   
+    public float MaxHeat => maxHeat;
     public float CurrentHP => currentHP;
     public float CurrentPower => basePower + powerBonus;
-
+    public float CurrentHeat => currentHeat;
 
     // Events
     // HP Events
@@ -39,6 +44,9 @@ public class PlayerStat : MonoBehaviour, ISaveable
     // Dig Power Events
     public event Action<float> OnDigPowerChanged;
     public event Action<float> OnPowerUp;
+
+    // Heat Events
+    public event Action<float> OnHeatChanged;
 
     // Invincible Events
     public event Action OnInvincibleStarted;
@@ -54,6 +62,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
     private bool isDead = false;
     private bool isInvincible = false;
     public bool isPoisoned = false;
+    private bool isInLavaZone = false; // Lava Zone 체크용
 
 
     private void Awake()
@@ -67,7 +76,47 @@ public class PlayerStat : MonoBehaviour, ISaveable
         Instance = this;
        
         currentHP = maxHP;
+        currentHeat = 0f;
     }
+
+    private void Start()
+    {
+        // Lava Zone 이벤트 구독
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLavaLayerEntered += HandleLavaLayerEntered;
+            LayerManager.Instance.OnLavaLayerExited += HandleLavaLayerExited;
+        }
+    }
+
+    private void Update()
+    {
+        // Lava Zone에 있을 때 지속적으로 열 증가
+        if (isInLavaZone)
+        {
+            ChangeHeat(Time.deltaTime * 5f); 
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 이벤트 구독 해제
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLavaLayerEntered -= HandleLavaLayerEntered;
+            LayerManager.Instance.OnLavaLayerExited -= HandleLavaLayerExited;
+        }
+    }
+
+    private void HandleLavaLayerEntered()
+    {
+        isInLavaZone = true;
+    }
+
+    private void HandleLavaLayerExited()
+    {
+        isInLavaZone = false;
+    }   
 
     #region HP
     public bool DamageHP(float damage)
@@ -206,6 +255,26 @@ public class PlayerStat : MonoBehaviour, ISaveable
         if (!isPoisoned) return;
         isPoisoned = false;
         OnPoisonedEnded?.Invoke();
+    }
+    #endregion
+
+    #region Heat
+    public void ChangeHeat(float amount)
+    {
+        currentHeat = Mathf.Clamp(currentHeat + amount, 0, maxHeat);
+        OnHeatChanged?.Invoke(currentHeat);
+
+        if (currentHeat >= maxHeat)
+        {
+            isDead = true;
+            OnDied?.Invoke();
+        }
+    }
+
+    public void CureHeat(float amount)
+    {
+        currentHeat = Mathf.Clamp(currentHeat - amount, 0, maxHeat);
+        OnHeatChanged?.Invoke(currentHeat);
     }
     #endregion
 

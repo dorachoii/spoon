@@ -78,6 +78,8 @@ public class LayerManager : MonoBehaviour
     public event Action<int> OnLayerChangedForPlayer;
     public event Action<int> OnTransitionLayerEntered; // 전환 층 진입
     public event Action<int> OnBossLayerEntered; // 보스 층 진입
+    public event Action OnLavaLayerEntered; // Lava Zone 진입
+    public event Action OnLavaLayerExited;
    
 
 
@@ -205,6 +207,18 @@ public class LayerManager : MonoBehaviour
                 CurrentPlayerLayerState = playerLayerData.layerState;
 
                 OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
+
+                // Lava Zone 진입 감지 (layerIndex 5가 Lava Zone)
+                if (playerLayerData.layerIndex == 5)
+                {
+                    OnLavaLayerEntered?.Invoke();
+                    FindObjectOfType<PlayerStatUI>()?.ToggleHeatSlider(true);
+                }
+                else
+                {
+                    OnLavaLayerExited?.Invoke();
+                    FindObjectOfType<PlayerStatUI>()?.ToggleHeatSlider(false);
+                }
             }
         }
     }
