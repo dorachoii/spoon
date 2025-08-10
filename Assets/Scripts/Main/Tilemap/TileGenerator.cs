@@ -23,7 +23,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
 
     [Header("Layer")]
-    int currentLayer = 0;
+    int currentTileLayer = 0;
 
 
     [Header("Stamping Tiles")]
@@ -32,7 +32,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private TileBase[,] tile_dotted = new TileBase[DOTTED_TILE_SIZE, DOTTED_TILE_SIZE];
     private TileBase[,] tile_gradient = new TileBase[GRADIENT_TILE_SIZE, GRADIENT_TILE_SIZE];
     //Gradient
-    private int gradientTileIdx = -1;
+   
     private int lastGradientLevel = -1;
 
     //Dotted
@@ -87,7 +87,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
-            LayerManager.Instance.OnBossLayerCompleted += HandleBossLayerCompleted;
+      
         }
     }
 
@@ -98,18 +98,25 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
-            LayerManager.Instance.OnBossLayerCompleted -= HandleBossLayerCompleted;
+   
         }
     }
 
     void HandleLevelChanged(int newLevel)
     {
-        currentLayer = Mathf.Clamp(newLevel, 0, tile_plain.Length - 1);
-        gradientTileIdx = currentLayer;
+        currentTileLayer = LayerManager.Instance.GetCurrentLayerTileIndex();
+  
 
         if (LayerManager.Instance != null && LayerManager.Instance.CurrentLayerState == LayerState.Normal)
         {
             isNormalLayerChanged = true;
+            
+            // 보스 층 완료 후 Normal 레이어로 변경될 때 타일 생성 재개
+            if (isPaused)
+            {
+                Debug.Log("[TileGenerator] 보스 층 완료 후 Normal 레이어 진입 - 타일 생성 재개");
+                ResumeTileGeneration();
+            }
         }
     }
 
@@ -146,11 +153,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
     void FillBottomRows(int startY, int endY, int layer)
     {
         // 레이어 변경되면, 경계선 그라디언트 그려준다.
-        if (isNormalLayerChanged && gradientTileIdx >= 0)
+        if (isNormalLayerChanged)
         {
-            StampGradientLine(startY, gradientTileIdx);
+            StampGradientLine(startY, currentTileLayer);
             isNormalLayerChanged = false;
-            gradientTileIdx = -1;
         }
 
         int height = endY - startY + 1;
@@ -370,12 +376,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
         SpawnBossTilemap(bossIndex);
     }
 
-    // boss layer completed
-    private void HandleBossLayerCompleted()
-    {
-        ResumeTileGeneration();
-    }
-
+ 
 
     #endregion
 

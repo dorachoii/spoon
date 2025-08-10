@@ -78,7 +78,7 @@ public class LayerManager : MonoBehaviour
     public event Action<int> OnLayerChangedForPlayer;
     public event Action<int> OnTransitionLayerEntered; // 전환 층 진입
     public event Action<int> OnBossLayerEntered; // 보스 층 진입
-    public event Action OnBossLayerCompleted; // 보스 층 완료
+   
 
 
 
@@ -263,7 +263,6 @@ public class LayerManager : MonoBehaviour
         // 현재 층의 끝 높이 재계산
         UpdateCurrentLayerEndHeight();
         
-        OnBossLayerCompleted?.Invoke();
     }
 
     #region Getter
