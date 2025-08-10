@@ -49,7 +49,7 @@ public class LayerData
     }
 }
 
-public class LayerManager : MonoBehaviour
+public class LayerManager : MonoBehaviour, ISaveable
 {
     public static LayerManager Instance { get; private set; }
 
@@ -321,6 +321,49 @@ public class LayerManager : MonoBehaviour
     public int GetMaxTile()
     {
         return maxTilesPerFrame;
+    }
+    #endregion
+
+    #region Save & Load
+    public void WriteData(GameData data)
+    {
+        // 현재 진행 상태 저장
+        data.currentTileLayer = CurrentTileLayer;
+        data.currentPlayerLayer = CurrentPlayerLayer;
+        data.currentLayerEndY = currentLayerEndY;
+        
+        // 레이어 데이터 리스트 저장 (보스가 죽어서 변경된 높이 포함)
+        data.layerDataList.Clear();
+        foreach (var layerData in layerDataList)
+        {
+            data.layerDataList.Add(layerData);
+        }
+    }
+    
+    public void ReadAndSetData(GameData data)
+    {
+        // 저장된 상태로 복원
+        CurrentTileLayer = data.currentTileLayer;
+        CurrentPlayerLayer = data.currentPlayerLayer;
+        currentLayerEndY = data.currentLayerEndY;
+        
+        // 레이어 데이터 복원
+        layerDataList.Clear();
+        foreach (var layerData in data.layerDataList)
+        {
+            layerDataList.Add(layerData);
+        }
+        
+        // 현재 레이어 상태 업데이트
+        if (CurrentTileLayer >= 0 && CurrentTileLayer < layerDataList.Count)
+        {
+            CurrentLayerState = layerDataList[CurrentTileLayer].layerState;
+        }
+        
+        if (CurrentPlayerLayer >= 0 && CurrentPlayerLayer < layerDataList.Count)
+        {
+            CurrentPlayerLayerState = layerDataList[CurrentPlayerLayer].layerState;
+        }
     }
     #endregion
 }

@@ -77,6 +77,10 @@ public class PlayerStat : MonoBehaviour, ISaveable
        
         currentHP = maxHP;
         currentHeat = 0f;
+        isDead = false;
+        isInvincible = false;
+        isPoisoned = false;
+        isInLavaZone = false;
     }
 
     private void Start()
@@ -282,11 +286,15 @@ public class PlayerStat : MonoBehaviour, ISaveable
     #region Save & Load
     public void WriteData(GameData data)
     {
+        Debug.Log("WriteData- PlayerPosition: " + gameObject.transform.position);
         data.playerPosition = gameObject.transform.position;
     }
-    public void ReadData(GameData data)
+    public void ReadAndSetData(GameData data)
     {
+        Debug.Log("[PlayerStat] ReadAndSetData() 호출됨 - GameObject 활성화: " + gameObject.activeInHierarchy + ", 컴포넌트 활성화: " + enabled);
+        Debug.Log("[PlayerStat] ReadData- PlayerPosition: " + gameObject.transform.position + " -> " + data.playerPosition);
         gameObject.transform.position = data.playerPosition;
+        Debug.Log("[PlayerStat] ReadAndSetData() 완료");
     }
     #endregion
 }

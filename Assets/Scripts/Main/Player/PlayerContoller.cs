@@ -161,6 +161,7 @@ public class PlayerContoller : MonoBehaviour
     {
         Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
 
+        Debug.Log("PlayerPosition- inputDirection: " + inputDirection);
         if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
         {
             inputDirection = -inputDirection;

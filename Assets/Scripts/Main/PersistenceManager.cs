@@ -8,7 +8,7 @@ using UnityEngine;
 public interface ISaveable
 {
     void WriteData(GameData data);    
-    void ReadData(GameData data); 
+    void ReadAndSetData(GameData data); 
 }
 
 [Serializable]
@@ -39,7 +39,12 @@ public class GameData
 {
     public Vector3 playerPosition;
     public List<TileData> tilemapData = new List<TileData>();   // 저장 시점의 tilemap 데이터 (保存時のタイルマップデータ)
-    public List<Vector3IntSerializable> removedTilePositions = new List<Vector3IntSerializable>();
+    
+    // LayerManager 데이터
+    public int currentTileLayer;
+    public int currentPlayerLayer;
+    public float currentLayerEndY;
+    public List<LayerData> layerDataList = new List<LayerData>();
 }
 
 
@@ -80,15 +85,23 @@ public class PersistenceManager : MonoBehaviour
 
     public void LoadGame()
     {
-        if (!File.Exists(savePath)) return;
+        if (!File.Exists(savePath)) 
+        {
+            // 파일이 없으면 새 게임 시작 (데이터 로드 없이)
+            Debug.Log("No save file found - starting new game");
+            OnDataLoaded?.Invoke();
+            return;
+        }
 
         string json = File.ReadAllText(savePath);
         GameData data = JsonUtility.FromJson<GameData>(json);
 
         var saveables = FindObjectsOfType<MonoBehaviour>().OfType<ISaveable>();
+        Debug.Log("LoadGame- saveables: " + saveables.Count());
         foreach (var saveable in saveables)
         {
-            saveable.ReadData(data);
+            Debug.Log("LoadGame- saveable: " + saveable.GetType().Name);
+            saveable.ReadAndSetData(data);
         }
 
         OnDataLoaded?.Invoke();
@@ -103,4 +116,5 @@ public class PersistenceManager : MonoBehaviour
     {
         return File.Exists(savePath);
     }
+    
 }

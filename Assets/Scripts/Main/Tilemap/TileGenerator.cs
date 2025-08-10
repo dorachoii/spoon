@@ -444,7 +444,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         data.tilemapData = GetTileDataList();
     }
-    public void ReadData(GameData data)
+    public void ReadAndSetData(GameData data)
     {
         LoadTilemapData(data.tilemapData);
     }
@@ -469,8 +469,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
                     {
                         x = x,
                         y = y,
-                        tilebaseName = tile.name
+                        tilebaseName = tile.name,
+                       
                     });
+                     Debug.Log("WriteData- TileData: " + tile.name);
                 }
             }
         }
