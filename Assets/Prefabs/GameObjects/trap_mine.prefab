@@ -102,9 +102,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectPrefab: {fileID: 3035650337442887019, guid: e1ce18ab0316be74ebf2f6bfa57bb21e, type: 3}
   soundEffect: {fileID: 8300000, guid: 8c8cf390751984ba59f5827d68ddbdeb, type: 3}
-  radius: 30
+  radius: 25
   force: 0.001
-  dmgRadius: 15
   dmg: 20
 --- !u!58 &4737842280975421179
 CircleCollider2D:

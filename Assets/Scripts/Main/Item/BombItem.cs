@@ -6,9 +6,8 @@ using UnityEngine.Tilemaps;
 public class BombItem : ItemBase
 {
     [Header("Bomb Settings")]
-    [SerializeField] private int radius = 30;
+    [SerializeField] private int radius = 25;
     [SerializeField] private float force = 0.001f;
-    [SerializeField] private float dmgRadius = 15f;
     [SerializeField] private float dmg = 20f;
     
     private SpriteColorEffector effector;
@@ -72,16 +71,19 @@ public class BombItem : ItemBase
     {
         if (player == null) return false;
 
-        Vector2 playerPos = player.transform.position;
-        float dist = Vector2.Distance(playerPos, transform.position);
-        
-        // 데미지 범위 내라면 (範囲内に入ったら)
-        if (dist <= dmgRadius)
+        Vector3Int bombCell = tilemap.WorldToCell(transform.position);
+        Vector3Int playerCell = tilemap.WorldToCell(player.transform.position);
+
+        float tileDistance = Mathf.Sqrt(Mathf.Pow(bombCell.x - playerCell.x, 2) + Mathf.Pow(bombCell.y - playerCell.y, 2));
+
+        // 데미지 범위 내라면 (타일 단위로 체크 - ExplodeTiles와 동일한 범위)
+        if (tileDistance <= radius)
         {
             // 플레이어 반동 (プレイヤー反動)
             Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
             if (rb != null)
             {
+                Vector2 playerPos = player.transform.position;
                 Vector2 dir = (playerPos - (Vector2)transform.position).normalized;
                 rb.AddForce(dir * force, ForceMode2D.Impulse);
             }
