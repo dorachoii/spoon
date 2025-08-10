@@ -36,10 +36,10 @@ public class LayerData
         return layerIndex switch
         {
             0 => "Mine Zone",
-            1 => "Crypt Zone 1",
+            1 => "Skull Zone 1",
             2 => "Boss Chamber I",
             3 => "",
-            4 => "Crypt Zone 2",
+            4 => "Skull Zone 2",
             5 => "Lava Zone",
             6 => "Ultimate Zone",
             7 => "Boss Chamber II",

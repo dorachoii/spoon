@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -12,6 +13,8 @@ public class BombItem : ItemBase
     
     private SpriteColorEffector effector;
 
+    private float autoExplodeDelay = 5f;
+
     protected override void Awake()
     {
         base.Awake();
@@ -20,13 +23,18 @@ public class BombItem : ItemBase
         {
             StartCoroutine(effector.IFlicker(gameObject.GetComponent<SpriteRenderer>(), PlayerColor.Red, loop: true));
         }
+
+        StartCoroutine(AutoExplode());
     }
 
     protected override void ApplyEffect(GameObject player)
     {
         ExplodeTiles();
-        Damage(player);
-        ShowStatusText("Damaged", Color.red);
+        bool damageApplied = Damage(player);
+        if (damageApplied)
+        {
+            ShowStatusText("Damaged", Color.red);
+        }
     }
 
     void ExplodeTiles()
@@ -60,9 +68,9 @@ public class BombItem : ItemBase
         }
     }
 
-    void Damage(GameObject player)
+    bool Damage(GameObject player)
     {
-        if (player == null) return;
+        if (player == null) return false;
 
         Vector2 playerPos = player.transform.position;
         float dist = Vector2.Distance(playerPos, transform.position);
@@ -82,8 +90,33 @@ public class BombItem : ItemBase
             PlayerStat playerStat = player.GetComponent<PlayerStat>();
             if (playerStat != null)
             {
-                playerStat.DamageHP(dmg);
+                return playerStat.DamageHP(dmg);
             }
         }
+        return false;
+    }
+
+    private IEnumerator AutoExplode()
+    {
+        yield return new WaitForSeconds(autoExplodeDelay);
+        
+        // 사운드와 이펙트 재생
+        PlaySoundEffect();
+        InstantiateFX();
+        
+        ExplodeTiles();
+        
+        // 자동 폭발 시에도 플레이어에게 데미지 주기
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            bool damageApplied = Damage(player);
+            if (damageApplied)
+            {
+                ShowStatusText("Damaged", Color.red);
+            }
+        }
+        
+        Destroy(gameObject);
     }
 }

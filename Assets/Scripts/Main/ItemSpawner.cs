@@ -13,7 +13,6 @@ public class LayerSpawnData
 public class ItemSpawner : MonoBehaviour
 {
     private Tilemap tilemap;
-
     private Transform player;
     private float lastDropY;
 
@@ -32,7 +31,6 @@ public class ItemSpawner : MonoBehaviour
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
         tilemap = TileGenerator.Instance.tilemap;
-
         lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
         LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLayerChanged;
     }
@@ -97,7 +95,6 @@ public class ItemSpawner : MonoBehaviour
         }
     }
 
-    private int lastIndex = 6;
     void SpawnItemAtTile(Vector3Int tilePos, LayerSpawnData data)
     {
         Vector3 worldPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
