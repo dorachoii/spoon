@@ -154,9 +154,12 @@ public class TileGenerator : MonoBehaviour, ISaveable
         TileBase[] existingTiles = tilemap.GetTilesBlock(bounds);
         TileBase[] newTiles = new TileBase[tilemapWidth * height];
 
+        // LayerManager에서 현재 레이어의 tileIndex를 가져옴
+        int currentTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
+        
         for (int i = 0; i < existingTiles.Length; i++)
         {
-            newTiles[i] = existingTiles[i] ?? tile_plain[layer];
+            newTiles[i] = existingTiles[i] ?? tile_plain[currentTileIndex];
         }
 
         tilemap.SetTilesBlock(bounds, newTiles);

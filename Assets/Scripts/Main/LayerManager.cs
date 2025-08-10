@@ -13,7 +13,7 @@ public enum LayerState
 [System.Serializable]
 public class LayerData
 {
-    public int layerIndex;
+    public int tileIndex;
     public LayerState state;
     public float layerHeight;
     public int bossIndex; // 보스 종류 구분 (-1이면 일반 층, 전환 층)
@@ -21,7 +21,7 @@ public class LayerData
 
     public LayerData(int index, LayerState layerState, float height, int boss = -1)
     {
-        layerIndex = index;
+        tileIndex = index;
         state = layerState;
         layerHeight = height;
         bossIndex = boss;
@@ -115,15 +115,15 @@ public class LayerManager : MonoBehaviour
         LayerData layer1 = new LayerData(0, LayerState.Normal, 20f, -1);
         LayerData layer2 = new LayerData(1, LayerState.Normal, 20f, -1);
 
-        LayerData boss1_transition = new LayerData(2, LayerState.Transition, 12f, -1);
-        LayerData boss1 = new LayerData(3, LayerState.Boss, 80f, 0);
+        LayerData boss1_transition = new LayerData(0, LayerState.Transition, 12f, -1);
+        LayerData boss1 = new LayerData(1, LayerState.Boss, 80f, 0);
 
-        LayerData layer3 = new LayerData(4, LayerState.Normal, 20f, -1);
-        LayerData layer4 = new LayerData(5, LayerState.Normal, 20f, -1);
-        LayerData layer5 = new LayerData(6, LayerState.Normal, 20f, -1);
+        LayerData layer3 = new LayerData(2, LayerState.Normal, 20f, -1);
+        LayerData layer4 = new LayerData(3, LayerState.Normal, 20f, -1);
+        LayerData layer5 = new LayerData(4, LayerState.Normal, 20f, -1);
 
-        LayerData boss2_transition = new LayerData(7, LayerState.Transition, 12f, -1);
-        LayerData boss2 = new LayerData(8, LayerState.Boss, 80f, 1);
+        LayerData boss2_transition = new LayerData(0, LayerState.Transition, 12f, -1);
+        LayerData boss2 = new LayerData(2, LayerState.Boss, 80f, 1);
 
 
         layerDataList.Add(layer1);
@@ -251,6 +251,16 @@ public class LayerManager : MonoBehaviour
             return layerDataList[CurrentLayer].layerName;
         }
         return "Unknown Layer";
+    }
+
+    // 현재 레이어의 tileIndex 반환 (타일맵 기준)
+    public int GetCurrentLayerTileIndex()
+    {
+        if (CurrentLayer >= 0 && CurrentLayer < layerDataList.Count)
+        {
+            return layerDataList[CurrentLayer].tileIndex;
+        }
+        return 0; // 기본값
     }
 
 
