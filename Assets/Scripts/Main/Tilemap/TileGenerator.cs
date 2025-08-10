@@ -56,6 +56,9 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private GameObject currentBoss; // 현재 보스 객체
     private bool isSpawningBoss = false;
 
+    // 보스 죽음 이벤트
+    public event System.Action OnBossDeath;
+
 
     void Awake()
     {
@@ -438,7 +441,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             {
                 currentBoss.SetActive(true);
                 
-                // TODO: 보스의 OnDeath 이벤트 구독
+                // 보스의 OnDeath 이벤트 구독 (TileGenerator용)
                 BossHP bossHP = currentBoss.GetComponent<BossHP>();
                 if (bossHP != null)
                 {
@@ -452,11 +455,16 @@ public class TileGenerator : MonoBehaviour, ISaveable
             Debug.LogWarning($"[TileGenerator] 보스 {bossIndex}에 대한 프리팹을 찾을 수 없습니다.");
         }
     }
+
+
     
     // 보스가 죽었을 때 호출되는 메서드
     private void HandleBossDeath()
     {
         Debug.Log("[TileGenerator] 보스가 죽었습니다 - 타일 생성 재개 및 다음 층으로 진행");
+        
+        // 보스 죽음 이벤트 발생
+        OnBossDeath?.Invoke();
         
         // 타일 생성 재개
         ResumeTileGeneration();

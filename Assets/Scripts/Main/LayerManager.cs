@@ -232,7 +232,6 @@ public class LayerManager : MonoBehaviour
         }
     }
 
-    
 
     // 현재 층의 하드니스 계산 (타일맵 기준)
     public float GetCurrentHardness()
@@ -240,7 +239,6 @@ public class LayerManager : MonoBehaviour
         int layer = Mathf.Max(0, CurrentPlayerLayer);
         return CurrentLayerHardness = 40f + layer * Mathf.Sqrt(layer) * 20f;
     }
-    
    
     
     // 현재 레이어 이름 반환 (타일맵 기준)

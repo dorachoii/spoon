@@ -6,6 +6,8 @@ using UnityEngine;
 // 각각 animator를 관리하기 위하여 그렇게 구성성
 public class BossHP : MonoBehaviour
 {
+    // 정적 이벤트 - 모든 보스의 죽음을 중앙에서 관리
+    public static event Action OnAnyBossDeath;
 
     private int maxHP = 100;
 
@@ -32,16 +34,17 @@ public class BossHP : MonoBehaviour
         {
             IsDead = true;
             OnDeath?.Invoke();
+            OnAnyBossDeath?.Invoke(); // 정적 이벤트 발생
             StartCoroutine(DestroyAfterAnimation());
         }
     }
+    
     IEnumerator DestroyAfterAnimation()
     {
         // 현재 재생중인 애니메이션(Death)의 길이를 가져옴
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         float animationLength = stateInfo.length;
-        yield return new WaitForSeconds(animationLength );
+        yield return new WaitForSeconds(animationLength);
         Destroy(gameObject);
     }
-
 }

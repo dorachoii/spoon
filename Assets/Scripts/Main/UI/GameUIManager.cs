@@ -22,6 +22,9 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private float showDuration = 2f;
     [SerializeField] private float fadeTime = 0.2f;
 
+    [Header("Boss Death UI")]
+    [SerializeField] private GameObject[] fireworksEffects;
+
     private Coroutine centerTextCoroutine;
 
 
@@ -58,6 +61,9 @@ public class GameUIManager : MonoBehaviour
     {
         PlayerStat.Instance.OnDied += HandlePlayerDied;
         LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
+        
+        // 정적 보스 죽음 이벤트 구독
+        BossHP.OnAnyBossDeath += HandleBossDeath;
 
         // Button Event 연결 (接続)
         if (gameover_restartButtonComp != null)
@@ -129,6 +135,9 @@ public class GameUIManager : MonoBehaviour
     {
         PlayerStat.Instance.OnDied -= HandlePlayerDied;
         LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
+        
+        // 정적 보스 죽음 이벤트 구독 해제
+        BossHP.OnAnyBossDeath -= HandleBossDeath;
     }
 
     private void HandlePlayerDied()
@@ -159,8 +168,82 @@ public class GameUIManager : MonoBehaviour
         ShowLayerText();
     }
 
+    // 보스 죽음 처리
+    public void HandleBossDeath()
+    {
+        ShowBossDeathUI();
+        SpawnFireworksEffect();
+    }
 
-  
+    // 보스 죽음 UI 표시 (centerText 사용)
+    private void ShowBossDeathUI()
+    {
+        ShowBossClearedText();
+    }
+
+    // 폭죽 효과 생성
+    private void SpawnFireworksEffect()
+    {
+        // 모든 폭죽 효과 켜기
+        for (int i = 0; i < fireworksEffects.Length; i++)
+        {
+            if (fireworksEffects[i] != null)
+            {
+                fireworksEffects[i].SetActive(true);
+            }
+        }
+        
+        // 3초 후 자동으로 끄기
+        StartCoroutine(HideFireworksAfterDelay());
+    }
+
+    private IEnumerator HideFireworksAfterDelay()
+    {
+        yield return new WaitForSeconds(3f);
+        
+        // 모든 폭죽 효과 끄기
+        for (int i = 0; i < fireworksEffects.Length; i++)
+        {
+            if (fireworksEffects[i] != null)
+            {
+                fireworksEffects[i].SetActive(false);
+            }
+        }
+    }
+
+    // 보스 클리어 텍스트 표시
+    private void ShowBossClearedText()
+    {
+        string title = "BOSS CLEARED!";
+        titleText.text = title;
+        titleText.color = new Color(1f, 0.8f, 0f); // 골드 색상
+        
+        if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
+        centerTextCoroutine = StartCoroutine(IShowBossClearedText());
+    }
+
+    private IEnumerator IShowBossClearedText()
+    {
+        float t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(0f, 1f, t / fadeTime);
+            yield return null;
+        }
+        canvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(3f); // 3초 동안 표시
+
+        t = 0f;
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(1f, 0f, t / fadeTime);
+            yield return null;
+        }
+        canvasGroup.alpha = 0f;
+    }
 
     private void ShowLayerText(Color textColor = default)
     {
