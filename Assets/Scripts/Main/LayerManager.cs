@@ -64,6 +64,9 @@ public class LayerManager : MonoBehaviour, ISaveable
     public float CurrentLayerHardness { get; private set; } = 1f;
     public LayerState CurrentLayerState { get; private set; } = LayerState.Normal;
     public LayerState CurrentPlayerLayerState { get; private set; } = LayerState.Normal; // 플레이어 위치 기준 레이어 상태
+    
+    // 플레이어 준비 상태
+    private bool isPlayerReady = false;
 
 
 
@@ -106,6 +109,7 @@ public class LayerManager : MonoBehaviour, ISaveable
     {
         tilemap = TileGenerator.Instance.tilemap;
         BossHP.OnAnyBossDeath += HandleBossDeath;
+        GameManager.OnPlayerReady += OnPlayerReady;
     }
 
 
@@ -145,6 +149,7 @@ public class LayerManager : MonoBehaviour, ISaveable
     void OnDestroy()
     {
         BossHP.OnAnyBossDeath -= HandleBossDeath;
+        GameManager.OnPlayerReady -= OnPlayerReady;
     }
     #endregion
 
@@ -192,6 +197,12 @@ public class LayerManager : MonoBehaviour, ISaveable
     #region Player Layer
     private void UpdatePlayerLayer()
     {
+        // 플레이어가 준비되지 않았으면 처리하지 않음
+        if (!isPlayerReady || PlayerStat.Instance == null)
+        {
+            return;
+        }
+        
         Vector3 playerPos = PlayerStat.Instance.transform.position;
         float playerY = playerPos.y;
 
@@ -212,12 +223,10 @@ public class LayerManager : MonoBehaviour, ISaveable
                 if (playerLayerData.layerIndex == 5)
                 {
                     OnLavaLayerEntered?.Invoke();
-                    FindObjectOfType<PlayerStatUI>()?.ToggleHeatSlider(true);
                 }
                 else
                 {
                     OnLavaLayerExited?.Invoke();
-                    FindObjectOfType<PlayerStatUI>()?.ToggleHeatSlider(false);
                 }
             }
         }
@@ -299,7 +308,7 @@ public class LayerManager : MonoBehaviour, ISaveable
 
     public int GetCurrentLayerTileIndex()
     {
-        Debug.Log($"지금 layer는 {CurrentTileLayer}, 지금 tile index는 {layerDataList[CurrentTileLayer].tileIndex}");
+
         if (CurrentTileLayer >= 0 && CurrentTileLayer < layerDataList.Count)
         {
             return layerDataList[CurrentTileLayer].tileIndex;
@@ -366,4 +375,10 @@ public class LayerManager : MonoBehaviour, ISaveable
         }
     }
     #endregion
+
+    private void OnPlayerReady()
+    {
+        isPlayerReady = true;
+        UpdatePlayerLayer(); // 플레이어가 준비되면 플레이어 레이어 업데이트
+    }
 }

@@ -87,8 +87,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
-      
         }
+        
+        // 플레이어 준비 이벤트 구독
+        GameManager.OnPlayerReady += OnPlayerReady;
     }
 
     void OnDisable()
@@ -98,8 +100,16 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLevelChanged;
             LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
-   
         }
+        
+        // 플레이어 준비 이벤트 구독 해제
+        GameManager.OnPlayerReady -= OnPlayerReady;
+    }
+    
+    private void OnPlayerReady()
+    {
+        // 플레이어가 준비된 후에 PlayerController 찾기
+        Debug.Log("[TileGenerator] Player ready - PlayerController can now be found");
     }
 
     void HandleLevelChanged(int newLevel)

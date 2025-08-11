@@ -81,20 +81,30 @@ public class PlayerContoller : MonoBehaviour
 
     private void Start()
     {
+        // 플레이어 준비 이벤트 구독
+        GameManager.OnPlayerReady += OnPlayerReady;
+        
         // null 체크 후 동적으로 찾기
         FindMissingReferences();
-        
-        PlayerStat.Instance.OnDamaged += HandleDamaged;
-        PlayerStat.Instance.OnDied += HandleDied;
-        PlayerStat.Instance.OnInvincibleStarted += StartInvincibleVisualEffect;
-        PlayerStat.Instance.OnInvincibleEnded += StopInvincibleVisualEffect;
-        PlayerStat.Instance.OnPoisonedStarted += StartPoisonVisualEffect;
-        PlayerStat.Instance.OnPoisonedEnded += StopPoisonVisualEffect;
-
-        speed = PlayerStat.Instance.Speed;
-        jumpForce = PlayerStat.Instance.JumpForce;
     }
     
+    private void OnPlayerReady()
+    {
+        // 플레이어가 준비된 후에 이벤트 구독
+        if (PlayerStat.Instance != null)
+        {
+            PlayerStat.Instance.OnDamaged += HandleDamaged;
+            PlayerStat.Instance.OnDied += HandleDied;
+            PlayerStat.Instance.OnInvincibleStarted += StartInvincibleVisualEffect;
+            PlayerStat.Instance.OnInvincibleEnded += StopInvincibleVisualEffect;
+            PlayerStat.Instance.OnPoisonedStarted += StartPoisonVisualEffect;
+            PlayerStat.Instance.OnPoisonedEnded += StopPoisonVisualEffect;
+
+            speed = PlayerStat.Instance.Speed;
+            jumpForce = PlayerStat.Instance.JumpForce;
+        }
+    }
+
     private void FindMissingReferences()
     {
         // FloatingJoystick 찾기
@@ -156,6 +166,9 @@ public class PlayerContoller : MonoBehaviour
 
     private void OnDestroy()
     {
+        // 플레이어 준비 이벤트 구독 해제
+        GameManager.OnPlayerReady -= OnPlayerReady;
+        
         if (PlayerStat.Instance != null)
         {
             PlayerStat.Instance.OnDamaged -= HandleDamaged;

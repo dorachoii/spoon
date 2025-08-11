@@ -15,6 +15,7 @@ public class ItemSpawner : MonoBehaviour
     private Tilemap tilemap;
     private Transform player;
     private float lastDropY;
+    private bool isPlayerReady = false;
 
     public float dropInterval = 8f;
 
@@ -29,20 +30,49 @@ public class ItemSpawner : MonoBehaviour
     
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        // 플레이어 준비 이벤트 구독
+        GameManager.OnPlayerReady += OnPlayerReady;
+        
+        // Tilemap은 바로 설정 가능
         tilemap = TileGenerator.Instance.tilemap;
-        lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
-        LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLayerChanged;
+        
+        // LayerManager 이벤트 구독
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLayerChanged;
+        }
+    }
+    
+    private void OnPlayerReady()
+    {
+        isPlayerReady = true;
+        
+        // 플레이어가 준비되면 참조 설정
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            player = playerObj.transform;
+            lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
+            Debug.Log("[ItemSpawner] Player ready - item spawning initialized");
+        }
     }
 
     void OnDestroy()
     {
-        LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLayerChanged;
+        // 플레이어 준비 이벤트 구독 해제
+        GameManager.OnPlayerReady -= OnPlayerReady;
+        
+        // LayerManager 이벤트 구독 해제
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLayerChanged;
+        }
     }
 
     void Update()
     {
-        if (player == null || tilemap == null) return;
+        // 플레이어가 준비되지 않았으면 처리하지 않음
+        if (!isPlayerReady || player == null || tilemap == null) return;
 
         float expectedDropY = lastDropY - dropInterval;
 

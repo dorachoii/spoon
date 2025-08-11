@@ -62,8 +62,8 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
-        PlayerStat.Instance.OnDied += HandlePlayerDeath;
-        LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
+        // 플레이어 준비 이벤트 구독
+        GameManager.OnPlayerReady += OnPlayerReady;
         
         // 정적 보스 죽음 이벤트 구독
         BossHP.OnAnyBossDeath += HandleBossDeath;
@@ -133,10 +133,37 @@ public class GameUIManager : MonoBehaviour
             }
         }
     }
+    
+    private void OnPlayerReady()
+    {
+        // 플레이어가 준비된 후에 이벤트 구독
+        if (PlayerStat.Instance != null)
+        {
+            PlayerStat.Instance.OnDied += HandlePlayerDeath;
+        }
+        
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
+        }
+    }
+    
     void OnDestroy()
     {
-        PlayerStat.Instance.OnDied -= HandlePlayerDeath;
-        LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
+        // 플레이어 준비 이벤트 구독 해제
+        GameManager.OnPlayerReady -= OnPlayerReady;
+        
+        // PlayerStat.Instance가 null인지 체크
+        if (PlayerStat.Instance != null)
+        {
+            PlayerStat.Instance.OnDied -= HandlePlayerDeath;
+        }
+        
+        // LayerManager.Instance가 null인지 체크
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
+        }
         
         // 정적 보스 죽음 이벤트 구독 해제
         BossHP.OnAnyBossDeath -= HandleBossDeath;
@@ -223,6 +250,12 @@ public class GameUIManager : MonoBehaviour
 
     private void ShowLayerText(Color textColor = default)
     {
+        if (LayerManager.Instance == null)
+        {
+            Debug.LogWarning("[GameUIManager] LayerManager.Instance is null - cannot show layer text");
+            return;
+        }
+        
         string title = LayerManager.Instance.GetCurrentLayerName();
         
         // 디버깅을 위한 로그 추가

@@ -757,6 +757,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8efab3e63e1e62b4e9cf72b374d79fe0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  heatSlider: {fileID: 29550289777577638}
   isPoisoned: 0
 --- !u!114 &1662842246194057249
 MonoBehaviour:

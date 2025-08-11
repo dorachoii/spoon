@@ -18,9 +18,25 @@ public class PlayerStatUI : MonoBehaviour
     {
         currentLayerHardness = 0;
         
-        // PlayerStat.Instance가 null인지 체크
+        // 플레이어 준비 이벤트 구독
+        GameManager.OnPlayerReady += OnPlayerReady;
+        
+       
+    }
+    
+    private void OnPlayerReady()
+    {
+        Debug.Log("[PlayerStatUI] OnPlayerReady");
+        // 플레이어가 준비된 후에 UI 초기화
         if (PlayerStat.Instance != null)
         {
+            // heatSlider 할당
+            if (PlayerStat.Instance.heatSlider != null)
+            {
+                Debug.Log("[PlayerStatUI] heatSlider found");
+                heatSlider = PlayerStat.Instance.heatSlider.GetComponent<Slider>();
+            }
+            
             hpSlider.maxValue = PlayerStat.Instance.MaxHP;
             powerSlider.maxValue = PlayerStat.Instance.MaxPower;
             heatSlider.maxValue = PlayerStat.Instance.MaxHeat;
@@ -32,27 +48,34 @@ public class PlayerStatUI : MonoBehaviour
             PlayerStat.Instance.OnHPChanged += UpdateHPValue;
             PlayerStat.Instance.OnDigPowerChanged += UpdatePowerValue;
             PlayerStat.Instance.OnHeatChanged += UpdateHeatValue;
+
+            ToggleHeatSlider(false);
         }
         else
         {
             Debug.LogWarning("[PlayerStatUI] PlayerStat.Instance is null - UI may not work properly");
         }
         
-        // LayerManager.Instance가 null인지 체크
+        // LayerManager 이벤트도 플레이어 준비 후에 구독
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForPlayer += UpdateLayerHardnessText;
+            LayerManager.Instance.OnLavaLayerEntered += OnLavaLayerEntered;
+            LayerManager.Instance.OnLavaLayerExited += OnLavaLayerExited;
         }
         else
         {
             Debug.LogWarning("[PlayerStatUI] LayerManager.Instance is null - layer updates may not work");
         }
+
         
-        ToggleHeatSlider(false);
     }
 
     void OnDestroy()
     {
+        // 플레이어 준비 이벤트 구독 해제
+        GameManager.OnPlayerReady -= OnPlayerReady;
+        
         // PlayerStat.Instance가 null인지 체크
         if (PlayerStat.Instance != null)
         {
@@ -65,6 +88,8 @@ public class PlayerStatUI : MonoBehaviour
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForPlayer -= UpdateLayerHardnessText;
+            LayerManager.Instance.OnLavaLayerEntered -= OnLavaLayerEntered;
+            LayerManager.Instance.OnLavaLayerExited -= OnLavaLayerExited;
         }
     }
 
@@ -96,6 +121,24 @@ public class PlayerStatUI : MonoBehaviour
     }
 
     public void ToggleHeatSlider(bool isOn){
-        heatSlider.gameObject.SetActive(isOn);
+        if (heatSlider != null)
+        {
+            heatSlider.gameObject.SetActive(isOn);
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerStatUI] heatSlider is null - cannot toggle heat slider");
+        }
+    }
+    
+    private void OnLavaLayerEntered()
+    {
+        ToggleHeatSlider(true);
+    }
+    
+    private void OnLavaLayerExited()
+    
+    {
+        ToggleHeatSlider(false);
     }
 }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
   
 // 저장 가능한 객체가 구현해야 하는 인터페이스 (保存可能なオブジェクトが実装すべきインターフェース)
 public interface ISaveable
@@ -58,6 +57,9 @@ public class PersistenceManager : MonoBehaviour
     private string savePath;
     public static event Action OnDataLoaded;
     
+    // 현재 로드된 게임 데이터
+    public GameData CurrentGameData { get; private set; }
+    
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -87,60 +89,39 @@ public class PersistenceManager : MonoBehaviour
 
     public void LoadGame()
     {
-        StartCoroutine(LoadGameCoroutine());
+        if (HasSavedData()) 
+        {
+            StartCoroutine(LoadGameCoroutine());
+        }else{
+            Debug.Log("test: 저장된 데이터가 없어서 ondata loaded 호출");
+            Debug.Log($"test: OnDataLoaded 이벤트 구독자 수: {OnDataLoaded?.GetInvocationList()?.Length ?? 0}");
+            OnDataLoaded?.Invoke();
+        }
     }
 
     private IEnumerator LoadGameCoroutine()
     {
-        if (!File.Exists(savePath)) 
+        string json;
+        try
         {
-            // 파일이 없으면 새 게임 시작 (데이터 로드 없이)
-            Debug.Log("No save file found - starting new game");
+            json = File.ReadAllText(savePath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"1:[PersistenceManager] Error reading save file: {e.Message}");
             OnDataLoaded?.Invoke();
             yield break;
         }
-
-        string json = File.ReadAllText(savePath);
-        GameData data = JsonUtility.FromJson<GameData>(json);
-
-        // 플레이어 위치 저장 (PlayerSpawner에서 사용할 수 있도록)
-        PlayerStat playerStat = FindObjectOfType<PlayerStat>();
-        if (playerStat != null)
-        {
-            // PlayerStat의 위치를 직접 설정하지 않고, 나중에 PlayerSpawner에서 처리하도록 함
-            Debug.Log($"Player position from save data: {data.playerPosition}");
-        }
+        
+        CurrentGameData = JsonUtility.FromJson<GameData>(json);
 
         var saveables = FindObjectsOfType<MonoBehaviour>().OfType<ISaveable>();
-        Debug.Log("LoadGame- saveables: " + saveables.Count());
-        
-        // 각 saveable의 ReadAndSetData를 순차적으로 처리
         foreach (var saveable in saveables)
-        {
-            Debug.Log("LoadGame- saveable: " + saveable.GetType().Name);
-            
-            // TileGenerator는 특별히 처리 (tilemap이 파괴되었을 수 있음)
-            if (saveable is TileGenerator)
-            {
-                if (TileGenerator.Instance != null && TileGenerator.Instance.tilemap != null)
-                {
-                    saveable.ReadAndSetData(data);
-                }
-                else
-                {
-                    Debug.LogWarning("[PersistenceManager] Skipping TileGenerator - tilemap is null or destroyed");
-                }
-            }
-            else
-            {
-                saveable.ReadAndSetData(data);
-            }
-            
-            // 한 프레임 대기하여 다른 작업들이 처리될 수 있도록 함
+        {        
+            saveable.ReadAndSetData(CurrentGameData);   
             yield return null;
         }
 
-        // 모든 데이터 로딩이 완료된 후 이벤트 발생
         OnDataLoaded?.Invoke();
     }
 
@@ -153,5 +134,4 @@ public class PersistenceManager : MonoBehaviour
     {
         return File.Exists(savePath);
     }
-    
 }

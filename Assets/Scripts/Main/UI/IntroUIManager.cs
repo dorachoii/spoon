@@ -33,7 +33,6 @@ public class IntroUIManager : MonoBehaviour
         // Button Event 연결 (接続)
         if (startButtonComp != null)
         {
-            startButtonComp.onClick.RemoveAllListeners();
             startButtonComp.onClick.AddListener(() =>
             {
                 // new game
@@ -43,7 +42,6 @@ public class IntroUIManager : MonoBehaviour
 
         if (continueButtonComp != null)
         {
-            continueButtonComp.onClick.RemoveAllListeners();
             continueButtonComp.onClick.AddListener(() =>
             {
                 // continue
