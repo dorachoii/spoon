@@ -9,6 +9,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 {
     public static TileGenerator Instance { get; private set; }
     private Camera mainCamera;
+    private PlayerContoller playerController;
 
     [Header("Tilemap")]
     [SerializeField] public Tilemap tilemap;
@@ -88,9 +89,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnTransitionLayerEntered += HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered += HandleBossLayerEntered;
         }
-        
-        // 플레이어 준비 이벤트 구독
-        GameManager.OnPlayerReady += OnPlayerReady;
     }
 
     void OnDisable()
@@ -101,15 +99,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
             LayerManager.Instance.OnTransitionLayerEntered -= HandleTransitionLayerEntered;
             LayerManager.Instance.OnBossLayerEntered -= HandleBossLayerEntered;
         }
-        
-        // 플레이어 준비 이벤트 구독 해제
-        GameManager.OnPlayerReady -= OnPlayerReady;
-    }
-    
-    private void OnPlayerReady()
-    {
-        // 플레이어가 준비된 후에 PlayerController 찾기
-        Debug.Log("[TileGenerator] Player ready - PlayerController can now be found");
     }
 
     void HandleLevelChanged(int newLevel)
@@ -363,14 +352,27 @@ public class TileGenerator : MonoBehaviour, ISaveable
         // 스탬핑 관련 변수들 초기화
         lastStampingY = lastBottomLeftCell.y;
         
-        // PlayerController의 removedTiles 캐시 초기화
-        PlayerContoller playerController = FindObjectOfType<PlayerContoller>();
-        if (playerController != null)
-        {
-            playerController.ClearDiggedTiles();
-        }
+        // PlayerController의 removedTiles 캐시 초기화를 코루틴으로 처리
+        StartCoroutine(ClearPlayerDiggedTilesCoroutine());
 
         isPaused = false;
+    }
+    
+    // TODO: 옮겨야 할 거 같음
+    private IEnumerator ClearPlayerDiggedTilesCoroutine()
+    {
+        // PlayerController를 찾을 때까지 대기
+        while (playerController == null)
+        {
+            playerController = FindObjectOfType<PlayerContoller>();
+            if (playerController != null)
+            {
+                playerController.ClearDiggedTiles();
+                break;
+            }
+            
+            yield return null;
+        }
     }
 
 

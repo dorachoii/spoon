@@ -21,7 +21,6 @@ public class PlayerSpawner : MonoBehaviour
     }
     
  
-    
     private void SpawnBasedOnData()
     {
         if (hasSpawnedPlayer) return;

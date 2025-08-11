@@ -43,7 +43,6 @@ public class GameManager : MonoBehaviour
         if (scene.name == SceneNames.GAME_SCENE_NAME)
         {
             SceneManager.sceneLoaded -= OnNewGameSceneLoaded;
-            Debug.Log("1:[GameManager] New game scene loaded, starting data loading");
             PersistenceManager.Instance?.LoadGame();
         }
     }
