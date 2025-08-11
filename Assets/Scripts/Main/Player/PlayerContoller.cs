@@ -25,6 +25,9 @@ public class PlayerContoller : MonoBehaviour
     // Constants
     private const float DIG_OFFSET_DISTANCE = 0.5f;
     private const float SCREEN_PADDING = 1f;
+
+    // Player Stat
+    private PlayerStat playerStat;
     
     // Player State
     public PlayerState currentState { get; private set; }
@@ -81,27 +84,36 @@ public class PlayerContoller : MonoBehaviour
 
     private void Start()
     {
-        // 플레이어 준비 이벤트 구독
-        GameManager.OnPlayerReady += OnPlayerReady;
-        
         // null 체크 후 동적으로 찾기
         FindMissingReferences();
+        
+        // 같은 게임오브젝트에서 PlayerStat 찾기
+        InitializePlayerStat();
     }
     
-    private void OnPlayerReady()
+    private void InitializePlayerStat()
     {
-        // 플레이어가 준비된 후에 이벤트 구독
-        if (PlayerStat.Instance != null)
+        // 같은 게임오브젝트에서 PlayerStat 컴포넌트 찾기
+        playerStat = GetComponent<PlayerStat>();
+        if (playerStat != null)
         {
-            PlayerStat.Instance.OnDamaged += HandleDamaged;
-            PlayerStat.Instance.OnDied += HandleDied;
-            PlayerStat.Instance.OnInvincibleStarted += StartInvincibleVisualEffect;
-            PlayerStat.Instance.OnInvincibleEnded += StopInvincibleVisualEffect;
-            PlayerStat.Instance.OnPoisonedStarted += StartPoisonVisualEffect;
-            PlayerStat.Instance.OnPoisonedEnded += StopPoisonVisualEffect;
+            // 이벤트 구독
+            playerStat.OnDamaged += HandleDamaged;
+            playerStat.OnDied += HandleDied;
+            playerStat.OnInvincibleStarted += StartInvincibleVisualEffect;
+            playerStat.OnInvincibleEnded += StopInvincibleVisualEffect;
+            playerStat.OnPoisonedStarted += StartPoisonVisualEffect;
+            playerStat.OnPoisonedEnded += StopPoisonVisualEffect;
 
-            speed = PlayerStat.Instance.Speed;
-            jumpForce = PlayerStat.Instance.JumpForce;
+            // 스탯 값 설정
+            speed = playerStat.Speed;
+            jumpForce = playerStat.JumpForce;
+            
+            Debug.Log("[PlayerController] PlayerStat initialized successfully");
+        }
+        else
+        {
+            Debug.LogError("[PlayerController] PlayerStat component not found on the same GameObject!");
         }
     }
 
@@ -166,17 +178,14 @@ public class PlayerContoller : MonoBehaviour
 
     private void OnDestroy()
     {
-        // 플레이어 준비 이벤트 구독 해제
-        GameManager.OnPlayerReady -= OnPlayerReady;
-        
-        if (PlayerStat.Instance != null)
+        if (playerStat != null)
         {
-            PlayerStat.Instance.OnDamaged -= HandleDamaged;
-            PlayerStat.Instance.OnDied -= HandleDied;
-            PlayerStat.Instance.OnInvincibleStarted -= StartInvincibleVisualEffect;
-            PlayerStat.Instance.OnInvincibleEnded -= StopInvincibleVisualEffect;
-            PlayerStat.Instance.OnPoisonedStarted -= StartPoisonVisualEffect;
-            PlayerStat.Instance.OnPoisonedEnded -= StopPoisonVisualEffect;
+            playerStat.OnDamaged -= HandleDamaged;
+            playerStat.OnDied -= HandleDied;
+            playerStat.OnInvincibleStarted -= StartInvincibleVisualEffect;
+            playerStat.OnInvincibleEnded -= StopInvincibleVisualEffect;
+            playerStat.OnPoisonedStarted -= StartPoisonVisualEffect;
+            playerStat.OnPoisonedEnded -= StopPoisonVisualEffect;
         }
     }
 
@@ -242,8 +251,7 @@ public class PlayerContoller : MonoBehaviour
         
         Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
 
-        Debug.Log("PlayerPosition- inputDirection: " + inputDirection);
-        if (PlayerStat.Instance != null && PlayerStat.Instance.isPoisoned)
+        if (playerStat != null && playerStat.isPoisoned)
         {
             inputDirection = -inputDirection;
         }
@@ -375,7 +383,8 @@ public class PlayerContoller : MonoBehaviour
         {
             //현재 층이 팔 수 있는 힘보다 강하면 튕겨 나간다. (現在の層が掘れる力より強い場合は跳ね飛ばす)
             float hardness = LayerManager.Instance.GetCurrentHardness();
-            float digPower = PlayerStat.Instance.CurrentPower;
+
+            float digPower = playerStat.CurrentPower;
 
             if (digPower < hardness)
             {
@@ -403,7 +412,7 @@ public class PlayerContoller : MonoBehaviour
 
             current += count;
 
-            yield return new WaitForSeconds(PlayerStat.Instance.GetDigDelay());
+            yield return new WaitForSeconds(playerStat.GetDigDelay());
         }
     }
 
@@ -458,7 +467,7 @@ public class PlayerContoller : MonoBehaviour
         Color tint = Color.white;
 
         // poision + invincible
-        if (PlayerStat.Instance.isPoisoned)
+        if (playerStat != null && playerStat.isPoisoned)
         {
             tint = Color.green * 0.6f + Color.white * 0.4f;
         }
@@ -475,7 +484,7 @@ public class PlayerContoller : MonoBehaviour
         }
 
         // poision + invincible
-        if (PlayerStat.Instance.isPoisoned)
+        if (playerStat != null && playerStat.isPoisoned)
         {
             coFlicker = StartCoroutine(effector.IFlicker(sr, PlayerColor.Green, loop: true));
         }

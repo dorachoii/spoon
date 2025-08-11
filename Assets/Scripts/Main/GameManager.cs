@@ -8,10 +8,8 @@ public class GameManager : MonoBehaviour
     // 플레이어 생성 완료 이벤트
     public static event Action OnPlayerReady;
     
-    // 플레이어 준비 이벤트를 발생시키는 public 메서드
     public static void TriggerPlayerReady()
     {
-        Debug.Log("[GameManager] TriggerPlayerReady");
         OnPlayerReady?.Invoke();
     }
 
