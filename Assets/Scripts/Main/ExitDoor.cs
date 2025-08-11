@@ -6,7 +6,6 @@ public class ExitDoor : MonoBehaviour
     {
         if(collision.CompareTag("Player")){
             GameManager.Instance.BackToTitle();
-         
         }
     }
 }

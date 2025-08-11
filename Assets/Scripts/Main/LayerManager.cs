@@ -87,6 +87,7 @@ public class LayerManager : MonoBehaviour, ISaveable
     public event Action<int> OnBossLayerEntered; // 보스 층 진입
     public event Action OnLavaLayerEntered; // Lava Zone 진입
     public event Action OnLavaLayerExited;
+    public event Action OnAllLayersCompleted; // 모든 층 완료
    
 
 
@@ -206,6 +207,11 @@ public class LayerManager : MonoBehaviour, ISaveable
                 {
                     OnBossLayerEntered?.Invoke(newLayerData.bossIndex);
                 }
+            }
+            else
+            {
+                // 모든 층을 완료했을 때
+                OnAllLayersCompleted?.Invoke();
             }
         }
     }

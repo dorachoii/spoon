@@ -113,7 +113,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
             // 보스 층 완료 후 Normal 레이어로 변경될 때 타일 생성 재개
             if (isPaused)
             {
-                Debug.Log("[TileGenerator] 보스 층 완료 후 Normal 레이어 진입 - 타일 생성 재개");
                 ResumeTileGeneration();
             }
         }
@@ -469,11 +468,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
         List<TileData> tileList = new List<TileData>();
         
         // tilemap이 null이거나 파괴되었으면 빈 리스트 반환
-        if (tilemap == null)
-        {
-            Debug.LogWarning("[TileGenerator] tilemap is null - cannot get tile data");
-            return tileList;
-        }
+        if (tilemap == null) return tileList;
         
         BoundsInt bounds = tilemap.cellBounds;
 
@@ -492,7 +487,6 @@ public class TileGenerator : MonoBehaviour, ISaveable
                         tilebaseName = tile.name,
                        
                     });
-                     Debug.Log("WriteData- TileData: " + tile.name);
                 }
             }
         }
@@ -503,11 +497,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     public void LoadTilemapData(List<TileData> tileDataList)
     {
         // tilemap이 null이거나 파괴되었으면 처리하지 않음
-        if (tilemap == null)
-        {
-            Debug.LogWarning("[TileGenerator] tilemap is null - cannot load tilemap data");
-            return;
-        }
+        if (tilemap == null) return;
         
         tilemap.ClearAllTiles();
 
@@ -527,6 +517,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
             if (tileData.x > maxX) maxX = tileData.x;
             if (tileData.y > maxY) maxY = tileData.y;
         }
+        Debug.Log("[TileGenerator] LoadTilemapData minX: " + minX + " minY: " + minY + " maxX: " + maxX + " maxY: " + maxY);
 
         // 3. 타일 데이터 배열 준비 및 세팅
         int width = maxX - minX + 1;

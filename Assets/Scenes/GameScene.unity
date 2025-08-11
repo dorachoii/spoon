@@ -128896,6 +128896,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1746106680}
   - component: {fileID: 1746106681}
+  - component: {fileID: 1746106682}
   m_Layer: 0
   m_Name: ItemSpawner
   m_TagString: Untagged
@@ -128962,6 +128963,20 @@ MonoBehaviour:
   savePointPrefab: {fileID: 5248746426986545982, guid: 2675e1ca317af724e8dafb8f1c67ae2b, type: 3}
   breakableTilemap: {fileID: 8591400217125788132, guid: a2ebbc2881eea3f4a9393b38ba6b30e8, type: 3}
   grid: {fileID: 1463149005}
+--- !u!114 &1746106682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1746106679}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 041bc5850808f474ca31d226beb57470, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorPrefab: {fileID: 4879126814948434670, guid: c6a8cf35a2604a34d942fcb530cfebea, type: 3}
+  doorOffset: {x: 0, y: 2, z: 0}
 --- !u!1001 &1765107373
 PrefabInstance:
   m_ObjectHideFlags: 0
