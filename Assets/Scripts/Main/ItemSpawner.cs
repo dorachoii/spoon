@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -15,7 +16,7 @@ public class ItemSpawner : MonoBehaviour
     private Tilemap tilemap;
     private Transform player;
     private float lastDropY;
-    private bool isPlayerReady = false;
+    private bool isPlayerFound = false;
 
     public float dropInterval = 8f;
 
@@ -30,9 +31,6 @@ public class ItemSpawner : MonoBehaviour
     
     void Start()
     {
-        // 플레이어 준비 이벤트 구독
-        GameManager.OnPlayerReady += OnPlayerReady;
-        
         // Tilemap은 바로 설정 가능
         tilemap = TileGenerator.Instance.tilemap;
         
@@ -41,27 +39,30 @@ public class ItemSpawner : MonoBehaviour
         {
             LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLayerChanged;
         }
+        
+        // 플레이어를 찾을 때까지 코루틴으로 대기
+        StartCoroutine(FindPlayerCoroutine());
     }
     
-    private void OnPlayerReady()
+    private IEnumerator FindPlayerCoroutine()
     {
-        isPlayerReady = true;
-        
-        // 플레이어가 준비되면 참조 설정
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+        // 플레이어가 생성될 때까지 대기
+        while (player == null)
         {
-            player = playerObj.transform;
-            lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
-            Debug.Log("[ItemSpawner] Player ready - item spawning initialized");
+            if (GameObject.FindGameObjectWithTag("Player") != null)
+            {
+                player = GameObject.FindGameObjectWithTag("Player").transform;
+                lastDropY = Mathf.Floor(player.position.y / dropInterval) * dropInterval;
+                isPlayerFound = true;
+                break;
+            }
+            
+            yield return null;
         }
     }
 
     void OnDestroy()
     {
-        // 플레이어 준비 이벤트 구독 해제
-        GameManager.OnPlayerReady -= OnPlayerReady;
-        
         // LayerManager 이벤트 구독 해제
         if (LayerManager.Instance != null)
         {
@@ -72,7 +73,7 @@ public class ItemSpawner : MonoBehaviour
     void Update()
     {
         // 플레이어가 준비되지 않았으면 처리하지 않음
-        if (!isPlayerReady || player == null || tilemap == null) return;
+        if (!isPlayerFound || player == null || tilemap == null) return;
 
         float expectedDropY = lastDropY - dropInterval;
 

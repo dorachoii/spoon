@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -66,7 +67,7 @@ public class LayerManager : MonoBehaviour, ISaveable
     public LayerState CurrentPlayerLayerState { get; private set; } = LayerState.Normal; // 플레이어 위치 기준 레이어 상태
     
     // 플레이어 준비 상태
-    private bool isPlayerReady = false;
+    private bool isPlayerFound = false;
 
 
 
@@ -109,7 +110,9 @@ public class LayerManager : MonoBehaviour, ISaveable
     {
         tilemap = TileGenerator.Instance.tilemap;
         BossHP.OnAnyBossDeath += HandleBossDeath;
-        GameManager.OnPlayerReady += OnPlayerReady;
+        
+        // 플레이어를 찾을 때까지 코루틴으로 대기
+        StartCoroutine(FindPlayerCoroutine());
     }
 
 
@@ -146,10 +149,21 @@ public class LayerManager : MonoBehaviour, ISaveable
         UpdateCurrentLayerEndHeight();
     }
 
+    private IEnumerator FindPlayerCoroutine()
+    {
+        // PlayerStat을 찾을 때까지 대기
+        while (PlayerStat.Instance == null)
+        {
+            yield return null;
+        }
+        
+        isPlayerFound = true;
+        UpdatePlayerLayer(); // 플레이어가 준비되면 플레이어 레이어 업데이트
+    }
+    
     void OnDestroy()
     {
         BossHP.OnAnyBossDeath -= HandleBossDeath;
-        GameManager.OnPlayerReady -= OnPlayerReady;
     }
     #endregion
 
@@ -198,7 +212,7 @@ public class LayerManager : MonoBehaviour, ISaveable
     private void UpdatePlayerLayer()
     {
         // 플레이어가 준비되지 않았으면 처리하지 않음
-        if (!isPlayerReady || PlayerStat.Instance == null)
+        if (!isPlayerFound || PlayerStat.Instance == null)
         {
             return;
         }
@@ -226,7 +240,11 @@ public class LayerManager : MonoBehaviour, ISaveable
                 }
                 else
                 {
-                    OnLavaLayerExited?.Invoke();
+                    // 이전 레이어가 Lava Zone이었을 때만 Exit 이벤트 발생
+                    if (CurrentPlayerLayerState == LayerState.Normal && playerLayerData.layerIndex != 5)
+                    {
+                        OnLavaLayerExited?.Invoke();
+                    }
                 }
             }
         }
@@ -376,9 +394,5 @@ public class LayerManager : MonoBehaviour, ISaveable
     }
     #endregion
 
-    private void OnPlayerReady()
-    {
-        isPlayerReady = true;
-        UpdatePlayerLayer(); // 플레이어가 준비되면 플레이어 레이어 업데이트
-    }
+
 }

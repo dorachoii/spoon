@@ -120,7 +120,10 @@ public class PlayerStatUI : MonoBehaviour
 
     private void OnLavaLayerEntered()
     {
-        ToggleHeatSlider(true);
+        if (heatSlider != null)
+        {
+            ToggleHeatSlider(true);
+        }
     }
 
     private void OnLavaLayerExited()
