@@ -154,8 +154,11 @@ public class ItemSpawner : MonoBehaviour
         Camera cam = Camera.main;
         float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
 
-        Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f, 0f, z));
-        Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f, 1f, z));
+        float xPadding = 0.15f;
+
+        // 일반 아이템들과 동일하게 화면 아래에서 생성
+        Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
+        Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));
 
         Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
         Vector3Int max = tilemap.WorldToCell(topRightWorld);
@@ -167,7 +170,9 @@ public class ItemSpawner : MonoBehaviour
             {
                 Vector3Int tilePos = new Vector3Int(x, y, 0);
                 if (tilemap.HasTile(tilePos))
+                {
                     validTiles.Add(tilePos);
+                }
             }
         }
 
