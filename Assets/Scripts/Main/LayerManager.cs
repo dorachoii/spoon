@@ -60,6 +60,7 @@ public class LayerManager : MonoBehaviour, ISaveable
 
 
     // layer
+    int currentPlayerLayer = -1;
     public int CurrentTileLayer { get; private set; } = -1;
     public int CurrentPlayerLayer { get; private set; } = -1; // 플레이어 위치 기준 레이어
     public float CurrentLayerHardness { get; private set; } = 1f;
@@ -75,6 +76,8 @@ public class LayerManager : MonoBehaviour, ISaveable
     // 층 데이터 관리
     private List<LayerData> layerDataList = new List<LayerData>();
     private float currentLayerEndY = 0f; // 현재 층의 끝 높이 (캐시)
+    
+
 
 
     // 이벤트
@@ -219,7 +222,7 @@ public class LayerManager : MonoBehaviour, ISaveable
         
         Vector3 playerPos = PlayerStat.Instance.transform.position;
         float playerY = playerPos.y;
-
+        int prevLayer = CurrentPlayerLayer;
         int newPlayerLayer = CalculatePlayerLayer(playerY);
 
         if (newPlayerLayer != CurrentPlayerLayer)
@@ -231,7 +234,14 @@ public class LayerManager : MonoBehaviour, ISaveable
                 LayerData playerLayerData = layerDataList[CurrentPlayerLayer];
                 CurrentPlayerLayerState = playerLayerData.layerState;
 
-                OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
+                // 더 깊은 층으로 내려갈 때만 이벤트 발생 (레이어 인덱스가 증가할 때)
+                if (CurrentPlayerLayer > prevLayer)
+                {
+                    if(currentPlayerLayer == CurrentPlayerLayer) return;
+                    currentPlayerLayer = CurrentPlayerLayer;
+                    OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
+                    Debug.Log($"[LayerManager] Entering layer {CurrentPlayerLayer}");
+                }
 
                 // Lava Zone 진입 감지 (layerIndex 5가 Lava Zone)
                 if (playerLayerData.layerIndex == 5)
@@ -358,6 +368,9 @@ public class LayerManager : MonoBehaviour, ISaveable
         data.currentTileLayer = CurrentTileLayer;
         data.currentPlayerLayer = CurrentPlayerLayer;
         data.currentLayerEndY = currentLayerEndY;
+        data.mainCamStartY = mainCamStartY;  // 카메라 시작 Y 위치 저장
+        
+
         
         // 레이어 데이터 리스트 저장 (보스가 죽어서 변경된 높이 포함)
         data.layerDataList.Clear();
@@ -373,6 +386,9 @@ public class LayerManager : MonoBehaviour, ISaveable
         CurrentTileLayer = data.currentTileLayer;
         CurrentPlayerLayer = data.currentPlayerLayer;
         currentLayerEndY = data.currentLayerEndY;
+        mainCamStartY = data.mainCamStartY;  // 카메라 시작 Y 위치 복원
+        
+
         
         // 레이어 데이터 복원
         layerDataList.Clear();

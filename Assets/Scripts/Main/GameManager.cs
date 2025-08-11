@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System;
-
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }

@@ -45,7 +45,9 @@ public class GameData
     public int currentTileLayer;
     public int currentPlayerLayer;
     public float currentLayerEndY;
+    public float mainCamStartY;  // 카메라 시작 Y 위치 저장
     public List<LayerData> layerDataList = new List<LayerData>();
+
 }
 
 

@@ -19,8 +19,7 @@ public class PlayerSpawner : MonoBehaviour
     {
         PersistenceManager.OnDataLoaded -= SpawnBasedOnData;
     }
-    
- 
+
     private void SpawnBasedOnData()
     {
         if (hasSpawnedPlayer) return;
@@ -39,6 +38,7 @@ public class PlayerSpawner : MonoBehaviour
             return PersistenceManager.Instance.CurrentGameData.playerPosition;
         }
         
+        Debug.Log("defaultSpawnPosition: " + defaultSpawnPosition);
         return defaultSpawnPosition;
     }
     
@@ -46,6 +46,14 @@ public class PlayerSpawner : MonoBehaviour
     {
         if (playerPrefab == null) return;
         
-        Instantiate(playerPrefab, position, Quaternion.identity);
+        // 비활성화 상태로 생성
+        GameObject player = Instantiate(playerPrefab, position, Quaternion.identity);
+        player.SetActive(false);
+        
+        // 위치 확실히 설정
+        player.transform.position = position;
+        
+        // 위치 설정 후 활성화
+        player.SetActive(true);
     } 
 }
