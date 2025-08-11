@@ -87,13 +87,7 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
     private void Start()
     {
-        // 플레이어 준비 이벤트 구독
-        GameManager.OnPlayerReady += OnPlayerReady;
-    }
-    
-    private void OnPlayerReady()
-    {
-        // 플레이어가 준비된 후에 LayerManager 이벤트 구독
+        // LayerManager 이벤트 구독
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLavaLayerEntered += HandleLavaLayerEntered;
@@ -112,9 +106,6 @@ public class PlayerStat : MonoBehaviour, ISaveable
 
     private void OnDestroy()
     {
-        // 플레이어 준비 이벤트 구독 해제
-        GameManager.OnPlayerReady -= OnPlayerReady;
-        
         // 이벤트 구독 해제
         if (LayerManager.Instance != null)
         {
