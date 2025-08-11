@@ -81,6 +81,9 @@ public class PlayerContoller : MonoBehaviour
 
     private void Start()
     {
+        // null 체크 후 동적으로 찾기
+        FindMissingReferences();
+        
         PlayerStat.Instance.OnDamaged += HandleDamaged;
         PlayerStat.Instance.OnDied += HandleDied;
         PlayerStat.Instance.OnInvincibleStarted += StartInvincibleVisualEffect;
@@ -90,6 +93,65 @@ public class PlayerContoller : MonoBehaviour
 
         speed = PlayerStat.Instance.Speed;
         jumpForce = PlayerStat.Instance.JumpForce;
+    }
+    
+    private void FindMissingReferences()
+    {
+        // FloatingJoystick 찾기
+        if (floatingJoystick == null)
+        {
+            floatingJoystick = FindObjectOfType<FloatingJoystick>();
+            if (floatingJoystick == null)
+            {
+                Debug.LogError("[PlayerController] FloatingJoystick not found in scene!");
+            }
+            else
+            {
+                Debug.Log("[PlayerController] FloatingJoystick found dynamically");
+            }
+        }
+        
+        // Tilemap 찾기
+        if (tilemap == null)
+        {
+            if (TileGenerator.Instance != null)
+            {
+                tilemap = TileGenerator.Instance.tilemap;
+                Debug.Log("[PlayerController] Tilemap found from TileGenerator");
+            }
+            else
+            {
+                tilemap = FindObjectOfType<Tilemap>();
+                if (tilemap == null)
+                {
+                    Debug.LogError("[PlayerController] Tilemap not found in scene!");
+                }
+                else
+                {
+                    Debug.Log("[PlayerController] Tilemap found dynamically");
+                }
+            }
+        }
+        
+        // FloatingText 찾기
+        if (floatingText == null)
+        {
+            // 자식 오브젝트에서 찾기
+            floatingText = transform.Find("FloatingText")?.gameObject;
+            if (floatingText == null)
+            {
+                // 씬에서 찾기
+                floatingText = GameObject.Find("FloatingText");
+                if (floatingText == null)
+                {
+                    Debug.LogWarning("[PlayerController] FloatingText not found - status text will not work");
+                }
+                else
+                {
+                    Debug.Log("[PlayerController] FloatingText found dynamically");
+                }
+            }
+        }
     }
 
     private void OnDestroy()
@@ -159,6 +221,12 @@ public class PlayerContoller : MonoBehaviour
 
      public void FixedUpdate()
     {
+        // floatingJoystick이 null이면 입력 처리하지 않음
+        if (floatingJoystick == null)
+        {
+            return;
+        }
+        
         Vector2 inputDirection = new Vector2(floatingJoystick.Horizontal, floatingJoystick.Vertical);
 
         Debug.Log("PlayerPosition- inputDirection: " + inputDirection);
@@ -350,6 +418,12 @@ public class PlayerContoller : MonoBehaviour
     #region Player Visual Effect
     public void ShowStatusText(string text, Color color)
     {
+        if (floatingText == null)
+        {
+            Debug.LogWarning("[PlayerController] Cannot show status text - floatingText is null");
+            return;
+        }
+        
         floatingText.SetActive(true);
         floatingText.GetComponent<StatusTextAnimator>().Initialize(text, color);
     }

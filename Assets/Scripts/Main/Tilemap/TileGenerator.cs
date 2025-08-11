@@ -455,6 +455,14 @@ public class TileGenerator : MonoBehaviour, ISaveable
     public List<TileData> GetTileDataList()
     {
         List<TileData> tileList = new List<TileData>();
+        
+        // tilemap이 null이거나 파괴되었으면 빈 리스트 반환
+        if (tilemap == null)
+        {
+            Debug.LogWarning("[TileGenerator] tilemap is null - cannot get tile data");
+            return tileList;
+        }
+        
         BoundsInt bounds = tilemap.cellBounds;
 
         for (int y = bounds.yMin; y < bounds.yMax; y++)
@@ -482,6 +490,13 @@ public class TileGenerator : MonoBehaviour, ISaveable
     // 불러오기용: 타일맵에 타일 데이터 리스트로 복원
     public void LoadTilemapData(List<TileData> tileDataList)
     {
+        // tilemap이 null이거나 파괴되었으면 처리하지 않음
+        if (tilemap == null)
+        {
+            Debug.LogWarning("[TileGenerator] tilemap is null - cannot load tilemap data");
+            return;
+        }
+        
         tilemap.ClearAllTiles();
 
         if (tileDataList == null || tileDataList.Count == 0) return;

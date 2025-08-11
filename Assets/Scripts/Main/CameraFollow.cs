@@ -6,7 +6,7 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private float smoothSpeed = 0.125f;
 
 
-    void Awake()
+    void Start()
     {
         if(player == null) player = GameObject.FindGameObjectWithTag("Player").transform;
     }

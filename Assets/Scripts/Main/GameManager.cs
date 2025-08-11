@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
 
     public void StartNewGame()
     {
+        
         PersistenceManager.Instance?.ClearSave();
         SceneManager.LoadScene(SceneNames.GAME_SCENE_NAME);
         Time.timeScale = 1;
@@ -62,6 +63,8 @@ public class GameManager : MonoBehaviour
             PersistenceManager.Instance?.LoadGame();
         }
     }
+    
+
 
 
     public void BackToTitle()
