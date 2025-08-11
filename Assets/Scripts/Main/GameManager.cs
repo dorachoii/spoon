@@ -5,13 +5,7 @@ using System;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    // 플레이어 생성 완료 이벤트
-    public static event Action OnPlayerReady;
-    
-    public static void TriggerPlayerReady()
-    {
-        OnPlayerReady?.Invoke();
-    }
+
 
     private void Awake()
     {
