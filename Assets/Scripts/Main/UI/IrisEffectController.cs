@@ -4,7 +4,7 @@ using System.Collections;
 public class IrisEffector : MonoBehaviour
 {
     private Transform playerTransform;
-    private bool isPlayerReady = false;
+    private bool isPlayerFound = false;
 
     [Header("Iris Effect Settings")]
     public RectTransform circle;
@@ -14,44 +14,28 @@ public class IrisEffector : MonoBehaviour
 
     void Start()
     {
-        // 플레이어 준비 이벤트 구독
-        GameManager.OnPlayerReady += OnPlayerReady;
+        StartCoroutine(FindPlayerCoroutine());
     }
     
-    void OnDestroy()
+    private IEnumerator FindPlayerCoroutine()
     {
-        GameManager.OnPlayerReady -= OnPlayerReady;
-    }
-    
-    private void OnPlayerReady()
-    {
-        isPlayerReady = true;
-        // 플레이어가 준비되면 찾기
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+        // 플레이어가 생성될 때까지 대기
+        while (playerTransform == null)
         {
-            playerTransform = playerObj.transform;
+            if (GameObject.FindGameObjectWithTag("Player")!= null)
+            {
+                playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+                isPlayerFound = true;
+                break;
+            }
+            
+            yield return null;
         }
     }
 
-    //TODO:FindGameObjectWithTag 대신 캐싱 필요
     void Update()
     {
-        // 플레이어가 준비되지 않았으면 처리하지 않음
-        if (!isPlayerReady)
-        {
-            return;
-        }
-        
-        // 플레이어가 null이거나 파괴되었으면 다시 찾기
-        if (playerTransform == null)
-        {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                playerTransform = playerObj.transform;
-            }
-        }
+        if (!isPlayerFound) return;
     }
 
     public void IrisIn()

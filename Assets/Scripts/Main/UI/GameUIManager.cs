@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
+    private PlayerStat playerStat;
+
     [Header("Game UI - GameOver")]
     [SerializeField] private GameObject gameover_restartButton;
     [SerializeField] private GameObject gameover_resumeButton;
@@ -51,7 +53,7 @@ public class GameUIManager : MonoBehaviour
             gameover_restartButtonComp = gameover_restartButton.GetComponent<Button>();
         if (gameover_resumeButton != null)
             gameover_resumeButtonComp = gameover_resumeButton.GetComponent<Button>();
-        
+
         if (pause_resumeButton != null)
             pause_resumeButtonComp = pause_resumeButton.GetComponent<Button>();
         if (pause_newGameButton != null)
@@ -62,9 +64,6 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
-        // 플레이어 준비 이벤트 구독
-        GameManager.OnPlayerReady += OnPlayerReady;
-        
         // 정적 보스 죽음 이벤트 구독
         BossHP.OnAnyBossDeath += HandleBossDeath;
 
@@ -75,7 +74,7 @@ public class GameUIManager : MonoBehaviour
             gameover_restartButtonComp.onClick.AddListener(() =>
             {
                 // new game
-                GameManager.Instance.StartNewGame(); 
+                GameManager.Instance.StartNewGame();
             });
         }
 
@@ -132,39 +131,48 @@ public class GameUIManager : MonoBehaviour
                 });
             }
         }
+
+        // 플레이어를 찾을 때까지 코루틴으로 대기
+        StartCoroutine(FindPlayerCoroutine());
     }
-    
-    private void OnPlayerReady()
+
+    private IEnumerator FindPlayerCoroutine()
     {
-        // 플레이어가 준비된 후에 이벤트 구독
-        if (PlayerStat.Instance != null)
+        // PlayerStat을 찾을 때까지 대기
+        while (playerStat == null)
         {
-            PlayerStat.Instance.OnDied += HandlePlayerDeath;
+            if (GameObject.FindGameObjectWithTag("Player") != null)
+            {
+                playerStat = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStat>();
+
+                playerStat.OnDied += HandlePlayerDeath;
+                break;
+            }
+
+            yield return null;
         }
-        
+
+        // LayerManager 이벤트 구독
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForPlayer += HandleLayerChanged;
         }
     }
-    
+
     void OnDestroy()
     {
-        // 플레이어 준비 이벤트 구독 해제
-        GameManager.OnPlayerReady -= OnPlayerReady;
-        
         // PlayerStat.Instance가 null인지 체크
         if (PlayerStat.Instance != null)
         {
             PlayerStat.Instance.OnDied -= HandlePlayerDeath;
         }
-        
+
         // LayerManager.Instance가 null인지 체크
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForPlayer -= HandleLayerChanged;
         }
-        
+
         // 정적 보스 죽음 이벤트 구독 해제
         BossHP.OnAnyBossDeath -= HandleBossDeath;
     }
@@ -223,7 +231,7 @@ public class GameUIManager : MonoBehaviour
                 fireworksEffects[i].SetActive(true);
             }
         }
-        
+
         // 3초 후 자동으로 끄기
         StartCoroutine(IOffFireworksFX());
     }
@@ -231,7 +239,7 @@ public class GameUIManager : MonoBehaviour
     private IEnumerator IOffFireworksFX()
     {
         yield return new WaitForSeconds(showDuration - fadeTime * 2f);
-        
+
         for (int i = 0; i < fireworksEffects.Length; i++)
         {
             if (fireworksEffects[i] != null)
@@ -241,11 +249,11 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-  
+
     // 보스 클리어 텍스트 표시
     private void ShowBossClearedText()
     {
-        ShowCenterText("BOSS CLEARED!", new Color(1f, 0.8f, 0f),  showDuration - fadeTime * 2f); 
+        ShowCenterText("BOSS CLEARED!", new Color(1f, 0.8f, 0f), showDuration - fadeTime * 2f);
     }
 
     private void ShowLayerText(Color textColor = default)
@@ -255,12 +263,12 @@ public class GameUIManager : MonoBehaviour
             Debug.LogWarning("[GameUIManager] LayerManager.Instance is null - cannot show layer text");
             return;
         }
-        
+
         string title = LayerManager.Instance.GetCurrentLayerName();
-        
+
         // 디버깅을 위한 로그 추가
         Debug.Log($"[GameUIManager] 현재 레이어: {LayerManager.Instance.CurrentPlayerLayer}, 이름: {title}");
-        
+
         // 현재 일반 층이면 검정, 보스 층이면 보라 이렇게 표시
         if (textColor == default)
         {
@@ -273,7 +281,7 @@ public class GameUIManager : MonoBehaviour
                 textColor = Color.black; // 검정색
             }
         }
-        
+
         ShowCenterText(title, textColor, showDuration - fadeTime * 2f);
     }
 
@@ -282,7 +290,7 @@ public class GameUIManager : MonoBehaviour
     {
         titleText.text = text;
         titleText.color = color;
-        
+
         if (centerTextCoroutine != null) StopCoroutine(centerTextCoroutine);
         centerTextCoroutine = StartCoroutine(IShowCenterText(displayDuration));
     }
