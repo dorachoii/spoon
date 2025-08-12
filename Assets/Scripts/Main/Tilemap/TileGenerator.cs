@@ -180,9 +180,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
     // 플레이어 위치 가져오기
     private Vector3 GetPlayerPosition()
     {
-        if (PersistenceManager.Instance?.CurrentGameData != null)
+        if (PersistenceManager.Instance.HasSavedData())
         {
             return PersistenceManager.Instance.CurrentGameData.playerPosition;
+
         }
 
         return new Vector3(0, 8, 0);

@@ -63,7 +63,6 @@ public class PlayerContoller : MonoBehaviour
     #region Initialize
     void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
         effector = GetComponent<SpriteColorEffector>();
@@ -84,6 +83,8 @@ public class PlayerContoller : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log($"플레이어 위치 - PlayerController: {transform.position}");
+        spawnTime = Time.time; // 생성 시간 기록
         // null 체크 후 동적으로 찾기
         FindMissingReferences();
         
@@ -95,6 +96,7 @@ public class PlayerContoller : MonoBehaviour
     {
         // 같은 게임오브젝트에서 PlayerStat 컴포넌트 찾기
         playerStat = GetComponent<PlayerStat>();
+        rb = GetComponent<Rigidbody2D>();
         if (playerStat != null)
         {
             // 이벤트 구독
@@ -191,9 +193,22 @@ public class PlayerContoller : MonoBehaviour
 
     #endregion
 
+    private bool isScreenClampingEnabled = false; // 화면 경계 제한 활성화 여부
+    private float screenClampingDelay = 1f; // 화면 경계 제한 활성화 지연 시간
+    private float spawnTime; // 플레이어 생성 시간
+
     private void LateUpdate()
     {
-        ClampPlayerPosToScreenBounds();
+        // 플레이어 생성 후 일정 시간이 지나면 화면 경계 제한 활성화
+        if (Time.time - spawnTime > screenClampingDelay)
+        {
+            isScreenClampingEnabled = true;
+        }
+        
+        if (isScreenClampingEnabled)
+        {
+            ClampPlayerPosToScreenBounds();
+        }
     }
 
 

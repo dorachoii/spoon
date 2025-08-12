@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class PlayerStat : MonoBehaviour, ISaveable
+public class PlayerStat : MonoBehaviour
 {
     public static PlayerStat Instance { get; private set; }
 
@@ -284,21 +284,6 @@ public class PlayerStat : MonoBehaviour, ISaveable
     }
     #endregion
 
-
-    #region Save & Load
-    public void WriteData(GameData data)
-    {
-        Debug.Log("WriteData- PlayerPosition: " + gameObject.transform.position);
-        data.playerPosition = gameObject.transform.position;
-    }
-    public void ReadAndSetData(GameData data)
-    {
-        Debug.Log("[PlayerStat] ReadAndSetData() 호출됨 - GameObject 활성화: " + gameObject.activeInHierarchy + ", 컴포넌트 활성화: " + enabled);
-        Debug.Log("[PlayerStat] ReadData- PlayerPosition: " + gameObject.transform.position + " -> " + data.playerPosition);
-        gameObject.transform.position = data.playerPosition;
-        Debug.Log("[PlayerStat] ReadAndSetData() 완료");
-    }
-    #endregion
 }
 
 

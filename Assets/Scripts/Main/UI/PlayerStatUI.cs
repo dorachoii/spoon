@@ -113,7 +113,7 @@ public class PlayerStatUI : MonoBehaviour
 
     public void ToggleHeatSlider(bool isOn)
     {
-
+        if(heatSlider.gameObject != null)
         heatSlider.gameObject.SetActive(isOn);
 
     }
