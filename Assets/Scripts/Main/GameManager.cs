@@ -6,9 +6,11 @@ public class GameManager : MonoBehaviour
     
     // 게임 상태 관리
     private bool isGameCleared = false;
+    private bool hasPlayedIntro = false;
     
     // 게임 클리어 이벤트
     public System.Action OnGameCleared;
+    public System.Action OnIntroCompleted;
 
 
     private void Awake()
@@ -93,5 +95,29 @@ public class GameManager : MonoBehaviour
     public void ResetGameCleared()
     {
         isGameCleared = false;
+    }
+    
+    // Intro 완료 처리
+    public void SetIntroCompleted()
+    {
+        if (!hasPlayedIntro)
+        {
+            hasPlayedIntro = true;
+            Debug.Log("[GameManager] Intro 완료!");
+            OnIntroCompleted?.Invoke();
+        }
+    }
+    
+    // Intro 재생 상태 확인
+    public bool HasPlayedIntro()
+    {
+        return hasPlayedIntro;
+    }
+    
+    // 게임 상태 리셋 (새 게임 시작 시)
+    public void ResetGameState()
+    {
+        isGameCleared = false;
+        hasPlayedIntro = false;
     }
 }

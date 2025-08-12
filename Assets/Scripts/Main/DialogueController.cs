@@ -35,8 +35,7 @@ public class DialogueController : MonoBehaviour
 
     private int currentIndex = 0;
 
-    // 대화 상태 관리
-    private bool hasPlayedIntro = false;
+    // 대화 상태는 GameManager에서 관리
 
     private Color femaleColor = Color.yellow;
     private Color defaultColor = Color.white;
@@ -47,6 +46,7 @@ public class DialogueController : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnGameCleared += OnGameCleared;
+            GameManager.Instance.OnIntroCompleted += OnIntroCompleted;
         }
 
         // 여기서 대화 배열 초기화 (예: 아까 준 대화)
@@ -91,7 +91,7 @@ public class DialogueController : MonoBehaviour
         }
 
         // Intro가 아직 재생되지 않았으면 intro 재생
-        if (!hasPlayedIntro)
+        if (GameManager.Instance != null && !GameManager.Instance.HasPlayedIntro())
         {
             SetDialogue(dialogues_intro);
             canvas_dialogue.SetActive(true);
@@ -146,11 +146,14 @@ public class DialogueController : MonoBehaviour
             currentIndex = 0;
             canvas_dialogue.SetActive(false);
 
-            // Intro 대화가 완료되면 플래그 설정
+            // Intro 대화가 완료되면 GameManager에 알림
             if (dialogues == dialogues_intro)
             {
-                hasPlayedIntro = true;
-                Debug.Log("[DialogueController] Intro 대화 완료 - 다음부터는 재생하지 않음");
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.SetIntroCompleted();
+                }
+                Debug.Log("[DialogueController] Intro 대화 완료 - GameManager에 알림");
             }
 
             return;
@@ -159,18 +162,19 @@ public class DialogueController : MonoBehaviour
         ShowDialogue(currentIndex);
     }
 
-    // Intro 재생 상태 확인
-    public bool HasPlayedIntro()
+        // GameManager의 Intro 완료 이벤트 핸들러
+    private void OnIntroCompleted()
     {
-        return hasPlayedIntro;
+        Debug.Log("[DialogueController] Intro 완료 이벤트 수신");
     }
-
+    
     private void OnDestroy()
     {
         // GameManager 이벤트 구독 해제
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnGameCleared -= OnGameCleared;
+            GameManager.Instance.OnIntroCompleted -= OnIntroCompleted;
         }
     }
 }

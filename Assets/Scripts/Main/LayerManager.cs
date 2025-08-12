@@ -36,7 +36,7 @@ public class LayerData
     {
         return layerIndex switch
         {
-            0 => "ジライ\nZONE",
+            0 => "ジライ\nZONE！",
             1 => "ガイコツの\nこうげき", 
             2 => "ミミズボス\nI", 
             3 => "",
@@ -273,10 +273,9 @@ public class LayerManager : MonoBehaviour
                 // 더 깊은 층으로 내려갈 때만 이벤트 발생 (레이어 인덱스가 증가할 때)
                 if (CurrentPlayerLayer > prevLayer)
                 {
-                    if(currentPlayerLayer == CurrentPlayerLayer) return;
                     currentPlayerLayer = CurrentPlayerLayer;
                     OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
-
+                    Debug.Log($"[LayerManager] 플레이어 레이어 변경: {prevLayer} -> {CurrentPlayerLayer}");
                 }
 
                 // Lava Zone 진입 감지 (layerIndex 5가 Lava Zone)
@@ -415,10 +414,12 @@ public class LayerManager : MonoBehaviour
         // 현재 레이어 끝 높이 계산
         UpdateCurrentLayerEndHeight();
         
-    
+        // 새 게임이고 첫 번째 레이어(0)에 있다면 초기 안내멘트 발생
+        if (!PersistenceManager.Instance.HasSavedData() && CurrentPlayerLayer == 0)
+        {
+            OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
+        }
     }
 
     #endregion
-
-
 }
