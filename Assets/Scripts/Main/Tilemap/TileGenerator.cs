@@ -33,7 +33,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     private TileBase[,] tile_dotted = new TileBase[DOTTED_TILE_SIZE, DOTTED_TILE_SIZE];
     private TileBase[,] tile_gradient = new TileBase[GRADIENT_TILE_SIZE, GRADIENT_TILE_SIZE];
     //Gradient
-   
+
     private int lastGradientLevel = -1;
 
     //Dotted
@@ -46,6 +46,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     [Header("Tile Generation Control")]
     private bool isPaused = false;
     private bool isNormalLayerChanged = false;
+    private bool isInitialized = false; // 초기화 완료 여부
 
 
     [Header("Boss Tilemap")]
@@ -69,20 +70,16 @@ public class TileGenerator : MonoBehaviour, ISaveable
         Instance = this;
 
         mainCamera = Camera.main;
-
-        if (tilemap == null) tilemap = GetComponentInChildren<Tilemap>();
-
-        // tilemap
-        lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
-        tilemapWidth = lastTopRightCell.x - lastBottomLeftCell.x + 1;
-
-        // stamping
-        lastStampingY = lastBottomLeftCell.y;
+        tilemap = GetComponentInChildren<Tilemap>();
+        tilemap.ClearAllTiles();
     }
 
     void OnEnable()
     {
+        // PersistenceManager 이벤트 구독
+        PersistenceManager.OnDataLoaded += InitializeTilemapBasedOnData;
+
+        // LayerManager 이벤트 구독
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLevelChanged;
@@ -93,6 +90,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     void OnDisable()
     {
+        // PersistenceManager 이벤트 구독 해제
+        PersistenceManager.OnDataLoaded -= InitializeTilemapBasedOnData;
+
+        // LayerManager 이벤트 구독 해제
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLevelChanged;
@@ -101,15 +102,101 @@ public class TileGenerator : MonoBehaviour, ISaveable
         }
     }
 
+    // OnDataLoaded 이벤트 핸들러 - 초기 타일맵 설정
+    private void InitializeTilemapBasedOnData()
+    {
+        if (isInitialized) return;
+
+        // 기본 초기화
+        InitializeTilemapBoundaries();
+
+        // 저장된 데이터가 있으면 로드, 없으면 기본 타일맵 생성
+        if (PersistenceManager.Instance?.CurrentGameData != null)
+        {
+            LoadTilemapData(PersistenceManager.Instance.CurrentGameData.tilemapData);
+        }
+        else
+        {
+            // 새 게임이면 현재 뷰포트에 기본 타일맵 생성
+            GenerateInitialTilemap();
+        }
+
+        isInitialized = true;
+    }
+
+    // 타일맵 경계 초기화 (플레이어 위치 기준)
+    private void InitializeTilemapBoundaries()
+    {
+        // 플레이어 위치를 기준으로 경계 설정
+        Vector3 playerPosition = GetPlayerPosition();
+        Vector3Int playerCell = tilemap.WorldToCell(playerPosition);
+
+        // 뷰포트의 높이 계산
+        Vector3 viewportTop = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, 1f, mainCamera.nearClipPlane));
+        Vector3 viewportBottom = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCamera.nearClipPlane));
+        float viewportHeight = viewportTop.y - viewportBottom.y;
+        float halfViewportHeight = viewportHeight * 0.5f;
+
+        // 플레이어 위치를 중심으로 뷰포트 높이의 절반씩 위아래로 설정
+        Vector3Int topCell = tilemap.WorldToCell(new Vector3(playerPosition.x, playerPosition.y + halfViewportHeight, 0));
+        Vector3Int bottomCell = tilemap.WorldToCell(new Vector3(playerPosition.x, playerPosition.y - halfViewportHeight, 0));
+
+        // 현재 뷰포트의 가로 범위 계산
+        Vector3Int currentBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        Vector3Int currentTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+
+        lastBottomLeftCell = new Vector3Int(currentBottomLeftCell.x, bottomCell.y, 0);
+        lastTopRightCell = new Vector3Int(currentTopRightCell.x, topCell.y, 0);
+        tilemapWidth = currentTopRightCell.x - currentBottomLeftCell.x + 1;
+        lastStampingY = bottomCell.y;
+    }
+
+    // 초기 타일맵 생성 (플레이어 위치 기준으로 아래쪽 뷰포트 채우기)
+    private void GenerateInitialTilemap()
+    {
+        // 플레이어 위치 찾기
+        Vector3 playerPosition = GetPlayerPosition();
+        Vector3Int playerCell = tilemap.WorldToCell(playerPosition);
+
+        // 플레이어 위치에서 10칸 아래까지의 영역 계산
+        int playerY = playerCell.y;
+        int bottomY = playerY - 10 - tileOffset; // 플레이어 위치에서 10칸 아래
+        int topY = playerY - 10;    // 플레이어 위치에서 5칸 위 (뷰포트 상단)
+   
+        // 타일맵 경계 업데이트 (플레이어 기준으로 설정)
+        Vector3Int currentBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        Vector3Int currentTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+
+        lastBottomLeftCell = new Vector3Int(currentBottomLeftCell.x, bottomY, 0);
+        lastTopRightCell = new Vector3Int(currentTopRightCell.x, topY, 0);
+
+        // 스탬핑 관련 변수 초기화
+        lastStampingY = bottomY;
+
+        int currentLayerTileIndex = LayerManager.Instance?.GetCurrentLayerTileIndex() ?? 0;
+        FillBottomRows(bottomY, topY, currentLayerTileIndex);
+    }
+
+    // 플레이어 위치 가져오기
+    private Vector3 GetPlayerPosition()
+    {
+        if (PersistenceManager.Instance?.CurrentGameData != null)
+        {
+            return PersistenceManager.Instance.CurrentGameData.playerPosition;
+        }
+
+        return new Vector3(0, 8, 0);
+    }
+
     void HandleLevelChanged(int newLevel)
     {
         currentTileLayer = LayerManager.Instance.GetCurrentLayerTileIndex();
-  
+
 
         if (LayerManager.Instance != null && LayerManager.Instance.CurrentLayerState == LayerState.Normal)
         {
             isNormalLayerChanged = true;
-            
+
             // 보스 층 완료 후 Normal 레이어로 변경될 때 타일 생성 재개
             if (isPaused)
             {
@@ -121,7 +208,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     #region Basic Tilemap
     void Update()
     {
-        if (isPaused) return;
+        if (isPaused || !isInitialized) return;
 
         Vector3Int currentBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
         Vector3Int currentTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
@@ -166,7 +253,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
         // LayerManager에서 현재 레이어의 tileIndex를 가져옴
         int currentTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
-        
+
         for (int i = 0; i < existingTiles.Length; i++)
         {
             newTiles[i] = existingTiles[i] ?? tile_plain[currentTileIndex];
@@ -289,7 +376,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
         // 해당 범위에 이미 타일이 있는지 체크
         BoundsInt dotBounds = new BoundsInt(origin.x, origin.y, 0, 9, 9, 1);
         TileBase[] existingTiles = tilemap.GetTilesBlock(dotBounds);
-        
+
         // 기존 타일이 있는 위치에만 dotted 패턴을 찍기
         TileBase[] selectedTiles = new TileBase[9 * 9];
 
@@ -343,20 +430,22 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
     public void ResumeTileGeneration()
     {
+        // 타일맵 초기화
         tilemap.ClearAllTiles();
         tilemap.CompressBounds();
-        lastBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
-        lastTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
-        
-        // 스탬핑 관련 변수들 초기화
-        lastStampingY = lastBottomLeftCell.y;
-        
+
+        // 경계 및 스탬핑 변수 초기화
+        InitializeTilemapBoundaries();
+
+        // 현재 뷰포트에 기본 타일맵 생성
+        GenerateInitialTilemap();
+
         // PlayerController의 removedTiles 캐시 초기화를 코루틴으로 처리
         StartCoroutine(ClearPlayerDiggedTilesCoroutine());
 
         isPaused = false;
     }
-    
+
     // TODO: 옮겨야 할 거 같음
     private IEnumerator ClearPlayerDiggedTilesCoroutine()
     {
@@ -369,7 +458,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
                 playerController.ClearDiggedTiles();
                 break;
             }
-            
+
             yield return null;
         }
     }
@@ -387,7 +476,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
         SpawnBossTilemap(bossIndex);
     }
 
- 
+
 
     #endregion
 
@@ -396,7 +485,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     public void SpawnBossTilemap(int bossIndex)
     {
         if (isSpawningBoss) return; // 이미 생성 중이면 중복 실행 방지
-        
+
         StartCoroutine(SpawnBossTilemapCoroutine(bossIndex));
     }
 
@@ -410,12 +499,12 @@ public class TileGenerator : MonoBehaviour, ISaveable
         {
             currentCrumbleTilemap = Instantiate(crumbleTilemapPrefabs[bossIndex]);
             currentCrumbleTilemap.transform.SetParent(transform);
-            
+
             Vector3 bottomCenterWorldPos = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, -0.2f, mainCamera.nearClipPlane));
             currentCrumbleTilemap.transform.position = new Vector3(bottomCenterWorldPos.x, bottomCenterWorldPos.y, 0f);
-            
+
             yield return null;
-            
+
             currentBossGroundTilemap = Instantiate(bossGroundTilemapPrefabs[bossIndex]);
             currentBossGroundTilemap.transform.SetParent(transform);
 
@@ -428,7 +517,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
             SpawnBoss(bossIndex, bossSpawnPosition);
         }
-        
+
         isSpawningBoss = false;
     }
 
@@ -438,7 +527,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
         if (bossIndex >= 0 && bossIndex < bossPrefabs.Length && bossPrefabs[bossIndex] != null)
         {
             currentBoss = Instantiate(bossPrefabs[bossIndex], position, Quaternion.identity);
-            
+
             if (currentBoss != null)
             {
                 currentBoss.SetActive(true);
@@ -457,7 +546,8 @@ public class TileGenerator : MonoBehaviour, ISaveable
     }
     public void ReadAndSetData(GameData data)
     {
-        LoadTilemapData(data.tilemapData);
+        // OnDataLoaded 이벤트에서 처리하므로 여기서는 아무것도 하지 않음
+        // 타일맵 데이터는 InitializeTilemapBasedOnData에서 처리됨
     }
 
 
@@ -466,10 +556,10 @@ public class TileGenerator : MonoBehaviour, ISaveable
     public List<TileData> GetTileDataList()
     {
         List<TileData> tileList = new List<TileData>();
-        
+
         // tilemap이 null이거나 파괴되었으면 빈 리스트 반환
         if (tilemap == null) return tileList;
-        
+
         BoundsInt bounds = tilemap.cellBounds;
 
         for (int y = bounds.yMin; y < bounds.yMax; y++)
@@ -485,7 +575,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
                         x = x,
                         y = y,
                         tilebaseName = tile.name,
-                       
+
                     });
                 }
             }
@@ -498,7 +588,7 @@ public class TileGenerator : MonoBehaviour, ISaveable
     {
         // tilemap이 null이거나 파괴되었으면 처리하지 않음
         if (tilemap == null) return;
-        
+
         tilemap.ClearAllTiles();
 
         if (tileDataList == null || tileDataList.Count == 0) return;
@@ -543,6 +633,23 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
         BoundsInt bounds = new BoundsInt(minX, minY, 0, width, height, 1);
         tilemap.SetTilesBlock(bounds, tiles);
+
+        // 타일맵 로드 후 경계 업데이트
+        UpdateTilemapBoundariesAfterLoad(minX, minY, maxX, maxY);
+    }
+
+    // 타일맵 로드 후 경계 업데이트
+    private void UpdateTilemapBoundariesAfterLoad(int minX, int minY, int maxX, int maxY)
+    {
+        // 로드된 타일맵의 경계를 기준으로 설정
+        lastBottomLeftCell = new Vector3Int(minX, minY, 0);
+        lastTopRightCell = new Vector3Int(maxX, maxY, 0);
+        tilemapWidth = maxX - minX + 1;
+
+        // 스탬핑 관련 변수 초기화
+        lastStampingY = minY;
+
+        Debug.Log($"[TileGenerator] 타일맵 경계 업데이트 완료: minY={minY}, maxY={maxY}, width={tilemapWidth}");
     }
     #endregion
 }
