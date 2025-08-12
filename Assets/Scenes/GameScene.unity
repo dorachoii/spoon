@@ -483,6 +483,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 3936731725376651980, guid: e881322d7c9cd0f4eb599062f3f8799d, type: 3}
+  defaultSpawnPosition: {x: 0, y: 8, z: 0}
 --- !u!1 &168767731
 GameObject:
   m_ObjectHideFlags: 0
@@ -2153,7 +2154,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 50}
+  m_SizeDelta: {x: 800, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &915005144
 MonoBehaviour:
@@ -2177,15 +2178,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 79c4779379180eb439ad41b8401a1df4, type: 2}
-  m_sharedMaterial: {fileID: 2390698094680563960, guid: 79c4779379180eb439ad41b8401a1df4, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3b1f675887615ea429960d2ea76b481c, type: 2}
+  m_sharedMaterial: {fileID: 4404044514503899972, guid: 3b1f675887615ea429960d2ea76b481c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279180549
-  m_fontColor: {r: 0.020825913, g: 0.11320752, b: 0.058760174, a: 1}
+    rgba: 4281267199
+  m_fontColor: {r: 1, g: 0.9513296, b: 0.17924517, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2202,8 +2203,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 80
-  m_fontSizeBase: 80
+  m_fontSize: 180
+  m_fontSizeBase: 180
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -128229,7 +128230,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 1
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 9
@@ -128972,16 +128973,17 @@ MonoBehaviour:
     - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
     - {fileID: 7904862957865094235, guid: 22a0329d3f904844c89cec40112a3f5a, type: 3}
     - {fileID: 7904862957865094235, guid: baaa2bafdcc44204c88999e358385604, type: 3}
-    enemyPrefabs: []
+    enemyPrefabs:
+    - {fileID: 8535364043472169121, guid: 6ad0dcaf73f020145b13bfc16a0b6cc7, type: 3}
     savePointCount: 1
   - itemPrefabs:
     - {fileID: 7904862957865094235, guid: baaa2bafdcc44204c88999e358385604, type: 3}
     - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
-    enemyPrefabs: []
+    enemyPrefabs:
+    - {fileID: 8535364043472169121, guid: 33513c6389a9f9a4d8135acf85f30520, type: 3}
     savePointCount: 2
   - itemPrefabs:
     - {fileID: 5680816269859317106, guid: b7a7334bdca243b419cf8a64954228a7, type: 3}
-    - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
     enemyPrefabs: []
     savePointCount: 1
   - itemPrefabs:

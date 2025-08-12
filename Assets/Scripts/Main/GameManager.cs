@@ -3,6 +3,12 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    
+    // 게임 상태 관리
+    private bool isGameCleared = false;
+    
+    // 게임 클리어 이벤트
+    public System.Action OnGameCleared;
 
 
     private void Awake()
@@ -64,5 +70,28 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene(SceneNames.INTRO_SCENE_NAME);
         AudioManager.Instance.ChangeBGM(BGMType.Intro);
+    }
+    
+    // 게임 클리어 처리
+    public void SetGameCleared()
+    {
+        if (!isGameCleared)
+        {
+            isGameCleared = true;
+            Debug.Log("[GameManager] 게임 클리어!");
+            OnGameCleared?.Invoke();
+        }
+    }
+    
+    // 게임 클리어 상태 확인
+    public bool IsGameCleared()
+    {
+        return isGameCleared;
+    }
+    
+    // 게임 클리어 상태 리셋 (새 게임 시작 시)
+    public void ResetGameCleared()
+    {
+        isGameCleared = false;
     }
 }

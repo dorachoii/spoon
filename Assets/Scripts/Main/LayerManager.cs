@@ -36,14 +36,14 @@ public class LayerData
     {
         return layerIndex switch
         {
-            0 => "Mine Zone",
-            1 => "Skull Zone 1",
-            2 => "Boss Chamber I",
+            0 => "ジライ\nZONE",
+            1 => "ガイコツの\nこうげき", 
+            2 => "ミミズボス\nI", 
             3 => "",
-            4 => "Skull Zone 2",
-            5 => "Lava Zone",
-            6 => "Ultimate Zone",
-            7 => "Boss Chamber II",
+            4 => "ガイコツの\nこうげき 2", 
+            5 => "アツアツ\nZONE",
+            6 => "ポイズン\nZONE", 
+            7 => "うねうね\nミミズボス\nII", 
             8 => "",
             _ => $"Layer{layerIndex}"
         };

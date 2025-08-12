@@ -48,7 +48,7 @@ public class Debris : MonoBehaviour
             // 보스가 죽었을 때는 플레이어에게 데미지를 주지 않음
             if (!isBossDead)
             {
-                PlayerStat.Instance.DamageHP(3);
+                PlayerStat.Instance.DamageHP(1);
             }
         }
     }
