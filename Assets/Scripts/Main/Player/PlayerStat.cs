@@ -170,7 +170,20 @@ public class PlayerStat : MonoBehaviour
         powerBonus += bonus;
         OnDigPowerChanged?.Invoke(CurrentPower);
         OnPowerUp?.Invoke(bonus);
+    }
 
+    // 게임 로드 시 최소 파워 보장
+    public void EnsureMinimumPower()
+    {Debug.Log("EnsureMinimumPower");
+        float hardness = LayerManager.Instance.GetCurrentHardness();
+        float minRequiredPower = hardness * 1.5f;
+        
+        if (CurrentPower < minRequiredPower)
+        {
+            float neededBonus = minRequiredPower - CurrentPower;
+            AddDigPowerBonus(neededBonus);
+            
+        }
     }
     #endregion
 

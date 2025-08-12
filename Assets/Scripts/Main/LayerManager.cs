@@ -414,6 +414,8 @@ public class LayerManager : MonoBehaviour
         
         // 현재 레이어 끝 높이 계산
         UpdateCurrentLayerEndHeight();
+        
+    
     }
 
     #endregion

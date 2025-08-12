@@ -32,6 +32,10 @@ public class PlayerContoller : MonoBehaviour
     // Player State
     public PlayerState currentState { get; private set; }
     private bool isStateLocked = false;
+    
+    // Power Insufficiency Tracking
+    private int insufficientPowerJumpCount = 0;
+    private const int MAX_INSUFFICIENT_POWER_JUMPS = 7;
 
     // Player Movement
     public FloatingJoystick floatingJoystick;
@@ -83,6 +87,7 @@ public class PlayerContoller : MonoBehaviour
 
     private void Start()
     {
+        PlayerStat.Instance.EnsureMinimumPower();
         Debug.Log($"플레이어 위치 - PlayerController: {transform.position}");
         spawnTime = Time.time; // 생성 시간 기록
         // null 체크 후 동적으로 찾기
@@ -403,6 +408,17 @@ public class PlayerContoller : MonoBehaviour
 
             if (digPower < hardness)
             {
+                insufficientPowerJumpCount++;
+                Debug.Log($"[PlayerController] 파워 부족으로 점프 발생: {insufficientPowerJumpCount}/{MAX_INSUFFICIENT_POWER_JUMPS}");
+                
+                if (insufficientPowerJumpCount >= MAX_INSUFFICIENT_POWER_JUMPS)
+                {
+                    Debug.Log("[PlayerController] 파워 부족으로 인한 점프 3회 초과! 치명적 데미지 적용");
+                    playerStat.DamageHP(100f); // 치명적 데미지로 사망 처리
+                    isDigging = false;
+                    yield break;
+                }
+                
                 ChangeState(PlayerState.Jump);
                 isDigging = false;
                 yield break;
@@ -547,6 +563,16 @@ public class PlayerContoller : MonoBehaviour
     public void ClearDiggedTiles()
     {
         TilesAlreadyDigged.Clear();
+    }
+    
+    // 파워 부족 카운트 리셋 (파워 아이템 획득 시 호출)
+    public void ResetInsufficientPowerCount()
+    {
+        if (insufficientPowerJumpCount > 0)
+        {
+            Debug.Log($"[PlayerController] 파워 획득으로 부족 카운트 리셋: {insufficientPowerJumpCount} -> 0");
+            insufficientPowerJumpCount = 0;
+        }
     }
 
     #endregion
