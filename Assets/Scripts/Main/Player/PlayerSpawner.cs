@@ -5,7 +5,7 @@ public class PlayerSpawner : MonoBehaviour, ISaveable
     [Header("Player Prefab")]
     [SerializeField] private GameObject playerPrefab;
 
-    private Vector3 defaultSpawnPosition = new Vector3(0, 8, 0);
+    public Vector3 defaultSpawnPosition = new Vector3(0, 8, 0);
     private bool hasSpawnedPlayer = false;
     private GameObject currentPlayer; // 현재 생성된 플레이어 참조
 
