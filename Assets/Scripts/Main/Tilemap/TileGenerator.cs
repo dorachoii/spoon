@@ -112,6 +112,14 @@ public class TileGenerator : MonoBehaviour, ISaveable
         if (PersistenceManager.Instance.HasSavedData())
         {
             LoadTilemapData(PersistenceManager.Instance.CurrentGameData.tilemapData);
+            
+            // LayerManager가 playerPosition을 기반으로 레이어 상태를 계산했으므로 확인
+            if (LayerManager.Instance != null && LayerManager.Instance.CurrentPlayerLayerState != LayerState.Normal)
+            {
+                isPaused = true;
+                Debug.Log($"[TileGenerator] 저장된 레이어가 Normal이 아님: {LayerManager.Instance.CurrentPlayerLayerState}, 타일 생성 일시정지");
+            }
+            
             isInitialized = true;
         }
         else
@@ -508,16 +516,9 @@ public class TileGenerator : MonoBehaviour, ISaveable
     }
     public void ReadAndSetData(GameData data)
     {
-        // 저장된 레이어가 Normal이 아니라면 타일 생성 일시정지
-        if (data != null && data.layerDataList != null && data.currentPlayerLayer >= 0 && data.currentPlayerLayer < data.layerDataList.Count)
-        {
-            LayerData playerLayerData = data.layerDataList[data.currentPlayerLayer];
-            if (playerLayerData.layerState != LayerState.Normal)
-            {
-                PauseTileGeneration();
-                Debug.Log($"[TileGenerator] 저장된 레이어가 Normal이 아님: {playerLayerData.layerState}, 타일 생성 일시정지");
-            }
-        }
+        // OnDataLoaded 이벤트에서 처리하므로 여기서는 아무것도 하지 않음
+        // 타일맵 데이터는 InitializeTilemapBasedOnData에서 처리됨
+        // LayerManager가 playerPosition을 기반으로 레이어 상태를 계산하므로 여기서는 추가 처리 불필요
     }
 
 
@@ -598,11 +599,16 @@ public class TileGenerator : MonoBehaviour, ISaveable
         BoundsInt bounds = new BoundsInt(minX, minY, 0, width, height, 1);
         tilemap.SetTilesBlock(bounds, tiles);
 
-            lastBottomLeftCell = new Vector3Int(minX, minY, 0);
-        lastTopRightCell = new Vector3Int(maxX, maxY, 0);
-        tilemapWidth = maxX - minX + 1;
+        // 4. 카메라 위치를 기반으로 타일맵 경계 설정
+        Vector3Int currentBottomLeftCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane)));
+        Vector3Int currentTopRightCell = tilemap.WorldToCell(mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)));
+
+        lastBottomLeftCell = new Vector3Int(currentBottomLeftCell.x, minY, 0);
+        lastTopRightCell = new Vector3Int(currentTopRightCell.x, maxY, 0);
+        tilemapWidth = currentTopRightCell.x - currentBottomLeftCell.x + 1;
         lastStampingY = minY;
         
+        Debug.Log($"[TileGenerator] 타일맵 로드 완료: 경계({lastBottomLeftCell} ~ {lastTopRightCell}), 카메라 위치: {mainCamera.transform.position}");
     }
 
     #endregion

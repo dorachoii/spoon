@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraFollow : MonoBehaviour
+public class CameraFollow : MonoBehaviour, ISaveable
 {
     [SerializeField] private Transform player;
     [SerializeField] private float smoothSpeed = 0.125f;
@@ -39,4 +39,21 @@ public class CameraFollow : MonoBehaviour
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
         transform.position = smoothedPosition;
     }
+
+    #region Save & Load
+    public void WriteData(GameData data)
+    {
+        // 카메라 위치 저장
+        data.cameraPosition = transform.position;
+    }
+
+    public void ReadAndSetData(GameData data)
+    {
+        // 저장된 카메라 위치로 복원
+        if (data != null)
+        {
+            transform.position = data.cameraPosition;
+        }
+    }
+    #endregion
 }

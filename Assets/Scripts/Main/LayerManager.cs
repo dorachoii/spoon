@@ -50,18 +50,19 @@ public class LayerData
     }
 }
 
-public class LayerManager : MonoBehaviour, ISaveable
+public class LayerManager : MonoBehaviour
 {
     public static LayerManager Instance { get; private set; }
 
     [Header("Camera")]
     private Camera mainCam;
-    private float mainCamStartY = 0f;
+    private GameObject player;
+    private float maincamStartY = -22f; // 플레이어 기본 위치(8)에서 tileOffset(30)만큼 아래
 
 
     // layer
     int currentPlayerLayer = -1;
-    public int CurrentTileLayer { get; private set; } = -1;
+    public int CurrentTilemapLayer { get; private set; } = -1;
     public int CurrentPlayerLayer { get; private set; } = -1; // 플레이어 위치 기준 레이어
     public float CurrentLayerHardness { get; private set; } = 1f;
     public LayerState CurrentLayerState { get; private set; } = LayerState.Normal;
@@ -71,13 +72,10 @@ public class LayerManager : MonoBehaviour, ISaveable
     private bool isPlayerFound = false;
 
 
-
-
     // 층 데이터 관리
     private List<LayerData> layerDataList = new List<LayerData>();
     private float currentLayerEndY = 0f; // 현재 층의 끝 높이 (캐시)
     
-
 
 
     // 이벤트
@@ -92,6 +90,8 @@ public class LayerManager : MonoBehaviour, ISaveable
 
 
 
+
+    
     [Header("Tilemap")]
     private Tilemap tilemap;
     private int maxTilesPerFrame = 40;  // 한 프레임에 처리할 최대 타일 수 (1Frameに処理する最大タイル数)
@@ -107,7 +107,50 @@ public class LayerManager : MonoBehaviour, ISaveable
 
         Instance = this;
         mainCam = Camera.main;
-        InitializeLayerData();
+
+        
+    }
+
+    void OnEnable()
+    {
+        // PersistenceManager 이벤트 구독
+        PersistenceManager.OnDataLoaded += OnDataLoaded;
+    }
+
+    void OnDisable()
+    {
+        // PersistenceManager 이벤트 구독 해제
+        PersistenceManager.OnDataLoaded -= OnDataLoaded;
+    }
+
+    // OnDataLoaded 이벤트 핸들러
+    private void OnDataLoaded()
+    {
+
+        if (PersistenceManager.Instance.HasSavedData())
+        {
+            // 저장된 데이터가 있으면 playerPosition과 cameraPosition을 기반으로 레이어 계산
+            GameData data = PersistenceManager.Instance.CurrentGameData;
+            CalculateLayerFromPlayerPosition(data.playerPosition, data.cameraPosition);
+        }
+        else
+        {
+            // 플레이어가 준비되면 레이어 계산을 다시 수행하도록 플래그 설정
+            StartCoroutine(CalculateLayerWhenPlayerReady());
+        }
+    }
+
+    // 플레이어가 준비되면 레이어를 계산하는 코루틴
+    private IEnumerator CalculateLayerWhenPlayerReady()
+    {
+        // 플레이어가 생성될 때까지 대기
+        while (player == null)
+        {
+            yield return null;
+        }
+        
+        // 플레이어가 준비되면 현재 위치로 레이어 계산
+        CalculateLayerFromPlayerPosition(player.transform.position, mainCam.transform.position);
     }
 
     void Start()
@@ -121,22 +164,18 @@ public class LayerManager : MonoBehaviour, ISaveable
 
     private void InitializeLayerData()
     {
-        mainCamStartY = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane)).y;
         layerDataList.Clear();
 
+        // 기본 레이어 데이터
         LayerData layer1 = new LayerData(0, 0, LayerState.Normal, 20f, -1);
         LayerData layer2 = new LayerData(1, 1, LayerState.Normal, 20f, -1);
-
         LayerData boss1_transition = new LayerData(2, 0, LayerState.Transition, 12f, -1);
-        LayerData boss1 = new LayerData(3, 1, LayerState.Boss,20f, 0);
-
+        LayerData boss1 = new LayerData(3, 1, LayerState.Boss, 20f, 0);
         LayerData layer3 = new LayerData(4, 2, LayerState.Normal, 20f, -1);
         LayerData layer4 = new LayerData(5, 3, LayerState.Normal, 20f, -1);
         LayerData layer5 = new LayerData(6, 4, LayerState.Normal, 20f, -1);
-
         LayerData boss2_transition = new LayerData(7, 0, LayerState.Transition, 12f, -1);
         LayerData boss2 = new LayerData(8, 2, LayerState.Boss, 20f, 1);
-
 
         layerDataList.Add(layer1);
         layerDataList.Add(layer2);
@@ -148,20 +187,20 @@ public class LayerManager : MonoBehaviour, ISaveable
         layerDataList.Add(boss2_transition);
         layerDataList.Add(boss2);
 
-        // 초기 층의 끝 높이 계산
-        UpdateCurrentLayerEndHeight();
+  
     }
 
     private IEnumerator FindPlayerCoroutine()
     {
         // PlayerStat을 찾을 때까지 대기
-        while (PlayerStat.Instance == null)
+        while (GameObject.FindGameObjectWithTag("Player") == null)
         {
             yield return null;
         }
-        
+        player = GameObject.FindGameObjectWithTag("Player");
         isPlayerFound = true;
-        UpdatePlayerLayer(); // 플레이어가 준비되면 플레이어 레이어 업데이트
+        
+        // 레이어 계산은 OnDataLoaded에서 처리되므로 여기서는 하지 않음
     }
     
 
@@ -179,20 +218,19 @@ public class LayerManager : MonoBehaviour, ISaveable
         Vector3 bottomCenterWorldPos = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane));
         float currentViewportY = bottomCenterWorldPos.y;
 
-        UpdateCurrentLayerEndHeight();
 
-        if (currentViewportY <= mainCamStartY - currentLayerEndY)
+        if (currentViewportY <= maincamStartY - currentLayerEndY)
         {
             // 다음 층으로 이동
-            if (CurrentTileLayer < layerDataList.Count - 1)
+            if (CurrentTilemapLayer < layerDataList.Count - 1)
             {
-                CurrentTileLayer++;
-                LayerData newLayerData = layerDataList[CurrentTileLayer];
+                CurrentTilemapLayer = CalculateTilemapLayer(currentViewportY);
+                LayerData newLayerData = layerDataList[CurrentTilemapLayer];
                 CurrentLayerState = newLayerData.layerState;
 
                 UpdateCurrentLayerEndHeight();
 
-                OnLayerChangedForTilemapGeneration?.Invoke(CurrentTileLayer);
+                OnLayerChangedForTilemapGeneration?.Invoke(CurrentTilemapLayer);
 
                 if (CurrentLayerState == LayerState.Transition)
                 {
@@ -217,13 +255,9 @@ public class LayerManager : MonoBehaviour, ISaveable
     private void UpdatePlayerLayer()
     {
         // 플레이어가 준비되지 않았으면 처리하지 않음
-        if (!isPlayerFound || PlayerStat.Instance == null)
-        {
-            return;
-        }
+        if (!isPlayerFound) return;
         
-        Vector3 playerPos = PlayerStat.Instance.transform.position;
-        float playerY = playerPos.y;
+        float playerY = player.transform.position.y;
         int prevLayer = CurrentPlayerLayer;
         int newPlayerLayer = CalculatePlayerLayer(playerY);
 
@@ -242,7 +276,7 @@ public class LayerManager : MonoBehaviour, ISaveable
                     if(currentPlayerLayer == CurrentPlayerLayer) return;
                     currentPlayerLayer = CurrentPlayerLayer;
                     OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
-                    Debug.Log($"[LayerManager] Entering layer {CurrentPlayerLayer}");
+
                 }
 
                 // Lava Zone 진입 감지 (layerIndex 5가 Lava Zone)
@@ -253,7 +287,7 @@ public class LayerManager : MonoBehaviour, ISaveable
                 else
                 {
                     // 이전 레이어가 Lava Zone이었을 때만 Exit 이벤트 발생
-                    if (CurrentPlayerLayerState == LayerState.Normal && playerLayerData.layerIndex != 5)
+                    if (prevLayer == 5 && playerLayerData.layerIndex != 5)
                     {
                         OnLavaLayerExited?.Invoke();
                     }
@@ -261,6 +295,9 @@ public class LayerManager : MonoBehaviour, ISaveable
             }
         }
     }
+    #endregion
+
+    #region  Calculate Layers
     private int CalculatePlayerLayer(float playerY)
     {
         float accumulatedHeight = 0f;
@@ -268,7 +305,7 @@ public class LayerManager : MonoBehaviour, ISaveable
         for (int i = 0; i < layerDataList.Count; i++)
         {
             accumulatedHeight += layerDataList[i].layerHeight;
-            if (playerY >= mainCamStartY - accumulatedHeight)
+            if (playerY >= maincamStartY - accumulatedHeight)
             {
                 return i;
             }
@@ -276,19 +313,32 @@ public class LayerManager : MonoBehaviour, ISaveable
 
         return layerDataList.Count - 1;
     }
-    #endregion
+
+    private int CalculateTilemapLayer(float currentViewportY)
+    {
+        float accumulatedHeight = 0f;
+        for (int i = 0; i < layerDataList.Count; i++)
+        {
+            accumulatedHeight += layerDataList[i].layerHeight;
+            if(currentViewportY >= maincamStartY - accumulatedHeight)
+            {
+                return i;
+            }
+        }
+        return layerDataList.Count - 1;
+    }
 
 
     private void UpdateCurrentLayerEndHeight()
     {
         currentLayerEndY = 0f;
-        for (int i = 0; i <= CurrentTileLayer; i++)
+        for (int i = 0; i <= CurrentTilemapLayer; i++)
         {
             currentLayerEndY += layerDataList[i].layerHeight;
         }
     }
 
-
+#endregion
    
 
     #region Getter
@@ -312,9 +362,9 @@ public class LayerManager : MonoBehaviour, ISaveable
     public int GetCurrentLayerTileIndex()
     {
 
-        if (CurrentTileLayer >= 0 && CurrentTileLayer < layerDataList.Count)
+        if (CurrentTilemapLayer >= 0 && CurrentTilemapLayer < layerDataList.Count)
         {
-            return layerDataList[CurrentTileLayer].tileIndex;
+            return layerDataList[CurrentTilemapLayer].tileIndex;
         }
         return 0; // 기본값
     }
@@ -336,53 +386,37 @@ public class LayerManager : MonoBehaviour, ISaveable
     }
     #endregion
 
-    #region Save & Load
-    public void WriteData(GameData data)
+    #region Layer Calculation
+    // 플레이어 위치와 카메라 위치를 기반으로 레이어 상태를 계산하는 메서드
+    private void CalculateLayerFromPlayerPosition(Vector3 playerPosition, Vector3 cameraPosition)
     {
-        // 현재 진행 상태 저장
-        data.currentTileLayer = CurrentTileLayer;
-        data.currentPlayerLayer = CurrentPlayerLayer;
-        data.currentLayerEndY = currentLayerEndY;
-        data.mainCamStartY = mainCamStartY;  // 카메라 시작 Y 위치 저장
+        InitializeLayerData();
+        // 플레이어 레이어 계산
+        float playerY = playerPosition.y;
+        CurrentPlayerLayer = CalculatePlayerLayer(playerY);
+        Debug.Log($"LayerManager: CurrentPlayerLayer: {CurrentPlayerLayer}");
         
-
-        
-        // 레이어 데이터 리스트 저장 (보스가 죽어서 변경된 높이 포함)
-        data.layerDataList.Clear();
-        foreach (var layerData in layerDataList)
-        {
-            data.layerDataList.Add(layerData);
-        }
-    }
-    
-    public void ReadAndSetData(GameData data)
-    {
-        // 저장된 상태로 복원
-        CurrentTileLayer = data.currentTileLayer;
-        CurrentPlayerLayer = data.currentPlayerLayer;
-        currentLayerEndY = data.currentLayerEndY;
-        mainCamStartY = data.mainCamStartY;  // 카메라 시작 Y 위치 복원
-        
-
-        
-        // 레이어 데이터 복원
-        layerDataList.Clear();
-        foreach (var layerData in data.layerDataList)
-        {
-            layerDataList.Add(layerData);
-        }
-        
-        // 현재 레이어 상태 업데이트
-        if (CurrentTileLayer >= 0 && CurrentTileLayer < layerDataList.Count)
-        {
-            CurrentLayerState = layerDataList[CurrentTileLayer].layerState;
-        }
-        
+        // 플레이어 레이어 상태 설정
         if (CurrentPlayerLayer >= 0 && CurrentPlayerLayer < layerDataList.Count)
         {
             CurrentPlayerLayerState = layerDataList[CurrentPlayerLayer].layerState;
         }
+        
+        // 카메라 위치를 기반으로 타일맵 레이어 계산
+        float viewPortY = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane)).y;
+        Debug.Log($"LayerManager: viewPortY: {viewPortY}");
+        CurrentTilemapLayer = CalculateTilemapLayer(viewPortY);
+        Debug.Log($"LayerManager: CurrentTilemapLayer: {CurrentTilemapLayer}");
+        // 타일맵 레이어 상태 설정
+        if (CurrentTilemapLayer >= 0 && CurrentTilemapLayer < layerDataList.Count)
+        {
+            CurrentLayerState = layerDataList[CurrentTilemapLayer].layerState;
+        }
+        
+        // 현재 레이어 끝 높이 계산
+        UpdateCurrentLayerEndHeight();
     }
+
     #endregion
 
 

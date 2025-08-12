@@ -39,15 +39,8 @@ public struct Vector3IntSerializable
 public class GameData
 {
     public Vector3 playerPosition;
+    public Vector3 cameraPosition;  // 카메라 위치 저장
     public List<TileData> tilemapData = new List<TileData>();   // 저장 시점의 tilemap 데이터 (保存時のタイルマップデータ)
-    
-    // LayerManager 데이터
-    public int currentTileLayer;
-    public int currentPlayerLayer;
-    public float currentLayerEndY;
-    public float mainCamStartY;  // 카메라 시작 Y 위치 저장
-    public List<LayerData> layerDataList = new List<LayerData>();
-
 }
 
 
@@ -95,8 +88,7 @@ public class PersistenceManager : MonoBehaviour
         {
             StartCoroutine(LoadGameCoroutine());
         }else{
-            Debug.Log("test: 저장된 데이터가 없어서 ondata loaded 호출");
-            Debug.Log($"test: OnDataLoaded 이벤트 구독자 수: {OnDataLoaded?.GetInvocationList()?.Length ?? 0}");
+
             OnDataLoaded?.Invoke();
         }
     }
