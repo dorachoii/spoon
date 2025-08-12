@@ -14,7 +14,7 @@ public enum EnemyType
 public class EnemyAttack : MonoBehaviour
 {
     public GameObject[] bulletPrefab;
-    private float fireRate = 3.0f;
+    private float fireRate = 4.0f;
     public int numOfDirections = 4;
 
     

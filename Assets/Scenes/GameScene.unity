@@ -128967,7 +128967,8 @@ MonoBehaviour:
   - itemPrefabs:
     - {fileID: 9147467908412981061, guid: 31318578f5aad7c4892e716efec35853, type: 3}
     - {fileID: 7904862957865094235, guid: 22a0329d3f904844c89cec40112a3f5a, type: 3}
-    enemyPrefabs: []
+    enemyPrefabs:
+    - {fileID: 8535364043472169121, guid: 33513c6389a9f9a4d8135acf85f30520, type: 3}
     savePointCount: 1
   - itemPrefabs:
     - {fileID: 541275502260085995, guid: 67ecd8e123b5d8d4eaf24ddb50e23b89, type: 3}
