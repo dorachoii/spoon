@@ -169,13 +169,13 @@ public class LayerManager : MonoBehaviour
         // 기본 레이어 데이터
         LayerData layer1 = new LayerData(0, 0, LayerState.Normal, 20f, -1);
         LayerData layer2 = new LayerData(1, 1, LayerState.Normal, 20f, -1);
-        LayerData boss1_transition = new LayerData(2, 0, LayerState.Transition, 12f, -1);
-        LayerData boss1 = new LayerData(3, 1, LayerState.Boss, 20f, 0);
+        LayerData boss1_transition = new LayerData(2, -1, LayerState.Transition, 12f, -1);
+        LayerData boss1 = new LayerData(3, -1, LayerState.Boss, 20f, 0);
         LayerData layer3 = new LayerData(4, 2, LayerState.Normal, 20f, -1);
         LayerData layer4 = new LayerData(5, 3, LayerState.Normal, 20f, -1);
         LayerData layer5 = new LayerData(6, 4, LayerState.Normal, 20f, -1);
-        LayerData boss2_transition = new LayerData(7, 0, LayerState.Transition, 12f, -1);
-        LayerData boss2 = new LayerData(8, 2, LayerState.Boss, 20f, 1);
+        LayerData boss2_transition = new LayerData(7, -1, LayerState.Transition, 12f, -1);
+        LayerData boss2 = new LayerData(8, -1, LayerState.Boss, 20f, 1);
 
         layerDataList.Add(layer1);
         layerDataList.Add(layer2);
@@ -361,12 +361,11 @@ public class LayerManager : MonoBehaviour
 
     public int GetCurrentLayerTileIndex()
     {
-
         if (CurrentTilemapLayer >= 0 && CurrentTilemapLayer < layerDataList.Count)
         {
             return layerDataList[CurrentTilemapLayer].tileIndex;
         }
-        return 0; // 기본값
+        return -1; // 유효하지 않은 레이어일 때 -1 반환
     }
 
 

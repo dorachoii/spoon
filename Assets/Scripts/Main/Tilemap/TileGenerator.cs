@@ -189,7 +189,9 @@ public class TileGenerator : MonoBehaviour, ISaveable
         if (currentBottomLeftCell.y <= lastBottomLeftCell.y)
         {
             int currentLayerTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
-            FillBottomRows(currentBottomLeftCell.y - tileOffset, lastBottomLeftCell.y - 1, currentLayerTileIndex);
+            if(currentLayerTileIndex >= 0){
+                FillBottomRows(currentBottomLeftCell.y - tileOffset, lastBottomLeftCell.y - 1, currentLayerTileIndex);
+            }
 
             // 패턴 찍어주는 함수
             StampDottedPattern(currentBottomLeftCell.y);
@@ -227,7 +229,14 @@ public class TileGenerator : MonoBehaviour, ISaveable
 
         for (int i = 0; i < existingTiles.Length; i++)
         {
-            newTiles[i] = existingTiles[i] ?? tile_plain[currentTileIndex];
+            if (currentTileIndex >= 0 && currentTileIndex < tile_plain.Length)
+            {
+                newTiles[i] = existingTiles[i] ?? tile_plain[currentTileIndex];
+            }
+            else
+            {
+                newTiles[i] = existingTiles[i]; // 유효하지 않은 인덱스면 기존 타일 유지
+            }
         }
 
         tilemap.SetTilesBlock(bounds, newTiles);
@@ -311,8 +320,12 @@ public class TileGenerator : MonoBehaviour, ISaveable
             if (validStampPos.Count > 0)
             {
                 Vector3Int randomStampPos = validStampPos[Random.Range(0, validStampPos.Count)];
-                int currentLayerTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
+
+                            int currentLayerTileIndex = LayerManager.Instance.GetCurrentLayerTileIndex();
+            if (currentLayerTileIndex >= 0)
+            {
                 StampSingleDottedTile(randomStampPos, currentLayerTileIndex);
+            }
             }
 
             lastStampingY = currentY;

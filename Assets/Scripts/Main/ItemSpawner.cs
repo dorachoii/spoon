@@ -87,11 +87,21 @@ public class ItemSpawner : MonoBehaviour
     private void HandleLayerChanged(int newLayer)
     {
         currentLayer = LayerManager.Instance.GetCurrentLayerTileIndex();
-        SpawnSavePoints();
+        
+        // 유효한 레이어일 때만 스폰
+        if (currentLayer >= 0)
+        {
+            SpawnSavePoints();
+        }
     }
 
     void SpawnItemBelowScreen()
     {
+        if (currentLayer < 0 || currentLayer >= layerSpawnDatas.Length)
+        {
+            return; // 유효하지 않은 레이어면 스폰하지 않음
+        }
+        
         LayerSpawnData data = layerSpawnDatas[currentLayer];
         if (data == null) return;
 
@@ -146,6 +156,11 @@ public class ItemSpawner : MonoBehaviour
 
     void SpawnSavePoints()
     {
+        if (currentLayer < 0 || currentLayer >= layerSpawnDatas.Length)
+        {
+            return; // 유효하지 않은 레이어면 스폰하지 않음
+        }
+        
         LayerSpawnData data = layerSpawnDatas[currentLayer];
         if (savePointPrefab == null || data == null) return;
 
