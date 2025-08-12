@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor.UIElements;
+#endif
 using UnityEngine;
 
 public struct Square

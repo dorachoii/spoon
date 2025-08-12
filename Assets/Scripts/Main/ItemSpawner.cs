@@ -97,10 +97,7 @@ public class ItemSpawner : MonoBehaviour
 
     void SpawnItemBelowScreen()
     {
-        if (currentLayer < 0 || currentLayer >= layerSpawnDatas.Length)
-        {
-            return; // 유효하지 않은 레이어면 스폰하지 않음
-        }
+        if (currentLayer < 0 || currentLayer >= layerSpawnDatas.Length) return;
         
         LayerSpawnData data = layerSpawnDatas[currentLayer];
         if (data == null) return;

@@ -230,7 +230,7 @@ public class PlayerContoller : MonoBehaviour
                 animator.SetBool("IsDigging", false);
                 break;
             case PlayerState.Jump:
-                animator.SetTrigger("JumpTrigger");
+                animator.SetTrigger("Jump");
                 rb.velocity = new Vector2(rb.velocity.x, 0);
                 rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 break;

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -56,3 +57,4 @@ public class AssetNameFixer : EditorWindow
         Debug.Log($"Fix Asset Names 완료! 총 {fixedCount}개의 에셋 이름을 변경했습니다.");
     }
 }
+#endif

@@ -55,6 +55,9 @@ public class PersistenceManager : MonoBehaviour
     // 현재 로드된 게임 데이터
     public GameData CurrentGameData { get; private set; }
     
+    // 플랫폼별 저장 방식 구분
+    private bool isWebGL;
+    
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -64,7 +67,20 @@ public class PersistenceManager : MonoBehaviour
         }
         Instance = this;
 
-        savePath = Path.Combine(Application.persistentDataPath, "savefile.json");
+        // 플랫폼 확인
+        isWebGL = Application.platform == RuntimePlatform.WebGLPlayer;
+        
+        if (isWebGL)
+        {
+            // WebGL에서는 PlayerPrefs 사용
+            Debug.Log("[PersistenceManager] WebGL 플랫폼 감지 - PlayerPrefs 사용");
+        }
+        else
+        {
+            // 다른 플랫폼에서는 파일 시스템 사용
+            savePath = Path.Combine(Application.persistentDataPath, "savefile.json");
+            Debug.Log($"[PersistenceManager] 파일 시스템 사용 - 경로: {savePath}");
+        }
     }
 
     public void SaveGame()
@@ -79,7 +95,20 @@ public class PersistenceManager : MonoBehaviour
         }
 
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(savePath, json);
+        
+        if (isWebGL)
+        {
+            // WebGL에서는 PlayerPrefs 사용
+            PlayerPrefs.SetString("GameSaveData", json);
+            PlayerPrefs.Save();
+            Debug.Log("[PersistenceManager] WebGL - PlayerPrefs에 게임 데이터 저장");
+        }
+        else
+        {
+            // 다른 플랫폼에서는 파일 시스템 사용
+            File.WriteAllText(savePath, json);
+            Debug.Log($"[PersistenceManager] 파일 시스템에 게임 데이터 저장: {savePath}");
+        }
     }
 
     public void LoadGame()
@@ -96,15 +125,33 @@ public class PersistenceManager : MonoBehaviour
     private IEnumerator LoadGameCoroutine()
     {
         string json;
-        try
+        
+        if (isWebGL)
         {
-            json = File.ReadAllText(savePath);
+            // WebGL에서는 PlayerPrefs에서 로드
+            json = PlayerPrefs.GetString("GameSaveData", "");
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogWarning("[PersistenceManager] WebGL - 저장된 게임 데이터가 없습니다");
+                OnDataLoaded?.Invoke();
+                yield break;
+            }
+            Debug.Log("[PersistenceManager] WebGL - PlayerPrefs에서 게임 데이터 로드");
         }
-        catch (System.Exception e)
+        else
         {
-            Debug.LogError($"1:[PersistenceManager] Error reading save file: {e.Message}");
-            OnDataLoaded?.Invoke();
-            yield break;
+            // 다른 플랫폼에서는 파일 시스템에서 로드
+            try
+            {
+                json = File.ReadAllText(savePath);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[PersistenceManager] 파일 읽기 오류: {e.Message}");
+                OnDataLoaded?.Invoke();
+                yield break;
+            }
+            Debug.Log($"[PersistenceManager] 파일 시스템에서 게임 데이터 로드: {savePath}");
         }
         
         CurrentGameData = JsonUtility.FromJson<GameData>(json);
@@ -121,11 +168,35 @@ public class PersistenceManager : MonoBehaviour
 
     public void ClearSave()
     {
-        if (File.Exists(savePath)) File.Delete(savePath);
+        if (isWebGL)
+        {
+            // WebGL에서는 PlayerPrefs에서 삭제
+            PlayerPrefs.DeleteKey("GameSaveData");
+            PlayerPrefs.Save();
+            Debug.Log("[PersistenceManager] WebGL - PlayerPrefs에서 게임 데이터 삭제");
+        }
+        else
+        {
+            // 다른 플랫폼에서는 파일 삭제
+            if (File.Exists(savePath)) 
+            {
+                File.Delete(savePath);
+                Debug.Log($"[PersistenceManager] 파일 시스템에서 게임 데이터 삭제: {savePath}");
+            }
+        }
     }
 
     public bool HasSavedData()
     {
-        return File.Exists(savePath);
+        if (isWebGL)
+        {
+            // WebGL에서는 PlayerPrefs에서 확인
+            return PlayerPrefs.HasKey("GameSaveData") && !string.IsNullOrEmpty(PlayerPrefs.GetString("GameSaveData", ""));
+        }
+        else
+        {
+            // 다른 플랫폼에서는 파일 존재 여부 확인
+            return File.Exists(savePath);
+        }
     }
 }

@@ -23,12 +23,18 @@ public class GameManager : MonoBehaviour
         Instance = this;
 
         DontDestroyOnLoad(gameObject);
+        
+        // 앱 시작 시 인트로 재생 상태 로드
+        LoadIntroState();
     }
 
 
     public void StartNewGame()
     {
         PersistenceManager.Instance?.ClearSave();
+        // 게임 클리어 상태만 리셋 (인트로 재생 상태는 유지)
+        ResetGameCleared();
+        
         // 먼저 씬을 로드하고, 씬 로드 완료 후 데이터를 로드
         SceneManager.LoadScene(SceneNames.GAME_SCENE_NAME);
         Time.timeScale = 1;
@@ -103,6 +109,7 @@ public class GameManager : MonoBehaviour
         if (!hasPlayedIntro)
         {
             hasPlayedIntro = true;
+            SaveIntroState(); // 상태 변경 시 즉시 저장
             Debug.Log("[GameManager] Intro 완료!");
             OnIntroCompleted?.Invoke();
         }
@@ -119,5 +126,28 @@ public class GameManager : MonoBehaviour
     {
         isGameCleared = false;
         hasPlayedIntro = false;
+    }
+    
+    // 인트로 재생 상태 저장
+    private void SaveIntroState()
+    {
+        PlayerPrefs.SetInt("HasPlayedIntro", hasPlayedIntro ? 1 : 0);
+        PlayerPrefs.Save();
+        Debug.Log($"[GameManager] 인트로 재생 상태 저장: {hasPlayedIntro}");
+    }
+    
+    // 인트로 재생 상태 로드
+    private void LoadIntroState()
+    {
+        hasPlayedIntro = PlayerPrefs.GetInt("HasPlayedIntro", 0) == 1;
+        Debug.Log($"[GameManager] 인트로 재생 상태 로드: {hasPlayedIntro}");
+    }
+    
+    // 인트로 재생 상태 리셋 (앱 재시작 시 사용)
+    public void ResetIntroState()
+    {
+        hasPlayedIntro = false;
+        PlayerPrefs.DeleteKey("HasPlayedIntro");
+        Debug.Log("[GameManager] 인트로 재생 상태 리셋");
     }
 }
