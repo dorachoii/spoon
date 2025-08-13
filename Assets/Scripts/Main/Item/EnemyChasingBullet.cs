@@ -6,19 +6,12 @@ public class EnemyChasingBullet : ItemBase
     [SerializeField] private float lifeTime = 4f;
     [SerializeField] private float speed = 5f;
 
-    [Header("Homing")]
-    [SerializeField, Range(0f, 1f)]
-    private float homingResponsiveness = 0.1f;
-    private float homingDuration = 0.5f; // 호밍 지속 시간
-
     [Header("Wave Oscillation")]
     [SerializeField] private float oscillationAmplitude = 0.3f;
     [SerializeField] private float oscillationFrequency = 6f; // 얼마나 빠르게 흔들릴지
 
-    private Vector2 currentHeading; // 현재 진행 방향
+    private Vector2 fixedHeading; // 고정된 진행 방향
     private Transform target;
-    private Vector2 fixedHeading; // 고정된 진행 방향 (호밍 끝난 시점)
-    private bool isHomingPhase = true; // 호밍 단계인지 여부
     private float elapsed = 0f;
     private Transform _tf;
 
@@ -29,9 +22,9 @@ public class EnemyChasingBullet : ItemBase
         AcquireTarget();
 
         if (target != null)
-            currentHeading = ((Vector2)(target.position - _tf.position)).normalized;
+            fixedHeading = ((Vector2)(target.position - _tf.position)).normalized;
         else
-            currentHeading = _tf.up; // 기본: 위쪽
+            fixedHeading = _tf.up; // 기본: 위쪽
     }
 
     protected override void Update()
@@ -40,32 +33,14 @@ public class EnemyChasingBullet : ItemBase
 
         elapsed += Time.deltaTime;
 
-        // 타깃이 없다면 재탐색
+        // 타깃이 없다면 재탐색 (방향 설정용)
         if (target == null)
             AcquireTarget();
 
-        // 호밍 단계
-        if (isHomingPhase && target != null && elapsed < homingDuration)
-        {
-            Vector2 toTarget = ((Vector2)(target.position - _tf.position)).normalized;
-            currentHeading = Vector2.Lerp(currentHeading, toTarget, homingResponsiveness).normalized;
-        }
-        // 호밍 단계가 끝나면 현재 방향을 고정
-        else if (isHomingPhase && elapsed >= homingDuration)
-        {
-            isHomingPhase = false;
-            fixedHeading = currentHeading; // 현재 진행 방향을 고정
-            Debug.Log($"[EnemyChasingBullet] 호밍 단계 종료, 고정 방향 설정: {fixedHeading}");
-        }
-        // 고정 방향 단계 (파동 움직임만)
-        else if (!isHomingPhase)
-        {
-            currentHeading = fixedHeading; // 고정된 방향 유지
-        }
-
-        Vector2 perp = new Vector2(-currentHeading.y, currentHeading.x);
+        // 고정된 방향으로 사인파 움직임
+        Vector2 perp = new Vector2(-fixedHeading.y, fixedHeading.x);
         float wave = Mathf.Sin(elapsed * oscillationFrequency) * oscillationAmplitude;
-        Vector2 velocity = (currentHeading + perp * wave).normalized * speed;
+        Vector2 velocity = (fixedHeading + perp * wave).normalized * speed;
 
         _tf.position += (Vector3)(velocity * Time.deltaTime);
 
