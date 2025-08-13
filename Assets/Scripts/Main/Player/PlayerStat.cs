@@ -13,7 +13,7 @@ public class PlayerStat : MonoBehaviour
     private float jumpForce = 0.0005f;
 
     // Player HP
-    private float maxHP = 100f;
+    private float maxHP = 200f;
     private float currentHP;
 
     // Player Power

@@ -88,23 +88,20 @@ public class PlayerContoller : MonoBehaviour
     private void Start()
     {
         PlayerStat.Instance.EnsureMinimumPower();
-        Debug.Log($"플레이어 위치 - PlayerController: {transform.position}");
-        spawnTime = Time.time; // 생성 시간 기록
-        // null 체크 후 동적으로 찾기
+
+        spawnTime = Time.time;
         FindMissingReferences();
-        
-        // 같은 게임오브젝트에서 PlayerStat 찾기
+
         InitializePlayerStat();
     }
     
     private void InitializePlayerStat()
     {
-        // 같은 게임오브젝트에서 PlayerStat 컴포넌트 찾기
         playerStat = GetComponent<PlayerStat>();
         rb = GetComponent<Rigidbody2D>();
         if (playerStat != null)
         {
-            // 이벤트 구독
+
             playerStat.OnDamaged += HandleDamaged;
             playerStat.OnDied += HandleDied;
             playerStat.OnInvincibleStarted += StartInvincibleVisualEffect;
@@ -112,11 +109,8 @@ public class PlayerContoller : MonoBehaviour
             playerStat.OnPoisonedStarted += StartPoisonVisualEffect;
             playerStat.OnPoisonedEnded += StopPoisonVisualEffect;
 
-            // 스탯 값 설정
             speed = playerStat.Speed;
             jumpForce = playerStat.JumpForce;
-            
-            Debug.Log("[PlayerController] PlayerStat initialized successfully");
         }
         else
         {
@@ -126,7 +120,6 @@ public class PlayerContoller : MonoBehaviour
 
     private void FindMissingReferences()
     {
-        // FloatingJoystick 찾기
         if (floatingJoystick == null)
         {
             floatingJoystick = FindObjectOfType<FloatingJoystick>();
@@ -134,19 +127,13 @@ public class PlayerContoller : MonoBehaviour
             {
                 Debug.LogError("[PlayerController] FloatingJoystick not found in scene!");
             }
-            else
-            {
-                Debug.Log("[PlayerController] FloatingJoystick found dynamically");
-            }
         }
         
-        // Tilemap 찾기
         if (tilemap == null)
         {
             if (TileGenerator.Instance != null)
             {
                 tilemap = TileGenerator.Instance.tilemap;
-                Debug.Log("[PlayerController] Tilemap found from TileGenerator");
             }
             else
             {
@@ -155,29 +142,18 @@ public class PlayerContoller : MonoBehaviour
                 {
                     Debug.LogError("[PlayerController] Tilemap not found in scene!");
                 }
-                else
-                {
-                    Debug.Log("[PlayerController] Tilemap found dynamically");
-                }
             }
         }
         
-        // FloatingText 찾기
         if (floatingText == null)
         {
-            // 자식 오브젝트에서 찾기
             floatingText = transform.Find("FloatingText")?.gameObject;
             if (floatingText == null)
             {
-                // 씬에서 찾기
                 floatingText = GameObject.Find("FloatingText");
                 if (floatingText == null)
                 {
                     Debug.LogWarning("[PlayerController] FloatingText not found - status text will not work");
-                }
-                else
-                {
-                    Debug.Log("[PlayerController] FloatingText found dynamically");
                 }
             }
         }
@@ -198,13 +174,12 @@ public class PlayerContoller : MonoBehaviour
 
     #endregion
 
-    private bool isScreenClampingEnabled = false; // 화면 경계 제한 활성화 여부
-    private float screenClampingDelay = 1f; // 화면 경계 제한 활성화 지연 시간
-    private float spawnTime; // 플레이어 생성 시간
+    private bool isScreenClampingEnabled = false;
+    private float screenClampingDelay = 1f;
+    private float spawnTime;
 
     private void LateUpdate()
     {
-        // 플레이어 생성 후 일정 시간이 지나면 화면 경계 제한 활성화
         if (Time.time - spawnTime > screenClampingDelay)
         {
             isScreenClampingEnabled = true;
@@ -263,7 +238,6 @@ public class PlayerContoller : MonoBehaviour
 
      public void FixedUpdate()
     {
-        // floatingJoystick이 null이면 입력 처리하지 않음
         if (floatingJoystick == null)
         {
             return;
@@ -377,18 +351,9 @@ public class PlayerContoller : MonoBehaviour
 
                 Vector3Int cellPos = centerCell + new Vector3Int(x, y, 0);
 
-                if (!tilemap.cellBounds.Contains(cellPos)) {
-                    Debug.Log($"[PlayerController] 타일맵 범위 밖: {cellPos}");
-                    continue;
-                }
-                if (TilesAlreadyDigged.Contains(cellPos))   {
-                    Debug.Log($"[PlayerController] 이미 제거된 타일: {cellPos}");
-                    continue;
-                }
-                if (!tilemap.HasTile(cellPos)) {
-                    Debug.Log($"[PlayerController] 타일맵에 타일이 없음: {cellPos}");
-                    continue;
-                }
+                if (!tilemap.cellBounds.Contains(cellPos)) continue;
+                if (TilesAlreadyDigged.Contains(cellPos))  continue;
+                if (!tilemap.HasTile(cellPos)) continue;
 
                 TilesToDig.Add(cellPos);
             }
@@ -409,12 +374,10 @@ public class PlayerContoller : MonoBehaviour
             if (digPower < hardness)
             {
                 insufficientPowerJumpCount++;
-                Debug.Log($"[PlayerController] 파워 부족으로 점프 발생: {insufficientPowerJumpCount}/{MAX_INSUFFICIENT_POWER_JUMPS}");
                 
                 if (insufficientPowerJumpCount >= MAX_INSUFFICIENT_POWER_JUMPS)
                 {
-                    Debug.Log("[PlayerController] 파워 부족으로 인한 점프 3회 초과! 치명적 데미지 적용");
-                    playerStat.DamageHP(100f); // 치명적 데미지로 사망 처리
+                    playerStat.DamageHP(100f);
                     isDigging = false;
                     yield break;
                 }
@@ -497,11 +460,10 @@ public class PlayerContoller : MonoBehaviour
 
         Color tint = Color.white;
 
-        // poision + invincible
-        if (playerStat != null && playerStat.isPoisoned)
-        {
-            tint = Color.green * 0.6f + Color.white * 0.4f;
-        }
+            if (playerStat != null && playerStat.isPoisoned)
+    {
+        tint = Color.green * 0.6f + Color.white * 0.4f;
+    }
         coRainbow = StartCoroutine(effector.IRainbow(GetComponent<SpriteRenderer>(), loop: true, hueSpeed: 2f, tint: tint));
     }
 
@@ -565,14 +527,9 @@ public class PlayerContoller : MonoBehaviour
         TilesAlreadyDigged.Clear();
     }
     
-    // 파워 부족 카운트 리셋 (파워 아이템 획득 시 호출)
     public void ResetInsufficientPowerCount()
     {
-        if (insufficientPowerJumpCount > 0)
-        {
-            Debug.Log($"[PlayerController] 파워 획득으로 부족 카운트 리셋: {insufficientPowerJumpCount} -> 0");
-            insufficientPowerJumpCount = 0;
-        }
+        if (insufficientPowerJumpCount > 0) insufficientPowerJumpCount = 0;
     }
 
     #endregion

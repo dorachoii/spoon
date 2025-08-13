@@ -258,16 +258,12 @@ public class GameUIManager : MonoBehaviour
 
     private void ShowLayerText(Color textColor = default)
     {
-        if (LayerManager.Instance == null)
-        {
-            Debug.LogWarning("[GameUIManager] LayerManager.Instance is null - cannot show layer text");
-            return;
-        }
+        if (LayerManager.Instance == null) return;
 
         string title = LayerManager.Instance.GetCurrentLayerName();
 
         // 디버깅을 위한 로그 추가
-        Debug.Log($"[GameUIManager] 현재 레이어: {LayerManager.Instance.CurrentPlayerLayer}, 이름: {title}");
+
 
         // 현재 일반 층이면 검정, 보스 층이면 보라 이렇게 표시
         if (textColor == default)

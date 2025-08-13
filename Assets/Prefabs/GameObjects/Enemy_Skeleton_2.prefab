@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 347024670613145794}
   - component: {fileID: 5134796604495846542}
   - component: {fileID: 8611061867228910223}
-  - component: {fileID: 6878926362023819535}
   m_Layer: 0
   m_Name: Enemy_Skeleton_2
   m_TagString: Enemy
@@ -125,16 +124,8 @@ MonoBehaviour:
   - {fileID: 4299029023291798423, guid: 57bdda149d1bf1145a6afe73d9d12008, type: 3}
   - {fileID: 3738318816054307862, guid: 1fef64ff7ccd8d545a2b82830d6b85db, type: 3}
   numOfDirections: 4
+  extendDuration: 0.5
+  holdDuration: 0.2
+  lineWidth: 0.05
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
   type: 1
---- !u!114 &6878926362023819535
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8535364043472169121}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb00a909e9aedbd48821337b761a9802, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

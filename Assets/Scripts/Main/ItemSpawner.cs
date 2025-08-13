@@ -29,12 +29,15 @@ public class ItemSpawner : MonoBehaviour
     public GameObject breakableTilemap;
     public GameObject grid;
     
+    // 세이브 포인트 생성 관련 변수
+    private bool shouldSpawnSavePoint = false;
+    private bool savePointSpawned = false;
+    private float savePointSpawnDepth = 5f;
+    
     void Start()
     {
-        // Tilemap은 바로 설정 가능
         tilemap = TileGenerator.Instance.tilemap;
         
-        // LayerManager 이벤트 구독
         if (LayerManager.Instance != null)
         {
             LayerManager.Instance.OnLayerChangedForTilemapGeneration += HandleLayerChanged;
@@ -44,9 +47,33 @@ public class ItemSpawner : MonoBehaviour
         StartCoroutine(FindPlayerCoroutine());
     }
     
+    void OnDestroy()
+    {
+    
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLayerChanged;
+        }
+    }
+
+    void Update()
+    {
+        if (!isPlayerFound || player == null || tilemap == null) return;
+
+        float expectedDropY = lastDropY - dropInterval;
+
+        if (player.position.y <= expectedDropY)
+        {
+            SpawnItemBelowScreen();
+            lastDropY = expectedDropY;
+        }
+        
+        CheckAndSpawnSavePoint();
+    }
+
+    
     private IEnumerator FindPlayerCoroutine()
     {
-        // 플레이어가 생성될 때까지 대기
         while (player == null)
         {
             if (GameObject.FindGameObjectWithTag("Player") != null)
@@ -61,37 +88,15 @@ public class ItemSpawner : MonoBehaviour
         }
     }
 
-    void OnDestroy()
-    {
-        // LayerManager 이벤트 구독 해제
-        if (LayerManager.Instance != null)
-        {
-            LayerManager.Instance.OnLayerChangedForTilemapGeneration -= HandleLayerChanged;
-        }
-    }
-
-    void Update()
-    {
-        // 플레이어가 준비되지 않았으면 처리하지 않음
-        if (!isPlayerFound || player == null || tilemap == null) return;
-
-        float expectedDropY = lastDropY - dropInterval;
-
-        if (player.position.y <= expectedDropY)
-        {
-            SpawnItemBelowScreen();
-            lastDropY = expectedDropY;
-        }
-    }
 
     private void HandleLayerChanged(int newLayer)
     {
         currentLayer = LayerManager.Instance.GetCurrentLayerTileIndex();
         
-        // 유효한 레이어일 때만 스폰
         if (currentLayer >= 0)
         {
-            SpawnSavePoints();
+            shouldSpawnSavePoint = true;
+            savePointSpawned = false;
         }
     }
 
@@ -102,30 +107,8 @@ public class ItemSpawner : MonoBehaviour
         LayerSpawnData data = layerSpawnDatas[currentLayer];
         if (data == null) return;
 
-        Camera cam = Camera.main;
-        float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
-
-        float xPadding = 0.15f;
-
-        Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
-        Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));
-
-        Vector3Int min = tilemap.WorldToCell(bottomLeftWorld);
-        Vector3Int max = tilemap.WorldToCell(topRightWorld);
-
-        List<Vector3Int> validTiles = new List<Vector3Int>();
-        for (int x = min.x; x <= max.x; x++)
-        {
-            for (int y = min.y; y <= max.y; y++)
-            {
-                Vector3Int tilePos = new Vector3Int(x, y, 0);
-                if (tilemap.HasTile(tilePos))
-                {
-                    validTiles.Add(tilePos);
-                }
-            }
-        }
-
+        List<Vector3Int> validTiles = GetValidTilesBelowViewport();
+        
         if (validTiles.Count > 0)
         {
             Vector3Int spawnTile = validTiles[Random.Range(0, validTiles.Count)];
@@ -137,38 +120,68 @@ public class ItemSpawner : MonoBehaviour
     {
         Vector3 worldPos = tilemap.CellToWorld(tilePos) + tilemap.tileAnchor;
 
-        int spawnRoll = Random.Range(0, 4); // 0~3 중 하나
+        int spawnRoll = Random.Range(0, 4);
 
         if (spawnRoll == 0 && data.enemyPrefabs.Length > 0)
         {
-            // 적 25% 확률 (4번 중 1번)
             Instantiate(data.enemyPrefabs[Random.Range(0, data.enemyPrefabs.Length)], worldPos, Quaternion.identity);
         }
         else if (data.itemPrefabs.Length > 0)
         {
-            // 나머지 75%는 아이템
             Instantiate(data.itemPrefabs[Random.Range(0, data.itemPrefabs.Length)], worldPos, Quaternion.identity);
         }
     }
 
+    void CheckAndSpawnSavePoint()
+    {
+        if (!shouldSpawnSavePoint || savePointSpawned) return;
+        
+        float layerStartY = LayerManager.Instance.GetCurrentLayerStartY();
+        float targetSpawnY = layerStartY - savePointSpawnDepth;
+        Debug.Log($"savepoint: targetSpawnY: {targetSpawnY}, 현재 플레이어 위치: {player.position.y}, 현재 레이어 시작점: {layerStartY}");
+        if (player.position.y <= targetSpawnY)
+        {
+            Debug.Log($"savepoint: 세이브 포인트 생성");
+            SpawnSavePoints();
+            savePointSpawned = true;
+            shouldSpawnSavePoint = false;
+        }
+    }
+    
     void SpawnSavePoints()
     {
-        if (currentLayer < 0 || currentLayer >= layerSpawnDatas.Length)
-        {
-            return; // 유효하지 않은 레이어면 스폰하지 않음
-        }
+        if (currentLayer < 0 || currentLayer >= layerSpawnDatas.Length) return;
         
         LayerSpawnData data = layerSpawnDatas[currentLayer];
-        if (savePointPrefab == null || data == null) return;
-
         int count = Random.Range(1, data.savePointCount + 1);
 
+        SpawnPrefabsInValidTiles(savePointPrefab, count);
+    }
+
+    void SpawnPrefabsInValidTiles(GameObject prefab, int count)
+    {
+        List<Vector3Int> validTiles = GetValidTilesBelowViewport();
+        
+        for (int i = 0; i < count; i++)
+        {
+            if (validTiles.Count == 0) break;
+
+            int idx = Random.Range(0, validTiles.Count);
+            Vector3Int spawnTile = validTiles[idx];
+            validTiles.RemoveAt(idx);
+
+            Vector3 spawnPos = tilemap.CellToWorld(spawnTile) + tilemap.tileAnchor;
+            Instantiate(prefab, spawnPos, Quaternion.identity);
+            Debug.Log($"savepoint: 세이브 포인트 생성");
+        }
+    }
+
+    List<Vector3Int> GetValidTilesBelowViewport()
+    {
         Camera cam = Camera.main;
         float z = Mathf.Abs(cam.transform.position.z - tilemap.transform.position.z);
-
         float xPadding = 0.15f;
 
-        // 일반 아이템들과 동일하게 화면 아래에서 생성
         Vector3 bottomLeftWorld = cam.ViewportToWorldPoint(new Vector3(0f + xPadding, -0.2f, z));
         Vector3 topRightWorld = cam.ViewportToWorldPoint(new Vector3(1f - xPadding, 0f, z));
 
@@ -188,16 +201,6 @@ public class ItemSpawner : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < count; i++)
-        {
-            if (validTiles.Count == 0) break;
-
-            int idx = Random.Range(0, validTiles.Count);
-            Vector3Int spawnTile = validTiles[idx];
-            validTiles.RemoveAt(idx);
-
-            Vector3 spawnPos = tilemap.CellToWorld(spawnTile) + tilemap.tileAnchor;
-            Instantiate(savePointPrefab, spawnPos, Quaternion.identity);
-        }
+        return validTiles;
     }
 }

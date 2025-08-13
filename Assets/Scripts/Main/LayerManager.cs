@@ -275,7 +275,6 @@ public class LayerManager : MonoBehaviour
                 {
                     currentPlayerLayer = CurrentPlayerLayer;
                     OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
-                    Debug.Log($"[LayerManager] 플레이어 레이어 변경: {prevLayer} -> {CurrentPlayerLayer}");
                 }
 
                 // Lava Zone 진입 감지 (layerIndex 5가 Lava Zone)
@@ -382,6 +381,24 @@ public class LayerManager : MonoBehaviour
     {
         return maxTilesPerFrame;
     }
+
+    public float GetCurrentLayerStartY()
+    {
+        // maincamStartY(-22f)에서 이전 레이어들의 높이를 빼면 현재 레이어의 시작점
+        float accumulatedHeight = 0f;
+        
+        // 현재 레이어 이전까지의 모든 레이어 높이를 누적
+        for (int i = 0; i < CurrentTilemapLayer; i++)
+        {
+            if (i < layerDataList.Count)
+            {
+                accumulatedHeight += layerDataList[i].layerHeight;
+            }
+        }
+        
+        // 현재 레이어의 시작점 = maincamStartY - 이전 레이어들의 누적 높이
+        return maincamStartY - accumulatedHeight;
+    }
     #endregion
 
     #region Layer Calculation
@@ -392,7 +409,6 @@ public class LayerManager : MonoBehaviour
         // 플레이어 레이어 계산
         float playerY = playerPosition.y;
         CurrentPlayerLayer = CalculatePlayerLayer(playerY);
-        Debug.Log($"LayerManager: CurrentPlayerLayer: {CurrentPlayerLayer}");
         
         // 플레이어 레이어 상태 설정
         if (CurrentPlayerLayer >= 0 && CurrentPlayerLayer < layerDataList.Count)
@@ -402,9 +418,7 @@ public class LayerManager : MonoBehaviour
         
         // 카메라 위치를 기반으로 타일맵 레이어 계산
         float viewPortY = mainCam.ViewportToWorldPoint(new Vector3(0.5f, 0f, mainCam.nearClipPlane)).y;
-        Debug.Log($"LayerManager: viewPortY: {viewPortY}");
         CurrentTilemapLayer = CalculateTilemapLayer(viewPortY);
-        Debug.Log($"LayerManager: CurrentTilemapLayer: {CurrentTilemapLayer}");
         // 타일맵 레이어 상태 설정
         if (CurrentTilemapLayer >= 0 && CurrentTilemapLayer < layerDataList.Count)
         {
@@ -417,6 +431,7 @@ public class LayerManager : MonoBehaviour
         // 새 게임이고 첫 번째 레이어(0)에 있다면 초기 안내멘트 발생
         if (!PersistenceManager.Instance.HasSavedData() && CurrentPlayerLayer == 0)
         {
+            OnLayerChangedForTilemapGeneration?.Invoke(CurrentTilemapLayer);
             OnLayerChangedForPlayer?.Invoke(CurrentPlayerLayer);
         }
     }

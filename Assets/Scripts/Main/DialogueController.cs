@@ -35,21 +35,19 @@ public class DialogueController : MonoBehaviour
 
     private int currentIndex = 0;
 
-    // 대화 상태는 GameManager에서 관리
+
 
     private Color femaleColor = Color.yellow;
     private Color defaultColor = Color.white;
 
     void Start()
     {
-        // GameManager 이벤트 구독
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnGameCleared += OnGameCleared;
             GameManager.Instance.OnIntroCompleted += OnIntroCompleted;
         }
 
-        // 여기서 대화 배열 초기화 (예: 아까 준 대화)
         dialogues_intro = new MakeDialogue[] {
             new MakeDialogue(true, "俺、マジで猫舌なんだニャン〜\nアイスクリーム最高だニャン〜！", intro_img[0]),
             new MakeDialogue(false, "(ニャン〜って…うるせぇな)\nほんとにおいしいの〜♡", intro_img[0]),
@@ -72,14 +70,11 @@ public class DialogueController : MonoBehaviour
             new MakeDialogue(true, "じゃあニャン〜", outro_img[8]),
             new MakeDialogue(false, "(ぽこんと)", outro_img[9]),
         };
-            // 대화 초기화 및 상태 확인
         CheckAndStartDialogue();
     }
 
-    // 대화 상태를 확인하고 적절한 대화 시작
     private void CheckAndStartDialogue()
     {
-        // 게임이 클리어되었으면 outro 재생
         if (GameManager.Instance != null && GameManager.Instance.IsGameCleared())
         {
             SetDialogue(dialogues_outro);
@@ -88,7 +83,6 @@ public class DialogueController : MonoBehaviour
             return;
         }
 
-        // Intro가 아직 재생되지 않았으면 intro 재생
         if (GameManager.Instance != null && !GameManager.Instance.HasPlayedIntro())
         {
             SetDialogue(dialogues_intro);
@@ -97,14 +91,11 @@ public class DialogueController : MonoBehaviour
             return;
         }
 
-        // Intro가 이미 재생되었으면 캔버스를 켜지 않음
         canvas_dialogue.SetActive(false);
     }
 
-    // GameManager의 게임 클리어 이벤트 핸들러
     private void OnGameCleared()
     {
-
         CheckAndStartDialogue();
     }
 
@@ -118,40 +109,37 @@ public class DialogueController : MonoBehaviour
 
     void SetDialogue(MakeDialogue[] dia)
     {
-
+        if (dia == null) return;
         dialogues = dia;
     }
 
     void ShowDialogue(int index)
     {
-        if (index < 0 || index >= dialogues.Length) return;
+        if (dialogues == null || index < 0 || index >= dialogues.Length) return;
 
         dialogueText.text = dialogues[index].dialogue;
-
 
         speakerImage.sprite = dialogues[index].speakerImage;
 
         dialogueText.color = dialogues[index].isBoy ? defaultColor : femaleColor;
-
     }
 
     void NextDialogue()
     {
+        if (dialogues == null || dialogues.Length == 0) return;
+        
         currentIndex++;
         if (currentIndex >= dialogues.Length)
         {
-            Debug.Log("대화가 끝났습니다.");
             currentIndex = 0;
             canvas_dialogue.SetActive(false);
 
-            // Intro 대화가 완료되면 GameManager에 알림
             if (dialogues == dialogues_intro)
             {
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.SetIntroCompleted();
                 }
-                Debug.Log("[DialogueController] Intro 대화 완료 - GameManager에 알림");
             }
 
             return;
@@ -160,15 +148,12 @@ public class DialogueController : MonoBehaviour
         ShowDialogue(currentIndex);
     }
 
-        // GameManager의 Intro 완료 이벤트 핸들러
     private void OnIntroCompleted()
     {
-        Debug.Log("[DialogueController] Intro 완료 이벤트 수신");
     }
     
     private void OnDestroy()
     {
-        // GameManager 이벤트 구독 해제
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnGameCleared -= OnGameCleared;
