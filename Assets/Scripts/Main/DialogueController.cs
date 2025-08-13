@@ -72,8 +72,6 @@ public class DialogueController : MonoBehaviour
             new MakeDialogue(true, "じゃあニャン〜", outro_img[8]),
             new MakeDialogue(false, "(ぽこんと)", outro_img[9]),
         };
-     
-
             // 대화 초기화 및 상태 확인
         CheckAndStartDialogue();
     }
