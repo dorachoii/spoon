@@ -115,12 +115,24 @@ public class LayerManager : MonoBehaviour
     {
         // PersistenceManager 이벤트 구독
         PersistenceManager.OnDataLoaded += OnDataLoaded;
+        
+        // GameManager resume 이벤트 구독
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameResumed += HandleGameResumed;
+        }
     }
 
     void OnDisable()
     {
         // PersistenceManager 이벤트 구독 해제
         PersistenceManager.OnDataLoaded -= OnDataLoaded;
+        
+        // GameManager resume 이벤트 구독 해제
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameResumed -= HandleGameResumed;
+        }
     }
 
     // OnDataLoaded 이벤트 핸들러
@@ -138,6 +150,38 @@ public class LayerManager : MonoBehaviour
             // 플레이어가 준비되면 레이어 계산을 다시 수행하도록 플래그 설정
             StartCoroutine(CalculateLayerWhenPlayerReady());
         }
+    }
+    
+    // GameManager resume 이벤트 핸들러
+    private void HandleGameResumed()
+    {
+        Debug.Log("LayerManager: Game resumed - 레이어 상태 재계산");
+        
+        // 플레이어가 아직 준비되지 않았다면 대기
+        if (player == null)
+        {
+            StartCoroutine(WaitForPlayerAndRecalculate());
+            return;
+        }
+        
+        // 현재 플레이어와 카메라 위치를 기반으로 레이어 상태 재계산
+        CalculateLayerFromPlayerPosition(player.transform.position, mainCam.transform.position);
+        
+        Debug.Log($"LayerManager: 레이어 상태 업데이트 완료 - CurrentTilemapLayer: {CurrentTilemapLayer}, CurrentPlayerLayer: {CurrentPlayerLayer}, CurrentLayerState: {CurrentLayerState}");
+    }
+    
+    // 플레이어를 기다리고 레이어를 재계산하는 코루틴
+    private IEnumerator WaitForPlayerAndRecalculate()
+    {
+        while (player == null)
+        {
+            yield return null;
+        }
+        
+        // 플레이어를 찾은 후 레이어 상태 재계산
+        CalculateLayerFromPlayerPosition(player.transform.position, mainCam.transform.position);
+        
+        Debug.Log($"LayerManager: 플레이어 찾음 후 레이어 상태 업데이트 - CurrentTilemapLayer: {CurrentTilemapLayer}, CurrentPlayerLayer: {CurrentPlayerLayer}, CurrentLayerState: {CurrentLayerState}");
     }
 
     // 플레이어가 준비되면 레이어를 계산하는 코루틴
@@ -167,13 +211,13 @@ public class LayerManager : MonoBehaviour
         layerDataList.Clear();
 
         // 기본 레이어 데이터
-        LayerData layer1 = new LayerData(0, 0, LayerState.Normal, 20f, -1);
-        LayerData layer2 = new LayerData(1, 1, LayerState.Normal, 20f, -1);
+        LayerData layer1 = new LayerData(0, 0, LayerState.Normal, 30f, -1);
+        LayerData layer2 = new LayerData(1, 1, LayerState.Normal, 30f, -1);
         LayerData boss1_transition = new LayerData(2, -1, LayerState.Transition, 12f, -1);
         LayerData boss1 = new LayerData(3, -1, LayerState.Boss, 20f, 0);
-        LayerData layer3 = new LayerData(4, 2, LayerState.Normal, 20f, -1);
-        LayerData layer4 = new LayerData(5, 3, LayerState.Normal, 20f, -1);
-        LayerData layer5 = new LayerData(6, 4, LayerState.Normal, 20f, -1);
+        LayerData layer3 = new LayerData(4, 2, LayerState.Normal, 30f, -1);
+        LayerData layer4 = new LayerData(5, 3, LayerState.Normal, 30f, -1);
+        LayerData layer5 = new LayerData(6, 4, LayerState.Normal, 30f, -1);
         LayerData boss2_transition = new LayerData(7, -1, LayerState.Transition, 12f, -1);
         LayerData boss2 = new LayerData(8, -1, LayerState.Boss, 20f, 1);
 

@@ -102,13 +102,15 @@ public class PlayerStatUI : MonoBehaviour
         hpSlider.value = hp;
     }
 
+int idx = 0;
     private void UpdateLayerHardnessText(int hardness)
     {
-        if (LayerManager.Instance != null && LayerManager.Instance.CurrentLayerState == LayerState.Normal)
-        {
-            currentLayerHardness++;
-            layerHardnessText.text = $"Hardness: {currentLayerHardness}";
-        }
+        int newidx = LayerManager.Instance.GetCurrentLayerTileIndex();
+        if(newidx == -1) return;
+
+        idx = newidx;
+            layerHardnessText.text = $"Hardness: {idx}";
+        
     }
 
     public void ToggleHeatSlider(bool isOn)

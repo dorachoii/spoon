@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     
     public System.Action OnGameCleared;
     public System.Action OnIntroCompleted;
+    public System.Action OnGameResumed;
 
 
     private void Awake()
@@ -63,6 +64,10 @@ public class GameManager : MonoBehaviour
             SceneManager.sceneLoaded -= OnSavedGameSceneLoaded;
     
             PersistenceManager.Instance?.LoadGame();
+            
+            // 게임이 resume되었음을 알림
+            Debug.Log("GameManager: OnGameResumed 이벤트 호출");
+            OnGameResumed?.Invoke();
         }
     }
     

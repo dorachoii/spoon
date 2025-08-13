@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PoisonItem : ItemBase
 {
-    private float poisonDuration = 5f;
+    private float poisonDuration = 7f;
     
     protected override void ApplyEffect(GameObject player)
     {

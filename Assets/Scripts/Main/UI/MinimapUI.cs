@@ -46,5 +46,8 @@ public class MinimapUI : MonoBehaviour
         Vector2 newPosition = new Vector2(currentPosition.x, progressY);
    
         character.anchoredPosition = newPosition;
+        
+        // 디버깅 로그
+        Debug.Log($"Minimap Update - CameraY: {cameraY}, Progress: {normalizedProgress:F2}, NewY: {progressY:F2}");
     }
 }

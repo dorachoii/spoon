@@ -379,6 +379,7 @@ public class PlayerContoller : MonoBehaviour
                 {
                     playerStat.DamageHP(100f);
                     isDigging = false;
+                    insufficientPowerJumpCount = 0;
                     yield break;
                 }
                 

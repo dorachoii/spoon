@@ -192,6 +192,9 @@ public class GameUIManager : MonoBehaviour
 
     private void HandlePlayerDeath()
     {
+        // Game Over 텍스트 표시
+        ShowCenterText("GAME OVER", Color.red, 3f);
+
         // iris in
         if (irisEffector != null) irisEffector.IrisIn();
 
@@ -262,19 +265,16 @@ public class GameUIManager : MonoBehaviour
 
         string title = LayerManager.Instance.GetCurrentLayerName();
 
-        // 디버깅을 위한 로그 추가
-
-
-        // 현재 일반 층이면 검정, 보스 층이면 보라 이렇게 표시
+        // transition 층이면 보라색, 일반 층이면 흰색으로 표시
         if (textColor == default)
         {
-            if (true)
+            if (LayerManager.Instance.CurrentLayerState == LayerState.Transition)
             {
                 textColor = new Color(0.5f, 0f, 1f); // 보라색
             }
             else
             {
-                textColor = Color.black; // 검정색
+                textColor = Color.white; // 흰색
             }
         }
 

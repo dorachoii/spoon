@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PowerItem : ItemBase
 {
-    private float powerBonus = 50f; 
+    private float powerBonus = 60f; 
 
     protected override void ApplyEffect(GameObject player)
     {

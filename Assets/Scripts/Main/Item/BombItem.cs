@@ -77,7 +77,7 @@ public class BombItem : ItemBase
         float tileDistance = Mathf.Sqrt(Mathf.Pow(bombCell.x - playerCell.x, 2) + Mathf.Pow(bombCell.y - playerCell.y, 2));
 
         // 데미지 범위 내라면 (타일 단위로 체크 - ExplodeTiles와 동일한 범위)
-        if (tileDistance <= radius)
+        if (tileDistance <= radius + 2)
         {
             // 플레이어 반동 (プレイヤー反動)
             Rigidbody2D rb = player.GetComponent<Rigidbody2D>();

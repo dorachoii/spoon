@@ -174,9 +174,9 @@ public class PlayerStat : MonoBehaviour
 
     // 게임 로드 시 최소 파워 보장
     public void EnsureMinimumPower()
-    {Debug.Log("EnsureMinimumPower");
+    {
         float hardness = LayerManager.Instance.GetCurrentHardness();
-        float minRequiredPower = hardness * 1.5f;
+        float minRequiredPower = hardness * 2f;
         
         if (CurrentPower < minRequiredPower)
         {
