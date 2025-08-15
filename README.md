@@ -1,0 +1,12 @@
+<img width="4000" height="2250" alt="segaPPT의 사본-02" src="https://github.com/user-attachments/assets/6c19de66-f8e2-4512-9f20-42ea7f242379" />
+<img width="4000" height="2250" alt="segaPPT의 사본-03" src="https://github.com/user-attachments/assets/2d30281f-8042-435d-b424-f2cbc7362d5f" />
+<img width="4000" height="2250" alt="segaPPT의 사본-05" src="https://github.com/user-attachments/assets/3fd5b7ce-7c15-4cb1-a171-2e0613c86bdc" />
+<img width="4000" height="2250" alt="segaPPT의 사본-06" src="https://github.com/user-attachments/assets/a6a6637d-38c4-454b-8ea0-340e3e06dfc7" />
+<img width="4000" height="2250" alt="segaPPT의 사본-07" src="https://github.com/user-attachments/assets/18c203fc-8145-4e59-bf52-48c724600f74" />
+<img width="4000" height="2250" alt="segaPPT의 사본-08" src="https://github.com/user-attachments/assets/faf84a06-b759-4693-9dc3-dbfb159776b9" />
+<img width="4000" height="2250" alt="segaPPT의 사본-09" src="https://github.com/user-attachments/assets/5920adbc-97f1-4c3d-b619-06f0b516c69b" />
+<img width="4000" height="2250" alt="segaPPT의 사본-10" src="https://github.com/user-attachments/assets/68a87a0e-34f1-4999-82be-c210c841bed6" />
+<img width="4000" height="2250" alt="segaPPT의 사본-11" src="https://github.com/user-attachments/assets/08b59690-6f2d-44b9-a30d-5ed2bae40bfa" />
+<img width="4000" height="2250" alt="segaPPT의 사본-12" src="https://github.com/user-attachments/assets/1df48326-7eae-4c2c-9306-c677bfabb8b3" />
+<img width="4000" height="2250" alt="segaPPT의 사본-13" src="https://github.com/user-attachments/assets/6af13e2d-9d6b-47a7-844c-ec83e3c63590" />
+<img width="4000" height="2250" alt="segaPPT의 사본-14" src="https://github.com/user-attachments/assets/8969cf3a-25df-4587-8b23-88c8d9381b9e" />
