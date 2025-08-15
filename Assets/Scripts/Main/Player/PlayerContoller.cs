@@ -32,6 +32,7 @@ public class PlayerContoller : MonoBehaviour
     // Player State
     public PlayerState currentState { get; private set; }
     private bool isStateLocked = false;
+    private bool levelEnded = false;
     
     // Power Insufficiency Tracking
     private int insufficientPowerJumpCount = 0;
@@ -93,6 +94,12 @@ public class PlayerContoller : MonoBehaviour
         FindMissingReferences();
 
         InitializePlayerStat();
+        
+        // LayerManager 이벤트 구독
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnAllLayersCompleted += HandleLevelEnded;
+        }
     }
     
     private void InitializePlayerStat()
@@ -170,6 +177,12 @@ public class PlayerContoller : MonoBehaviour
             playerStat.OnPoisonedStarted -= StartPoisonVisualEffect;
             playerStat.OnPoisonedEnded -= StopPoisonVisualEffect;
         }
+        
+        // LayerManager 이벤트 구독 해제
+        if (LayerManager.Instance != null)
+        {
+            LayerManager.Instance.OnAllLayersCompleted -= HandleLevelEnded;
+        }
     }
 
     #endregion
@@ -231,6 +244,13 @@ public class PlayerContoller : MonoBehaviour
         ChangeState(PlayerState.Die);
         isStateLocked = true;
     }
+    
+    private void HandleLevelEnded()
+    {
+        levelEnded = true;
+    }
+    
+
 
     #endregion
 
@@ -239,6 +259,12 @@ public class PlayerContoller : MonoBehaviour
      public void FixedUpdate()
     {
         if (floatingJoystick == null)
+        {
+            return;
+        }
+        
+        // 레벨이 끝났으면 모든 입력 무시
+        if (levelEnded)
         {
             return;
         }

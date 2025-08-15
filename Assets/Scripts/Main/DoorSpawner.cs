@@ -5,7 +5,7 @@ public class DoorSpawner : MonoBehaviour
 {
     [Header("Door Settings")]
     public GameObject doorPrefab;
-    public Vector3 doorOffset = new Vector3(0f, -2f, 0f); // 플레이어 위치 기준 오프셋
+    private Vector3 doorOffset = new Vector3(0f, 7f, 0f); // 플레이어 위치 기준 오프셋
     
     private Transform player;
     private bool isPlayerFound = false;
@@ -18,10 +18,14 @@ public class DoorSpawner : MonoBehaviour
         {
             LayerManager.Instance.OnAllLayersCompleted += SpawnDoor;
         }
+       
         
     }
-    
-
+void Update(){
+    if(Input.GetKeyDown(KeyCode.Space)){
+        SpawnDoor();
+    }
+}
     
     void OnDestroy()
     {
@@ -34,20 +38,31 @@ public class DoorSpawner : MonoBehaviour
     
     private void SpawnDoor()
     {
-        if (doorSpawned || doorPrefab == null || !isPlayerFound || player == null) return;
+        // 플레이어 찾기
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player").transform;
+            if (player != null)
+            {
+                isPlayerFound = true;
+            }
+        }
+        
+        if (doorSpawned || doorPrefab == null || !isPlayerFound || player == null) {
+            return;
+        }
           
-        // 플레이어 리지드바디 중력 비활성화 (떨어지지 않도록)
+        // 플레이어 리지드바디를 kinematic으로 설정
         Rigidbody2D playerRigidbody = player.GetComponent<Rigidbody2D>();
         if (playerRigidbody != null)
         {
-            playerRigidbody.gravityScale = 0f;
-            Debug.Log("[DoorSpawner] Player gravity disabled!");
+            playerRigidbody.simulated = false;
         }
-          // 플레이어 위치에 문 생성
+        
+        // 플레이어 위치에 문 생성
         Vector3 doorPosition = player.position + doorOffset;
         Instantiate(doorPrefab, doorPosition, Quaternion.identity);
         
         doorSpawned = true;
-        Debug.Log("[DoorSpawner] Door spawned at player position!");
     }
 }
