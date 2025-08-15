@@ -1,3 +1,5 @@
+[![Demo Video](https://img.youtube.com/vi/VVkmgRvas6M/0.jpg)](https://youtube.com/shorts/VVkmgRvas6M)
+
 <img width="4000" height="2250" alt="segaPPT의 사본-02" src="https://github.com/user-attachments/assets/6c19de66-f8e2-4512-9f20-42ea7f242379" />
 <img width="4000" height="2250" alt="segaPPT의 사본-03" src="https://github.com/user-attachments/assets/2d30281f-8042-435d-b424-f2cbc7362d5f" />
 <img width="4000" height="2250" alt="segaPPT의 사본-05" src="https://github.com/user-attachments/assets/3fd5b7ce-7c15-4cb1-a171-2e0613c86bdc" />
