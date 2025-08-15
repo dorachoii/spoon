@@ -1,4 +1,5 @@
-[![Demo Video](https://img.youtube.com/vi/VVkmgRvas6M/0.jpg)](https://youtube.com/shorts/VVkmgRvas6M)
+[![Watch the video](https://yourdomain.com/custom-thumbnail.png)](https://youtu.be/VVkmgRvas6M)
+
 
 <img width="4000" height="2250" alt="segaPPT의 사본-02" src="https://github.com/user-attachments/assets/6c19de66-f8e2-4512-9f20-42ea7f242379" />
 <img width="4000" height="2250" alt="segaPPT의 사본-03" src="https://github.com/user-attachments/assets/2d30281f-8042-435d-b424-f2cbc7362d5f" />
