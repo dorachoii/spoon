@@ -1,8 +1,8 @@
 
 
-## 📦 Release Information
+## 📦 Project Information
 - **Platform**: PC / iOS  
-- **Release Date**: 2025-08-17 
+- **Duration**: 3週、個人制作
 - **Download Link**: [App Store](https://apps.apple.com/kr/app/spoon-romance/id6751016334?l=en-GB)
 
 ### 🎥 Gameplay Video
